@@ -21,6 +21,7 @@ public class ThirdLobTest {
         double lambdaArrival = 0.1;             // arrival frequency, same for all
         double ReturnFrequencyHFT = 1;          // returning frequency of HFT
         double ReturnFrequencyNonHFT = 0.1;     // returning frequency of NonHFT
+        String folder = "C:\\Users\\Jakub\\Documents\\School\\SFI\\_paper1 HFT, MM, rebates and market quality\\Matlab Analysis\\";
 
 
         int infoSize = 8;                       // size of the BookInfo in LOB
@@ -116,11 +117,11 @@ public class ThirdLobTest {
 
 
         HashMap<Integer, Trader> traders = new HashMap<Integer, Trader>();
-        History h = new History(traders); // create history
+        History h = new History(traders, folder); // create history
         // create map of traders
 
         Trader trader = new Trader(infoSize, tauB, tauS, nP, FVpos, tickSize, ReturnFrequencyHFT,
-                ReturnFrequencyNonHFT, LL, HL, end, maxDepth, breakPoint, hti, prTremble);
+                ReturnFrequencyNonHFT, LL, HL, end, maxDepth, breakPoint, hti, prTremble, folder, h);
         LOB_LinkedHashMap book = new LOB_LinkedHashMap(FV, FVpos, maxDepth, end, tickSize, nP ,h, traders);
         // create book
         book.makeBook(Prices);

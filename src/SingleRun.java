@@ -195,6 +195,7 @@ public class SingleRun {
                 if (write){
                     h.printTransactions(header, outputNameTransactions);
                     h.printBookData(header, outputNameBookData);
+                    h.printDepthFrequency();
                 }
                 h.printStatisticsData(header, outputNameStatsData);
                 h.resetHistory();

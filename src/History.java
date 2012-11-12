@@ -18,15 +18,18 @@ public class History {
     ArrayList<Integer> Events;
     ArrayList<Integer> States;
     Vector<Trade> history;
+    Vector<Decision> decisions;
+    String folder;
 
-    public History(HashMap<Integer, Trader> t){
+    public History(HashMap<Integer, Trader> t, String f){
         traders = t;
         Asks = new ArrayList<Integer>();
         Bids = new ArrayList<Integer>();
         Events = new ArrayList<Integer>();
         States = new ArrayList<Integer>();
         history = new Vector<Trade>();
-
+        decisions = new Vector<Decision>();
+        folder = f;
     }
     
     public void addTrade(Order buy, Order sell, double timeTrade, double price,
@@ -48,9 +51,12 @@ public class History {
         States.add(statesNum);
     }
 
+    public void addDecisions(int Bt, int lBt, int spread, int action){
+        decisions.add(new Decision(Bt, lBt, spread, action));
+    }
+
     public void printTransactions(boolean writeHeader, String fileNameTransactions){
         try{
-            String folder =  "C:\\Users\\Jakub\\Documents\\School\\SFI\\_paper1 HFT, MM, rebates and market quality\\Matlab Analysis\\";
             String outputFileName = folder + fileNameTransactions;
             FileWriter writer = new FileWriter(outputFileName, true);
             if (writeHeader){
@@ -81,7 +87,6 @@ public class History {
 
     public void printBookData(boolean writeHeader, String fileNameBookData){
         try{
-            String folder = "C:\\Users\\Jakub\\Documents\\School\\SFI\\_paper1 HFT, MM, rebates and market quality\\Matlab Analysis\\";
             String outputFileName = folder + fileNameBookData;
             FileWriter writer = new FileWriter(outputFileName, true);
             if (writeHeader){
@@ -105,7 +110,6 @@ public class History {
 
     public void printStatisticsData(boolean writeHeader, String fileNameStatisticsData){
         try{
-            String folder = "C:\\Users\\Jakub\\Documents\\School\\SFI\\_paper1 HFT, MM, rebates and market quality\\Matlab Analysis\\";
             String outputFileName = folder + fileNameStatisticsData;
             FileWriter writer = new FileWriter(outputFileName, true);
             if (writeHeader){
@@ -122,6 +126,22 @@ public class History {
             System.exit(1);
         }
     }
+
+    public void printDepthFrequency(){
+        try{
+            String outputFileName = folder + "frequency.csv";
+            FileWriter writer = new FileWriter(outputFileName, true);
+            for (Decision d:decisions){
+                writer.write(d.printDecision());
+            }
+            writer.close();
+        }
+        catch (Exception e){
+            e.printStackTrace();
+            System.exit(1);
+        }
+    }
+
     public int historySize(){
         return history.size();
     }
@@ -132,6 +152,7 @@ public class History {
         Events = new ArrayList<Integer>();
         States = new ArrayList<Integer>();
         history = new Vector<Trade>();
+        decisions = new Vector<Decision>();
     }
 
 

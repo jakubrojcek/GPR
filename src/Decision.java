@@ -11,11 +11,11 @@ public class Decision {
     private int spread;
     private int action;
 
-    public void Decision(int b, int lb, int s, int a){
-        Bt = b;
-        lBt = lb;
-        spread = s;
-        action = a;
+    public Decision(int b, int lb, int s, int a){
+        this.Bt = b;
+        this.lBt = lb;
+        this.spread = s;
+        this.action = a;
     }
 
     public String printDecision(){

@@ -21,6 +21,7 @@ public class ReducedStatesTest {
         double lambdaArrival = 0.1;             // arrival frequency, same for all
         double ReturnFrequencyHFT = 1;          // returning frequency of HFT
         double ReturnFrequencyNonHFT = 0.4;     // returning frequency of NonHFT
+        String folder = "C:\\Users\\Jakub\\Documents\\School\\SFI\\_paper1 HFT, MM, rebates and market quality\\Matlab Analysis\\";
 
 
 
@@ -119,11 +120,11 @@ public class ReducedStatesTest {
 
 
         HashMap<Integer, Trader> traders = new HashMap<Integer, Trader>(); //trader ID, trader object
-        History h = new History(traders); // create history
+        History h = new History(traders, folder); // create history
         // create map of traders
 
         Trader trader = new Trader(infoSize, tauB, tauS, nP, FVpos, tickSize, ReturnFrequencyHFT,
-                ReturnFrequencyNonHFT, LL, HL, end, maxDepth, breakPoint, hti, prTremble);
+                ReturnFrequencyNonHFT, LL, HL, end, maxDepth, breakPoint, hti, prTremble, folder, h);
         LOB_LinkedHashMap book = new LOB_LinkedHashMap(FV, FVpos, maxDepth, end, tickSize, nP ,h, traders);
         // create book
         book.makeBook(Prices);
@@ -135,9 +136,10 @@ public class ReducedStatesTest {
                 outputNameTransactions, outputNameBookData);
         // gettting to equilibrium ballpark
         int nEvents = 10000000;         // number of events
-        boolean write = false;         // write output in this SingleRun?
+        boolean write = true;         // write output in this SingleRun?
         boolean purge = false;         // purge in this SingleRun?
         boolean nReset = false;        // reset n in this SingleRun?
+        trader.setWrite(true);
 
         double[] RunOutcome =
                 sr.run(nEvents, nHFT, NewNonHFT, EventTime, FV, write,

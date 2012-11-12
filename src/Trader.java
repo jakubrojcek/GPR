@@ -44,6 +44,8 @@ public class Trader {
     static int HTinit;                  // initial capacity for Payoffs HashTable
     static double prTremble = 0.0;      // probability of trembling
     static boolean write = false;              // to write things in trader?
+    static String folder;
+    History hist;
 
     //private double CFEE;              // cancellation fee
 
@@ -62,7 +64,8 @@ public class Trader {
     }
 
     public Trader(int is, double[] tb, double[] ts, byte numberPrices, int FVpos, double tickS, double rFast, double rSlow,
-                  int ll, int hl, int e, int md, int bp, int hti, double pt){
+                  int ll, int hl, int e, int md, int bp, int hti, double pt, String f,
+                  History h){
         infoSize = is;
         LL = ll;
         HL = hl;
@@ -87,6 +90,8 @@ public class Trader {
         maxDepth = md;
         tickSize = tickS;
         prTremble = pt;
+        folder = f;
+        hist = h;
     }
 
     // decision about the price is made here, so far random
@@ -216,7 +221,7 @@ public class Trader {
         oldAction = action;                                      // save for later updating
 
         if (write){                                              // printing data for output tables
-            printDepthFrequency((int)Bt, BookInfo[2], (int)(At - Bt), action);
+            hist.addDecisions((int)Bt, BookInfo[2], (int)(At - Bt), action);
         }
 
         if (action == end || action == 2 * end + 1) {isTraded = true;}     // isTraded set to true if submitting MOs
@@ -310,18 +315,17 @@ public class Trader {
     public void printStatesDensity(double et){
         Payoff pay;
         try{
-            String folder = "C:\\Users\\Jakub\\Documents\\School\\SFI\\_paper1 HFT, MM, rebates and market quality\\Matlab Analysis\\";
             String outputFileName = folder + "occurrences.csv";
             FileWriter writer = new FileWriter(outputFileName, true);
             Iterator keys = Payoffs.keySet().iterator();
             while (keys.hasNext()){
                 pay =  Payoffs.get(keys.next());
-                /*if (pay instanceof MultiplePayoff){
+                if (pay instanceof MultiplePayoff){
                     writer.write(((MultiplePayoff)pay).getN() + ";" + "\r");
-                }*/
-                if (pay instanceof SinglePayoff){
-                    writer.write(et - ((SinglePayoff) pay).getEventTime() + ";" + "\r");
                 }
+               /* if (pay instanceof SinglePayoff){
+                    writer.write(et - ((SinglePayoff) pay).getEventTime() + ";" + "\r");
+                }*/
             }
             writer.close();
         }
@@ -371,19 +375,7 @@ public class Trader {
             }
      }
 
-    public void printDepthFrequency(int B, int lBt, int spread, int action){
-     try{
-        String folder = "C:\\Users\\Jakub\\Documents\\School\\SFI\\_paper1 HFT, MM, rebates and market quality\\Matlab Analysis\\";
-        String outputFileName = folder + "frequency.csv";
-        FileWriter writer = new FileWriter(outputFileName, true);
-        writer.write(B + ";" + lBt + ";" + spread + ";" + action + ";" + "\r");
-        writer.close();
-    }
-    catch (Exception e){
-        e.printStackTrace();
-        System.exit(1);
-    }
-    }
+
 
     // getters
     public int getTraderID(){
