@@ -60,7 +60,6 @@ public class LOB_LinkedHashMap {
     public void FVup(double fv, double et){
         // (1) book shift, (2) 31+1, (3) currentPosition, (4) pricePosition
         positionShift++;
-
         Set keys = book[0].keySet();
         //System.out.println("Keys to delete are " + keys);
         while (! keys.isEmpty()){

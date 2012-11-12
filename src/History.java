@@ -122,7 +122,6 @@ public class History {
             System.exit(1);
         }
     }
-
     public int historySize(){
         return history.size();
     }
