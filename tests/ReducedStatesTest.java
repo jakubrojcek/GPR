@@ -20,7 +20,7 @@ public class ReducedStatesTest {
         int nNegativeNonHFT = 10;               // # of negative PV slow traders
         double lambdaArrival = 0.1;             // arrival frequency, same for all
         double ReturnFrequencyHFT = 1;          // returning frequency of HFT
-        double ReturnFrequencyNonHFT = 0.5;     // returning frequency of NonHFT
+        double ReturnFrequencyNonHFT = 0.4;     // returning frequency of NonHFT
 
 
 
