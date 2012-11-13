@@ -21,7 +21,7 @@ public class ThirdLobTest {
         double lambdaArrival = 0.1;             // arrival frequency, same for all
         double ReturnFrequencyHFT = 1;          // returning frequency of HFT
         double ReturnFrequencyNonHFT = 0.1;     // returning frequency of NonHFT
-        String folder = "C:\\Users\\Jakub\\Documents\\School\\SFI\\_paper1 HFT, MM, rebates and market quality\\Matlab Analysis\\";
+        String folder = "D:\\_paper1 HFT, MM, rebates and market quality\\Matlab Analysis\\";
 
 
         int infoSize = 8;                       // size of the BookInfo in LOB
