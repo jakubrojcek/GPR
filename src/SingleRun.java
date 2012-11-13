@@ -195,10 +195,11 @@ public class SingleRun {
                 if (write){
                     h.printTransactions(header, outputNameTransactions);
                     h.printBookData(header, outputNameBookData);
-                    h.printDepthFrequency();
+                    trader.printDepthFrequency();
                 }
                 h.printStatisticsData(header, outputNameStatsData);
                 h.resetHistory();
+                trader.resetDecisionHistory();
             }   //where events happen
             if (i % 50000000 == 0) {
                 if (purge){

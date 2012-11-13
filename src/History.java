@@ -18,7 +18,6 @@ public class History {
     ArrayList<Integer> Events;
     ArrayList<Integer> States;
     Vector<Trade> history;
-    Vector<Decision> decisions;
     String folder;
 
     public History(HashMap<Integer, Trader> t, String f){
@@ -28,7 +27,6 @@ public class History {
         Events = new ArrayList<Integer>();
         States = new ArrayList<Integer>();
         history = new Vector<Trade>();
-        decisions = new Vector<Decision>();
         folder = f;
     }
     
@@ -51,9 +49,6 @@ public class History {
         States.add(statesNum);
     }
 
-    public void addDecisions(int Bt, int lBt, int spread, int action){
-        decisions.add(new Decision(Bt, lBt, spread, action));
-    }
 
     public void printTransactions(boolean writeHeader, String fileNameTransactions){
         try{
@@ -127,20 +122,7 @@ public class History {
         }
     }
 
-    public void printDepthFrequency(){
-        try{
-            String outputFileName = folder + "frequency.csv";
-            FileWriter writer = new FileWriter(outputFileName, true);
-            for (Decision d:decisions){
-                writer.write(d.printDecision());
-            }
-            writer.close();
-        }
-        catch (Exception e){
-            e.printStackTrace();
-            System.exit(1);
-        }
-    }
+
 
     public int historySize(){
         return history.size();
@@ -152,7 +134,6 @@ public class History {
         Events = new ArrayList<Integer>();
         States = new ArrayList<Integer>();
         history = new Vector<Trade>();
-        decisions = new Vector<Decision>();
     }
 
 

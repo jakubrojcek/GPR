@@ -1,5 +1,6 @@
 import java.io.FileWriter;
 import java.util.*;
+import java.util.Vector;
 
 import static java.lang.System.*;
 
@@ -45,7 +46,7 @@ public class Trader {
     static double prTremble = 0.0;      // probability of trembling
     static boolean write = false;              // to write things in trader?
     static String folder;
-    History hist;
+    static Vector<Decision> decisions;
 
     //private double CFEE;              // cancellation fee
 
@@ -64,8 +65,7 @@ public class Trader {
     }
 
     public Trader(int is, double[] tb, double[] ts, byte numberPrices, int FVpos, double tickS, double rFast, double rSlow,
-                  int ll, int hl, int e, int md, int bp, int hti, double pt, String f,
-                  History h){
+                  int ll, int hl, int e, int md, int bp, int hti, double pt, String f){
         infoSize = is;
         LL = ll;
         HL = hl;
@@ -91,7 +91,7 @@ public class Trader {
         tickSize = tickS;
         prTremble = pt;
         folder = f;
-        hist = h;
+        decisions = new Vector<Decision>();
     }
 
     // decision about the price is made here, so far random
@@ -221,7 +221,7 @@ public class Trader {
         oldAction = action;                                      // save for later updating
 
         if (write){                                              // printing data for output tables
-            hist.addDecisions((int)Bt, BookInfo[2], (int)(At - Bt), action);
+            addDecisions((int) Bt, BookInfo[2], (int) (At - Bt), action);
         }
 
         if (action == end || action == 2 * end + 1) {isTraded = true;}     // isTraded set to true if submitting MOs
@@ -375,7 +375,28 @@ public class Trader {
             }
      }
 
+    public void addDecisions(int b, int lb, int s, int ac){
+        decisions.add(new Decision(b, lb, s, ac));
+    }
 
+    public void printDepthFrequency(){
+        try{
+            String outputFileName = folder + "frequency.csv";
+            FileWriter writer = new FileWriter(outputFileName, true);
+            for (Decision d:decisions){
+                writer.write(d.printDecision());
+            }
+            writer.close();
+        }
+        catch (Exception e){
+            e.printStackTrace();
+            System.exit(1);
+        }
+    }
+
+    public void resetDecisionHistory(){
+        decisions = new Vector<Decision>();
+    }
 
     // getters
     public int getTraderID(){
