@@ -21,7 +21,7 @@ public class ReducedStatesTest {
         double lambdaArrival = 0.1;             // arrival frequency, same for all
         double ReturnFrequencyHFT = 1;          // returning frequency of HFT
         double ReturnFrequencyNonHFT = 0.4;     // returning frequency of NonHFT
-        String folder = "C:\\Users\\Jakub\\Documents\\School\\SFI\\_paper1 HFT, MM, rebates and market quality\\Matlab Analysis\\";
+        String folder = "D:\\_paper1 HFT, MM, rebates and market quality\\Matlab Analysis\\";
 
 
 
@@ -135,11 +135,10 @@ public class ReducedStatesTest {
                 FprivateValues, sigma, tickSize, FVplus, header, book, traders, h, trader, outputNameStatsData,
                 outputNameTransactions, outputNameBookData);
         // gettting to equilibrium ballpark
-        int nEvents = 10000000;         // number of events
-        boolean write = true;         // write output in this SingleRun?
+        int nEvents = 10000000;        // number of events
+        boolean write = false;         // write output in this SingleRun?
         boolean purge = false;         // purge in this SingleRun?
         boolean nReset = false;        // reset n in this SingleRun?
-        trader.setWrite(true);
 
         double[] RunOutcome =
                 sr.run(nEvents, nHFT, NewNonHFT, EventTime, FV, write,
