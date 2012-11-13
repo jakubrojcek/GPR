@@ -21,6 +21,7 @@ public class Trader {
     private long oldCode;               // oldCode holds old hash code for the last state in which he took action
     private byte oldAction;             // which action he took in the old state
     private float rho = 0.05f;          // trading "impatience" parameter
+    private double PriceFV;             // current fundamental value-> price at middle position
 
     static int TraderCount = 0;         // counting number of traders, gives traderID as well
     static int tradeCount = 0;          // counting number of trader
@@ -33,7 +34,6 @@ public class Trader {
     static Hashtable<Integer, Double[]> discountFactorS = new Hashtable<Integer, Double[]>();    // container for discount factors computed using tauS
     static int infoSize;                    // 2-bid, ask, 4-last price, direction, 6-depth at bid,ask, 8-depth off bid,ask
     static byte nP;                     // number of prices
-    static double PriceFV;              // current fundamental value-> price at 31st position
     static double tickSize;             // size of one tick
     static int LL;                      // Lowest  allowed limit order price.  LL + HL = nP-1 for allowed orders centered around E(v)
     static int HL;                      // Highest allowed limit order price
@@ -224,7 +224,13 @@ public class Trader {
             addDecisions((int) Bt, BookInfo[2], (int) (At - Bt), action);
         }
 
-        if (action == end || action == 2 * end + 1) {isTraded = true;}     // isTraded set to true if submitting MOs
+        if (action == end || action == 2 * end + 1) {
+            isTraded = true;                                    // isTraded set to true if submitting MOs
+            if (action == end && BookInfo[2] == 0 || action == 2 * end + 1 && BookInfo[3] == 0){
+                execution(priceFV, EventTime);
+            }
+        }
+
         return (action != 2 * end + 2) ? new PriceOrder(pricePosition, currentOrder) : null;
     }
 

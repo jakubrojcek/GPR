@@ -60,20 +60,27 @@ public class LOB_LinkedHashMap {
     public void FVup(double fv, double et){
         // (1) book shift, (2) 31+1, (3) currentPosition, (4) pricePosition
         positionShift++;
-        Set keys = book[0].keySet();
         //System.out.println("Keys to delete are " + keys);
-        while (! keys.isEmpty()){
+        Set keys = book[1].keySet();
+        while (! keys.isEmpty()){          // this part executes the SLOs against fringe
             int id = (Integer) keys.iterator().next();
-            if (!book[0].get(id).isBuyOrder()){     // Seller executed when FV moved up
-                //System.out.println("Seller executed when FV moved up");  TODO: check if OK, too often
+            if (! book[1].get(id).isBuyOrder()){
+                System.out.println("Seller executed when FV moved up"); // TODO: check if OK, too often
                 traders.get(id).execution(fv, et);
                 if (traderIDsNonHFT.contains(id)){
                     traderIDsNonHFT.remove(traderIDsNonHFT.indexOf(id));
                 } else if (traderIDsHFT.contains(id)){
                     traderIDsHFT.remove(traderIDsHFT.indexOf(id));
                 }
+                currentPosition.remove(id);
+                keys.remove(keys.iterator().next());
             }
-            currentPosition.remove(id);           // buyer falls off the grid
+        }
+
+        keys = book[0].keySet();
+        while (! keys.isEmpty()){                        // removing BLOs from the zero position
+            int id = (Integer) keys.iterator().next();
+            currentPosition.remove(id);
             keys.remove(keys.iterator().next());
         }
 
@@ -91,20 +98,27 @@ public class LOB_LinkedHashMap {
         // (1) book shift, (2) 31-1, (3) currentPosition, (4) pricePosition
         positionShift--;
 
-        Set keys = book[nPoints - 1].keySet();
+        Set keys = book[nPoints - 2].keySet();
         //System.out.println("Keys to delete are " + keys);
         while (! keys.isEmpty()){
             int id = (Integer) keys.iterator().next();
-            if (book[nPoints - 1].get(id).isBuyOrder()){ // Buyer executed when FV moved down
-                //System.out.println("Buyer executed when FV moved down");
+            if (book[nPoints - 2].get(id).isBuyOrder()){ // Buyer executed when FV moved down
+                System.out.println("Buyer executed when FV moved down");
                 traders.get(id).execution(fv, et);
                 if (traderIDsNonHFT.contains(id)){
                     traderIDsNonHFT.remove(traderIDsNonHFT.indexOf(id));
                 } else if (traderIDsHFT.contains(id)){
                     traderIDsHFT.remove(traderIDsHFT.indexOf(id));
                 }
+                currentPosition.remove(keys.iterator().next());
+                keys.remove(keys.iterator().next());
             }
-            currentPosition.remove(keys.iterator().next()); // seller falls off the grid
+        }
+
+        keys = book[nPoints - 1].keySet();
+        while (! keys.isEmpty()){                        // removing SLOs from the zero position
+            int id = (Integer) keys.iterator().next();
+            currentPosition.remove(id);
             keys.remove(keys.iterator().next());
         }
 
@@ -226,10 +240,13 @@ public class LOB_LinkedHashMap {
                 }else {
                     traderIDsNonHFT.remove(traderIDsNonHFT.indexOf(cpID));
                 }
-                traders.remove(oID);    //garbage collecting
+                traders.remove(oID);            //garbage collecting
                 traders.remove(cpID);
-            }else{
-                book[pos].put(oID, o);// put some number here
+            } else if (pos == nPoints - 1){     // if BMO executed against fringe
+                return;
+            }
+            else{
+                book[pos].put(oID, o);          // put some number here
                 currentPosition.put(oID, pos + positionShift);
                 if (traders.get(oID).getIsHFT()){
                     traderIDsHFT.add(oID);
@@ -254,7 +271,10 @@ public class LOB_LinkedHashMap {
                 }
                 traders.remove(oID);   // garbage collecting
                 traders.remove(cpID);
-            }else{
+            } else if (pos == 0){      // if SMO executed against fringe
+                return;
+            }
+            else{
                 book[pos].put(oID,o);// put some key number here
                 currentPosition.put(oID, pos + positionShift);
                 if (traders.get(oID).getIsHFT()){
