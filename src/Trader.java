@@ -21,7 +21,7 @@ public class Trader {
     private long oldCode;               // oldCode holds old hash code for the last state in which he took action
     private byte oldAction;             // which action he took in the old state
     private float rho = 0.05f;          // trading "impatience" parameter
-    private double PriceFV;             // current fundamental value-> price at middle position
+    private double PriceFV;             // current fundamental value-> price at middle position //TODO: should this be in the payoff?
 
     static int TraderCount = 0;         // counting number of traders, gives traderID as well
     static int tradeCount = 0;          // counting number of trader
@@ -238,7 +238,7 @@ public class Trader {
         double payoff;
         tradeCount++;
         if (oldAction < end){ // sell LO executed
-            payoff = (oldAction - breakPoint) * tickSize - (fundamentalValue - PriceFV) - privateValue;
+            payoff = (oldAction - breakPoint) * tickSize - (fundamentalValue - PriceFV) - privateValue; //TODO: put priceFV
             //System.out.println("seller oldAction = " + oldAction + " payoff: " + payoff);
         } else {              // buy LO executed
             payoff = (breakPoint - (oldAction - end - 1)) * tickSize + privateValue +
@@ -308,7 +308,7 @@ public class Trader {
             if (isReturning){
                 x = (BookSizes[P] > 0) ? 2 : 1;
             }
-            System.out.println(Bt + " : " + lBt + " ; " + At + " : " + lAt);
+            //System.out.println(Bt + " : " + lBt + " ; " + At + " : " + lAt);
             /*Long code = (Bt<<50) + (At<<44) + (lBt<<40) + (lAt<<36) + (dBt<<29) + (dSt<<22) + (Pt<<16) + (b<<15) +
                     + (P<<9) + (q<<5) + (x<<3) + (a<<1) + l;*/
             code = (Bt<<42) + (At<<37) + (lBt<<34) + (lAt<<31) + (dBt<<25) + (dSt<<19) + (Pt<<14) + (b<<13) +

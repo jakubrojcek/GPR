@@ -119,7 +119,7 @@ public class MultiplePayoff extends Payoff{
         }*/
 
         double alpha = (1.0/(1 + n[nIndex]));  // updating factor
-        //System.out.println(p[nIndex] - payoff + " before");
+        System.out.println(p[nIndex] - payoff + " before");
         p[nIndex] = (float) ((1 - alpha) * p[nIndex] +
                 + alpha * Math.exp( - rho * (et - EventTime)) * payoff);
     }

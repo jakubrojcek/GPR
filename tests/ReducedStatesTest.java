@@ -25,7 +25,7 @@ public class ReducedStatesTest {
 
 
 
-        int infoSize = 7;                       // 2-bid, ask, 4-last price, direction, 6-depth at bid,ask, 8-depth off bid,ask
+        int infoSize = 8;                       // 2-bid, ask, 4-last price, direction, 6-depth at bid,ask, 8-depth off bid,ask
         byte nP = 31;                           // number of prices tracked by the book
         int maxDepth = 7;                       // 0 to 7 which matter
         int FVpos = (int) nP/2;                 // position of the fundamental value
@@ -146,9 +146,9 @@ public class ReducedStatesTest {
         EventTime = RunOutcome[0];
         FV = RunOutcome[1];
 
-        nEvents = 200000000;        // number of events
+        nEvents = 1000000000;        // number of events
         write = false;              // write output in this SingleRun?
-        purge = false;              // purge in this SingleRun?
+        purge = true;              // purge in this SingleRun?
         nReset = true;              // reset n in this SingleRun?
         trader.setPrTremble(0.05);
 
@@ -158,7 +158,7 @@ public class ReducedStatesTest {
         EventTime = RunOutcome[0];
         FV = RunOutcome[1];
 
-        nEvents = 200000000;       // number of events
+        nEvents = 1000000000;       // number of events
         write = false;              // write output in this SingleRun?
         purge = false;              // purge in this SingleRun?
         nReset = true;              // reset n in this SingleRun?
