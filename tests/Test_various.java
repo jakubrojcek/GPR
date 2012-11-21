@@ -158,9 +158,9 @@ public class Test_various {
 //        book.printBook();
 //        System.out.println("running time = " + (timeStamp2 - timeStamp1));
 
-        long A;
+        /*long A;
         A = -4/3;
-        System.out.println(A);
+        System.out.println(A);*/
 
         /*ArrayList<Byte> IDs = new ArrayList<Byte>(1);
         Byte a = 5;
@@ -169,17 +169,23 @@ public class Test_various {
         IDs.add(b);
         System.out.println(IDs.indexOf(a));
 */
-/*        FileWriter fw;
+        FileWriter fw;
         try{
-            String outputFileName =  "C:\\Users\\Jakub\\Documents\\School\\SFI\\_paper1 HFT, MM, rebates and market quality\\Output.csv";
+            String outputFileName =  "D:\\_paper1 HFT, MM, rebates and market quality\\Matlab Analysis\\blabla.csv";
             fw = new FileWriter(outputFileName);
-            fw.write("hello Writer");
+            short[] n = {2,3,4};
+            int sz = n.length;
+            String s = new String();
+            for (int i = 0; i < sz; i++){
+                s = s + n[i] + ";";
+            }
+            fw.write(s + "\r");
             fw.close();
         }
         catch (Exception e) {
             e.printStackTrace();
             System.exit(1);
-        }*/
+        }
 
         /*
         // order 1

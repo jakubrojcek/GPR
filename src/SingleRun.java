@@ -87,11 +87,11 @@ public class SingleRun {
 
             // number of all agents to trade
 
-            double prob1 = (double) nHFT / nAll * 0.8;
-            double prob2 = (double) NewNonHFT / nAll * 0.8;
-            double prob3 = (double) ReturningHFT / nAll * 0.8;
-            double prob4 = (double) ReturningNonHFT / nAll * 0.8;
-            double prob5 = 0.2;     //TODO: change to 0.08 to match GPR 2005
+            double prob1 = (double) nHFT / nAll * 0.92;
+            double prob2 = (double) NewNonHFT / nAll * 0.92;
+            double prob3 = (double) ReturningHFT / nAll * 0.92;
+            double prob4 = (double) ReturningNonHFT / nAll * 0.92;
+            double prob5 = 0.08;
 
             // for now prob of change in FV is equal to 0
 
@@ -201,12 +201,12 @@ public class SingleRun {
                 h.resetHistory();
                 trader.resetDecisionHistory();
             }   //where events happen
-            if (i % 50000000 == 0) {
+            if (i % 300000000 == 0) {
                 if (purge){
                     trader.purge();
                 }
                 if (nReset){
-                    trader.nReset((byte)5, (short) 30);
+                    trader.nReset((byte)3, (short) 10);
                 }
             }
         }

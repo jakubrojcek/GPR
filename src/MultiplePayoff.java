@@ -119,7 +119,7 @@ public class MultiplePayoff extends Payoff{
         }*/
 
         double alpha = (1.0/(1 + n[nIndex]));  // updating factor
-        System.out.println(p[nIndex] - payoff + " before");
+        //System.out.println(payoff - p[nIndex] + " before");
         p[nIndex] = (float) ((1 - alpha) * p[nIndex] +
                 + alpha * Math.exp( - rho * (et - EventTime)) * payoff);
     }
@@ -145,6 +145,14 @@ public class MultiplePayoff extends Payoff{
         for (int i = 0; i < len; i++){
             n[i] = (short) Math.min(n[i], nReset); //TODO: check if comparing short and byte OK
         }
+    }
+
+    public float[] getP() {
+        return p;
+    }
+
+    public short [] getNarray(){
+        return n;
     }
 
     public float getMax(){

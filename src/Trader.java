@@ -320,14 +320,26 @@ public class Trader {
 
     public void printStatesDensity(double et){
         Payoff pay;
+        short [] n;
+        float [] p;
         try{
             String outputFileName = folder + "occurrences.csv";
+            String outputFileName2 = folder + "payoffs.csv";
             FileWriter writer = new FileWriter(outputFileName, true);
+            FileWriter writer2 = new FileWriter(outputFileName2, true);
             Iterator keys = Payoffs.keySet().iterator();
             while (keys.hasNext()){
                 pay =  Payoffs.get(keys.next());
                 if (pay instanceof MultiplePayoff){
                     writer.write(((MultiplePayoff)pay).getN() + ";" + "\r");
+                    n = ((MultiplePayoff)pay).getNarray();
+                    p = ((MultiplePayoff)pay).getP();
+                    int sz = n.length;
+                    String s = new String();
+                    for (int i = 0; i < sz; i++){
+                        s = s + n[i] + ";" + p[i] + ";";
+                    }
+                    writer2.write(s + "\r");
                 }
                /* if (pay instanceof SinglePayoff){
                     writer.write(et - ((SinglePayoff) pay).getEventTime() + ";" + "\r");
