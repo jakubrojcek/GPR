@@ -49,6 +49,7 @@ public class MultiplePayoff extends Payoff{
         }
     }
 
+    // update old state upon return of a trader whose previous state is captured in this MultiplePayoff
     public void updateMax(float[] payoffs, double et){ // overloading update method MP happens more times
         for (byte i = 0; i < nPayoffs; i++){
             if (payoffs[i] > max){
@@ -109,7 +110,7 @@ public class MultiplePayoff extends Payoff{
         fromPreviousRound = false;
     }
 
-
+    // updates payoff from the oldAction upon execution
     public void update(byte oldAction, double payoff, double et){
         // after the new belief is computed, it comes back to payoff vector, max, maxIndex is updated
         nIndex = Actions.indexOf(oldAction);
@@ -118,10 +119,10 @@ public class MultiplePayoff extends Payoff{
             System.out.println("occurred " + n[nIndex] + " count " +recursiveStatesCount);
         }*/
 
-        double alpha = (1.0/(1 + n[nIndex]));  // updating factor
+        double alpha = (1.0/(1 + n[nIndex]));  // updating factor  // TODO: check if not zero
         //System.out.println(payoff - p[nIndex] + " before");
         p[nIndex] = (float) ((1 - alpha) * p[nIndex] +
-                + alpha * Math.exp( - rho * (et - EventTime)) * payoff);
+                + alpha * Math.exp( - rho * (et - EventTime)) * payoff); // TODO: check the values produced
     }
 
     public int getN(){

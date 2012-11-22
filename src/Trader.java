@@ -2,8 +2,6 @@ import java.io.FileWriter;
 import java.util.*;
 import java.util.Vector;
 
-import static java.lang.System.*;
-
 /**
  * Created by IntelliJ IDEA.
  * User: Jakub
@@ -47,6 +45,8 @@ public class Trader {
     static boolean write = false;              // to write things in trader?
     static String folder;
     static Vector<Decision> decisions;
+    static int [] bookSizesHistory;
+    static int[] previousTraderAction;
 
     //private double CFEE;              // cancellation fee
 
@@ -64,6 +64,7 @@ public class Trader {
 
     }
 
+    // constructor of the main trader- loads parameters from main
     public Trader(int is, double[] tb, double[] ts, byte numberPrices, int FVpos, double tickS, double rFast, double rSlow,
                   int ll, int hl, int e, int md, int bp, int hti, double pt, String f){
         infoSize = is;
@@ -92,6 +93,9 @@ public class Trader {
         prTremble = pt;
         folder = f;
         decisions = new Vector<Decision>();
+        bookSizesHistory = new int[2 * nP + 1];
+        bookSizesHistory[0] = 0;
+        previousTraderAction = new int[3];
     }
 
     // decision about the price is made here, so far random
@@ -105,7 +109,7 @@ public class Trader {
         int pricePosition;             // pricePosition at which to submit
         boolean buyOrder = false;      // buy order?
 
-        long Bt = BookInfo[0];         // Best Bid position
+        long Bt = BookInfo[0];         // Best Bid position  // TODO: change to int
         long At = BookInfo[1];         // Best Ask position
         int P = Priorities.get(nP);    // pricePosition position in previous action
         int q = Priorities.get((byte)P);     // priority of the order at P
@@ -221,19 +225,30 @@ public class Trader {
         oldAction = action;                                      // save for later updating
 
         if (write){                                              // printing data for output tables
-            addDecisions((int) Bt, BookInfo[2], (int) (At - Bt), action);
+            addDecisions(BookInfo, (int) action, previousTraderAction);
+            previousTraderAction[0] = (int)action;
+            previousTraderAction[1] = (int)Bt;
+            previousTraderAction[2] = (int)At;
+
+            bookSizesHistory[0]++;
+            int sz = BookSizes.length;
+            for (int i = 0; i < sz; i++){
+                if (BookSizes[i] < 0){
+                    bookSizesHistory[i + 1] = bookSizesHistory[i + 1] + BookSizes[i];
+                } else {
+                    bookSizesHistory[nP + i + 1] = bookSizesHistory[nP + i + 1] + BookSizes[i];
+                }
+            }
         }
 
         if (action == end || action == 2 * end + 1) {
             isTraded = true;                                    // isTraded set to true if submitting MOs
-            if (action == end && BookInfo[2] == 0 || action == 2 * end + 1 && BookInfo[3] == 0){
-                execution(priceFV, EventTime);
-            }
         }
 
         return (action != 2 * end + 2) ? new PriceOrder(pricePosition, currentOrder) : null;
     }
 
+    // used to update payoff of action taken in a state upon execution
     public void execution(double fundamentalValue, double EventTime){
         double payoff;
         tradeCount++;
@@ -252,10 +267,13 @@ public class Trader {
             } else {
                 ((MultiplePayoff) pay).update(oldAction, payoff, EventTime);
             }
+        } else {
+            //TODO: debug here? if not necessary, delete this else statement
         }
         isTraded = true;
     }
 
+    // Hash code computed dependent on various Information Size (2, 4, 6, 7, 8)
     public Long HashCode(Hashtable<Byte, Byte> Priorities, int[] BookSizes, int[] BookInfo){
         Long code = (long) 0;
         if (infoSize == 2){
@@ -266,6 +284,17 @@ public class Trader {
             int x = 0;                     // order was buy(2) or sell(1) or no order (0)
             int a = pv;                    // private value zero(0), negative (1), positive (2)
             code = (Bt<<17) + (At<<12) + (P<<7) + (q<<4) + (x<<2) + a;
+
+        } else if (infoSize == 6) {
+            long Bt = BookInfo[0];         // Best Bid position
+            long At = BookInfo[1];         // Best Ask position
+            long lBt = BookInfo[2] / 3;        // depth at best Bid TODO: needed?
+            long lAt = BookInfo[3] / 3;        // depth at best Ask TODO: needed?
+            int P = Priorities.get(nP);    // pricePosition position in previous action
+            int q = Priorities.get((byte)P);     // priority of the order at P
+            int x = 0;                     // order was buy(2) or sell(1) or no order (0)
+            int a = pv;                    // private value zero(0), negative (1), positive (2)
+            code = (Bt<<21) + (At<<16) + (lBt<<14) + (lAt<<12) + (P<<7) + (q<<4) + (x<<2) + a;
 
         } else if (infoSize == 7){
             long Bt = BookInfo[0];         // Best Bid position
@@ -318,6 +347,7 @@ public class Trader {
         return code;
     }
 
+    // used to print the data analysed for convergence- occurrences os states, payoffs, time since last hit
     public void printStatesDensity(double et){
         Payoff pay;
         short [] n;
@@ -341,20 +371,46 @@ public class Trader {
                     }
                     writer2.write(s + "\r");
                 }
+
                /* if (pay instanceof SinglePayoff){
                     writer.write(et - ((SinglePayoff) pay).getEventTime() + ";" + "\r");
                 }*/
             }
             writer.close();
+            writer2.close();
         }
         catch (Exception e){
             e.printStackTrace();
             System.exit(1);
         }
-
-
     }
 
+    // prints Histogram of bookSizes-> so the book into a csv file. The first var is the actual FV
+    public void printHistogram(){
+        try{
+            String outputFileName3 = folder + "histogram.csv";
+            FileWriter writer3 = new FileWriter(outputFileName3, true);
+            int sz = bookSizesHistory.length;
+            writer3.write(bookSizesHistory[0] + ";");
+            for (int i = 1; i < sz; i++){
+                writer3.write((double)bookSizesHistory[i]/(double)bookSizesHistory[0] + ";");
+            }
+            writer3.write("\r");
+            writer3.close();
+        }
+        catch (Exception e){
+            e.printStackTrace();
+            System.exit(1);
+        }
+    }
+
+    // resets the history of bookSizes data used for histogram
+    public void resetHistogram(){
+        bookSizesHistory = new int[2 * nP + 1];
+        bookSizesHistory[0] = 0;
+    }
+
+    // deletes the Payoff of a state which has fromPreviousRound set to true
     public void purge(){
         Long code;
         Payoff pay;
@@ -373,6 +429,7 @@ public class Trader {
         System.out.println("all: " + all + " deleted: " + deleted);
     }
 
+    // resets n in Payoffs, sets purge indicator to true-> true until next time the state is hit
     public void nReset(byte n, short m){
         Long code;
         Payoff pay;
@@ -393,13 +450,15 @@ public class Trader {
             }
      }
 
-    public void addDecisions(int b, int lb, int s, int ac){
-        decisions.add(new Decision(b, lb, s, ac));
+    // adds decisions data collected from actions in different states
+    public void addDecisions(int[] bi, int ac , int[] prevTrAc){
+        decisions.add(new Decision(bi, ac, prevTrAc));
     }
 
-    public void printDepthFrequency(){
+    // prints decisions data collected from actions in different states
+    public void printDecisions(){
         try{
-            String outputFileName = folder + "frequency.csv";
+            String outputFileName = folder + "decisions.csv";
             FileWriter writer = new FileWriter(outputFileName, true);
             for (Decision d:decisions){
                 writer.write(d.printDecision());
@@ -412,6 +471,7 @@ public class Trader {
         }
     }
 
+    // resets Decision history, memory management
     public void resetDecisionHistory(){
         decisions = new Vector<Decision>();
     }

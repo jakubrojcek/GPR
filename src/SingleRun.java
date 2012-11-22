@@ -1,5 +1,4 @@
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 
 /**
  * Created with IntelliJ IDEA.
@@ -195,11 +194,14 @@ public class SingleRun {
                 if (write){
                     h.printTransactions(header, outputNameTransactions);
                     h.printBookData(header, outputNameBookData);
-                    trader.printDepthFrequency();
+                    trader.printDecisions();
+                    trader.printHistogram();
+                    trader.resetDecisionHistory();
+                    trader.resetHistogram();
                 }
                 h.printStatisticsData(header, outputNameStatsData);
                 h.resetHistory();
-                trader.resetDecisionHistory();
+
             }   //where events happen
             if (i % 300000000 == 0) {
                 if (purge){

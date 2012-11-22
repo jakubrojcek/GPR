@@ -245,7 +245,7 @@ public class LOB_LinkedHashMap {
                 }
                 traders.remove(oID);            //garbage collecting
                 traders.remove(cpID);
-            } else if (pos == nPoints - 1){     // if BMO executed against fringe
+            } else if (pos == nPoints - 1){     // if BMO executed against fringe, just continue
 
             }
             else{
@@ -274,7 +274,7 @@ public class LOB_LinkedHashMap {
                 }
                 traders.remove(oID);   // garbage collecting
                 traders.remove(cpID);
-            } else if (pos == 0){      // if SMO executed against fringe
+            } else if (pos == 0){      // if SMO executed against fringe, just continue
 
             }
             else{

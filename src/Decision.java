@@ -7,18 +7,27 @@
  */
 public class Decision {
     private int Bt;
+    private int At;
     private int lBt;
-    private int spread;
+    private int lAt;
     private int action;
+    private int previousAction;
+    private int previousBt;
+    private int previousAt;
 
-    public Decision(int b, int lb, int s, int a){
-        this.Bt = b;
-        this.lBt = lb;
-        this.spread = s;
-        this.action = a;
+    public Decision(int[] bi, int ac, int[] prevTrAc){
+        this.Bt = bi[0];
+        this.At = bi[1];
+        this.lBt = bi[2];
+        this.lAt = bi[3];
+        this.action = ac;
+        this.previousAction = prevTrAc[0];
+        this.previousBt = prevTrAc[1];
+        this.previousAt = prevTrAc[2];
     }
 
     public String printDecision(){
-        return (Bt + ";" + lBt + ";" + spread + ";" + action + ";" + "\r");
+        return (Bt + ";" + At + ";" + lBt + ";" + lAt + ";" + action + ";" +
+                + previousAction + ";" + previousBt + ";" + previousAt + ";" + "\r");
     }
 }
