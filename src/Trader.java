@@ -44,7 +44,7 @@ public class Trader {
     static double prTremble = 0.0;      // probability of trembling
     static boolean write = false;              // to write things in trader?
     static String folder;
-    static Vector<Decision> decisions;
+    static Decision decision;
     static int [] bookSizesHistory;
     static int[] previousTraderAction;
 
@@ -92,7 +92,7 @@ public class Trader {
         tickSize = tickS;
         prTremble = pt;
         folder = f;
-        decisions = new Vector<Decision>();
+        decision = new Decision(numberPrices, FVpos, e, bp);
         bookSizesHistory = new int[2 * nP + 1];
         bookSizesHistory[0] = 0;
         previousTraderAction = new int[3];
@@ -105,15 +105,15 @@ public class Trader {
         // positions , priorities table, & isReturning? 1 if yes, last transaction pricePosition
         // signed sizes vector, (best Bid, Ask), (depth at B, A), (depth Buy, Sell), (last pricePosition, WasBuy)
         // event time
-        PriceFV = priceFV;             // get price of the fundamental value = fundamental value
-        int pricePosition;             // pricePosition at which to submit
-        boolean buyOrder = false;      // buy order?
+        PriceFV = priceFV;                  // get price of the fundamental value = fundamental value
+        int pricePosition;                  // pricePosition at which to submit
+        boolean buyOrder = false;           // buy order?
 
-        long Bt = BookInfo[0];         // Best Bid position  // TODO: change to int
-        long At = BookInfo[1];         // Best Ask position
-        int P = Priorities.get(nP);    // pricePosition position in previous action
-        int q = Priorities.get((byte)P);     // priority of the order at P
-        int x = 0;                     // order was buy(2) or sell(1) or no order (0)
+        long Bt = BookInfo[0];              // Best Bid position
+        long At = BookInfo[1];              // Best Ask position
+        int P = Priorities.get(nP);         // pricePosition position in previous action
+        int q = Priorities.get((byte)P);    // priority of the order at P
+        int x = 0;                          // order was buy(2) or sell(1) or no order (0)
         if (isReturning){
             x = (BookSizes[P] > 0) ? 2 : 1;
         }
@@ -225,11 +225,12 @@ public class Trader {
         oldAction = action;                                      // save for later updating
 
         if (write){                                              // printing data for output tables
-            addDecisions(BookInfo, (int) action, previousTraderAction);
+            // tables I, V
+            decision.addDecision(BookInfo, (int) action, previousTraderAction);
             previousTraderAction[0] = (int)action;
             previousTraderAction[1] = (int)Bt;
             previousTraderAction[2] = (int)At;
-
+            // histogram
             bookSizesHistory[0]++;
             int sz = BookSizes.length;
             for (int i = 0; i < sz; i++){
@@ -253,7 +254,7 @@ public class Trader {
         double payoff;
         tradeCount++;
         if (oldAction < end){ // sell LO executed
-            payoff = (oldAction - breakPoint) * tickSize - (fundamentalValue - PriceFV) - privateValue; //TODO: put priceFV
+            payoff = (oldAction - breakPoint) * tickSize - (fundamentalValue - PriceFV) - privateValue;
             //System.out.println("seller oldAction = " + oldAction + " payoff: " + payoff);
         } else {              // buy LO executed
             payoff = (breakPoint - (oldAction - end - 1)) * tickSize + privateValue +
@@ -267,8 +268,6 @@ public class Trader {
             } else {
                 ((MultiplePayoff) pay).update(oldAction, payoff, EventTime);
             }
-        } else {
-            //TODO: debug here? if not necessary, delete this else statement
         }
         isTraded = true;
     }
@@ -277,39 +276,39 @@ public class Trader {
     public Long HashCode(Hashtable<Byte, Byte> Priorities, int[] BookSizes, int[] BookInfo){
         Long code = (long) 0;
         if (infoSize == 2){
-            long Bt = BookInfo[0];         // Best Bid position
-            long At = BookInfo[1];         // Best Ask position
-            int P = Priorities.get(nP);    // pricePosition position in previous action
-            int q = Priorities.get((byte)P);     // priority of the order at P
-            int x = 0;                     // order was buy(2) or sell(1) or no order (0)
-            int a = pv;                    // private value zero(0), negative (1), positive (2)
+            long Bt = BookInfo[0];                  // Best Bid position
+            long At = BookInfo[1];                  // Best Ask position
+            int P = Priorities.get(nP);             // pricePosition position in previous action
+            int q = Priorities.get((byte)P);        // priority of the order at P
+            int x = 0;                              // order was buy(2) or sell(1) or no order (0)
+            int a = pv;                             // private value zero(0), negative (1), positive (2)
             code = (Bt<<17) + (At<<12) + (P<<7) + (q<<4) + (x<<2) + a;
 
         } else if (infoSize == 6) {
-            long Bt = BookInfo[0];         // Best Bid position
-            long At = BookInfo[1];         // Best Ask position
-            long lBt = BookInfo[2] / 3;        // depth at best Bid TODO: needed?
-            long lAt = BookInfo[3] / 3;        // depth at best Ask TODO: needed?
-            int P = Priorities.get(nP);    // pricePosition position in previous action
-            int q = Priorities.get((byte)P);     // priority of the order at P
-            int x = 0;                     // order was buy(2) or sell(1) or no order (0)
-            int a = pv;                    // private value zero(0), negative (1), positive (2)
+            long Bt = BookInfo[0];                  // Best Bid position
+            long At = BookInfo[1];                  // Best Ask position
+            long lBt = BookInfo[2] / 3;             // depth at best Bid
+            long lAt = BookInfo[3] / 3;             // depth at best Ask
+            int P = Priorities.get(nP);             // pricePosition position in previous action
+            int q = Priorities.get((byte)P);        // priority of the order at P
+            int x = 0;                              // order was buy(2) or sell(1) or no order (0)
+            int a = pv;                             // private value zero(0), negative (1), positive (2)
             code = (Bt<<21) + (At<<16) + (lBt<<14) + (lAt<<12) + (P<<7) + (q<<4) + (x<<2) + a;
 
         } else if (infoSize == 7){
-            long Bt = BookInfo[0];         // Best Bid position
-            long At = BookInfo[1];         // Best Ask position
-            long lBt = BookInfo[2] / 3;        // depth at best Bid TODO: needed?
-            long lAt = BookInfo[3] / 3;        // depth at best Ask TODO: needed?
-            long dBt = (BookInfo[4] / maxDepth);       // depth at buy    TODO: discretize
-            int dSt = (BookInfo[5] / maxDepth);        // depth at sell   TODO: discretize
-            int Pt = BookInfo[6];          // last transaction pricePosition position // TODO:needed?
-            int b = BookInfo[7];           // 1 if last transaction buy, 0 if sell
-            int P = Priorities.get(nP);    // pricePosition position in previous action
-            int q = Priorities.get((byte)P);     // priority of the order at P
-            int x = 0;                     // order was buy(2) or sell(1) or no order (0) //TODO: if 0, then P and q not needed
-            int a = pv;                    // private value zero(0), negative (1), positive (2)
-            int l = (isHFT) ? 1 : 0;       // arrival frequency slow (0), fast (1)
+            long Bt = BookInfo[0];                  // Best Bid position
+            long At = BookInfo[1];                  // Best Ask position
+            long lBt = BookInfo[2] / 3;             // depth at best Bid
+            long lAt = BookInfo[3] / 3;             // depth at best Ask
+            long dBt = (BookInfo[4] / maxDepth);    // depth at buy
+            int dSt = (BookInfo[5] / maxDepth);     // depth at sell
+            int Pt = BookInfo[6];                   // last transaction pricePosition position
+            int b = BookInfo[7];                    // 1 if last transaction buy, 0 if sell
+            int P = Priorities.get(nP);             // pricePosition position in previous action
+            int q = Priorities.get((byte)P);        // priority of the order at P
+            int x = 0;                              // order was buy(2) or sell(1) or no order (0)
+            int a = pv;                             // private value zero(0), negative (1), positive (2)
+            int l = (isHFT) ? 1 : 0;                // arrival frequency slow (0), fast (1)
             if (isReturning){
                 x = (BookSizes[P] > 0) ? 2 : 1;
             }
@@ -321,19 +320,19 @@ public class Trader {
 
         }
         else if (infoSize == 8){
-            long Bt = BookInfo[0];         // Best Bid position
-            long At = BookInfo[1];         // Best Ask position
-            long lBt = BookInfo[2];        // depth at best Bid TODO: needed?
-            long lAt = BookInfo[3];        // depth at best Ask TODO: needed?
-            long dBt  = BookInfo[4];       // depth at buy    TODO: discretize
-            int dSt = BookInfo[5];         // depth at sell   TODO: discretize
-            int Pt = BookInfo[6];          // last transaction pricePosition position // TODO:needed?
-            int b = BookInfo[7];           // 1 if last transaction buy, 0 if sell
-            int P = Priorities.get(nP);    // pricePosition position in previous action
-            int q = Priorities.get((byte)P);     // priority of the order at P
-            int x = 0;                     // order was buy(2) or sell(1) or no order (0)
-            int a = pv;                    // private value zero(0), negative (1), positive (2)
-            int l = (isHFT) ? 1 : 0;       // arrival frequency slow (0), fast (1)
+            long Bt = BookInfo[0];              // Best Bid position
+            long At = BookInfo[1];              // Best Ask position
+            long lBt = BookInfo[2];             // depth at best Bid
+            long lAt = BookInfo[3];             // depth at best Ask
+            long dBt  = BookInfo[4];            // depth at buy
+            int dSt = BookInfo[5];              // depth at sell
+            int Pt = BookInfo[6];               // last transaction pricePosition position
+            int b = BookInfo[7];                // 1 if last transaction buy, 0 if sell
+            int P = Priorities.get(nP);         // pricePosition position in previous action
+            int q = Priorities.get((byte)P);    // priority of the order at P
+            int x = 0;                          // order was buy(2) or sell(1) or no order (0)
+            int a = pv;                         // private value zero(0), negative (1), positive (2)
+            int l = (isHFT) ? 1 : 0;            // arrival frequency slow (0), fast (1)
             if (isReturning){
                 x = (BookSizes[P] > 0) ? 2 : 1;
             }
@@ -450,19 +449,13 @@ public class Trader {
             }
      }
 
-    // adds decisions data collected from actions in different states
-    public void addDecisions(int[] bi, int ac , int[] prevTrAc){
-        decisions.add(new Decision(bi, ac, prevTrAc));
-    }
 
     // prints decisions data collected from actions in different states
     public void printDecisions(){
         try{
             String outputFileName = folder + "decisions.csv";
             FileWriter writer = new FileWriter(outputFileName, true);
-            for (Decision d:decisions){
-                writer.write(d.printDecision());
-            }
+            writer.write(decision.printDecision());
             writer.close();
         }
         catch (Exception e){
@@ -473,7 +466,7 @@ public class Trader {
 
     // resets Decision history, memory management
     public void resetDecisionHistory(){
-        decisions = new Vector<Decision>();
+        decision = new Decision(nP, fvPos, end, breakPoint);
     }
 
     // getters

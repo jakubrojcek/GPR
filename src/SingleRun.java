@@ -160,7 +160,7 @@ public class SingleRun {
                 if (PO != null){
                     book.transactionRule(PO.getPrice() , PO.getCurrentOrder());
                 } else {
-                    book.tryCancel(ID);    //TODO: test
+                    book.tryCancel(ID);
                 }
 
             } else if (rn < x4){                   // Returning nonHFT

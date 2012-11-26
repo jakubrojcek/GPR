@@ -30,10 +30,9 @@ public class LOB_LinkedHashMap {
     // traderID, position of price + positionShift
 
 
-    LinkedHashMap<Integer, Order>[] book; // price position and orders // TODO: to byte later
+    LinkedHashMap<Integer, Order>[] book; // price position and orders
     History hist;
     HashMap<Integer, Trader> traders;
-
 
     public LOB_LinkedHashMap(double fv, int FVpos, int md, int e, double ts, byte nP, History h, HashMap<Integer, Trader> t){
         hist = h;
