@@ -109,71 +109,84 @@ public class Decision {
         } else if (prevTrAc[0] > e && prevTrAc[0] < (2 * e + 2)){  // BLO previously submitted
             if ((prevTrAc[0] - (e + 1)) < prevTrAc[1]){          // BelowBLO previously submitted
                 counts[51]++;
-                if (ac == 2 * e + 1){                            // BMO
-                    counts[33]++;
-                } else if (ac - (e + 1) < bi[0]){                 // BelowBLO
-                    counts[36]++;
-                } else if (ac - (e + 1) == bi[0]){                // AtBLO
-                    counts[35]++;
-                } else if (ac - (e + 1) > bi[0] && ac < 2 * e + 2){  // AggBLO
-                    counts[34]++;
+                if (ac > e && ac < 2 * e + 2){
+                    if (ac == 2 * e + 1){                            // BMO
+                        counts[33]++;
+                    } else if (ac - (e + 1) < bi[0]){                 // BelowBLO
+                        counts[36]++;
+                    } else if (ac - (e + 1) == bi[0]){                // AtBLO
+                        counts[35]++;
+                    } else if (ac - (e + 1) > bi[0]){  // AggBLO
+                        counts[34]++;
+                    }
                 }
+
             } else if (prevTrAc[0] -(e + 1) == prevTrAc[1]){     // AtBLO previously submitted
                 counts[49]++;
-                if (ac == 2 * e + 1){                   // BMO
-                    counts[25]++;
-                } else if (ac - (e + 1) < bi[0]){        // BelowBLO
-                    counts[28]++;
-                } else if (ac - (e + 1) == bi[0]){       // AtBLO
-                    counts[27]++;
-                } else if (ac - (e + 1)> bi[0] && ac < 2 * e + 2) {  // AggBLO
-                    counts[26]++;
+                if (ac > e && ac < 2 * e + 2){
+                    if (ac == 2 * e + 1){                            // BMO
+                        counts[25]++;
+                    } else if (ac - (e + 1) < bi[0]){                 // BelowBLO
+                        counts[28]++;
+                    } else if (ac - (e + 1) == bi[0]){                // AtBLO
+                        counts[27]++;
+                    } else if (ac - (e + 1) > bi[0]){  // AggBLO
+                        counts[26]++;
+                    }
                 }
             } else {                                             // AggBLO previously submitted
                 counts[47]++;
-                if (ac == 2 * e + 1){                   // BMO
-                    counts[17]++;
-                } else if (ac - (e + 1) < bi[0]){        // BelowBLO
-                    counts[20]++;
-                } else if (ac - (e + 1) == bi[0]){       // AtBLO
-                    counts[19]++;
-                } else if (ac - (e + 1) > bi[0] && ac < 2 * e + 2){                                // AggBLO
-                    counts[18]++;
+                if (ac > e && ac < 2 * e + 2){
+                    if (ac == 2 * e + 1){                            // BMO
+                        counts[17]++;
+                    } else if (ac - (e + 1) < bi[0]){                 // BelowBLO
+                        counts[20]++;
+                    } else if (ac - (e + 1) == bi[0]){                // AtBLO
+                        counts[19]++;
+                    } else if (ac - (e + 1) > bi[0]){  // AggBLO
+                        counts[18]++;
+                    }
                 }
             }
         } else if (prevTrAc[0] < e){                             // SLO previously submitted
             if (prevTrAc[0] > prevTrAc[2]){                      // AboveSLO previously submitted
                 counts[52]++;
-                if (ac == 2 * e + 1){                   // BMO
-                    counts[37]++;
-                } else if (ac - (e + 1) < bi[0]){        // BelowBLO
-                    counts[40]++;
-                } else if (ac - (e + 1) == bi[0]){       // AtBLO
-                    counts[39]++;
-                } else  if (ac - (e + 1) > bi[0] && ac < 2 * e + 2){                                // AggBLO
-                    counts[38]++;
+                if (ac > e && ac < 2 * e + 2){
+                    if (ac == 2 * e + 1){                            // BMO
+                        counts[37]++;
+                    } else if (ac - (e + 1) < bi[0]){                 // BelowBLO
+                        counts[40]++;
+                    } else if (ac - (e + 1) == bi[0]){                // AtBLO
+                        counts[39]++;
+                    } else if (ac - (e + 1) > bi[0]){  // AggBLO
+                        counts[38]++;
+                    }
                 }
             } else if (prevTrAc[0] == prevTrAc[2]){              // AtSLO previously submitted
                 counts[50]++;
-                if (ac == 2 * e + 1){                   // BMO
-                    counts[29]++;
-                } else if (ac - (e + 1) < bi[0]){        // BelowBLO
-                    counts[32]++;
-                } else if (ac - (e + 1) == bi[0]){       // AtBLO
-                    counts[31]++;
-                } else  if (ac - (e + 1) > bi[0] && ac < 2 * e + 2){                                // AggBLO
-                    counts[30]++;
+                if (ac > e && ac < 2 * e + 2){
+                    if (ac == 2 * e + 1){                            // BMO
+                        counts[29]++;
+                    } else if (ac - (e + 1) < bi[0]){                 // BelowBLO
+                        counts[32]++;
+                    } else if (ac - (e + 1) == bi[0]){                // AtBLO
+                        counts[31]++;
+                    } else if (ac - (e + 1) > bi[0]){  // AggBLO
+                        counts[30]++;
+                    }
                 }
             } else {                                             // AggSLO previously submitted
                 counts[48]++;
-                if (ac == 2 * e + 1){                   // BMO
-                    counts[21]++;
-                } else if (ac - (e + 1) < bi[0]){        // BelowBLO
-                    counts[24]++;
-                } else if (ac - (e + 1) == bi[0]){       // AtBLO
-                    counts[23]++;
-                } else if (ac - (e + 1) > bi[0] && ac < 2 * e + 2) {                                // AggBLO
-                    counts[22]++;
+                if (ac > e && ac < 2 * e + 2){
+                    if (ac == 2 * e + 1){                            // BMO
+                        counts[21]++;
+                    } else if (ac - (e + 1) < bi[0]){                 // BelowBLO
+                        counts[24]++;
+                    } else if (ac - (e + 1) == bi[0]){                // AtBLO
+                        counts[23]++;
+                    } else if (ac - (e + 1) > bi[0]){  // AggBLO
+                        counts[22]++;
+                    }
                 }
             }
         }
