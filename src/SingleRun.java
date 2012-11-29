@@ -183,9 +183,11 @@ public class SingleRun {
                 if (rn3 < FVplus){
                     FV = FV + sigma * tickSize;
                     book.FVup(FV, EventTime);
+                    //System.out.println("up" + FV);
                 } else {
                     FV = FV - sigma * tickSize;
                     book.FVdown(FV, EventTime);
+                    //System.out.println("down" + FV);
                 }
             }
             h.addOrderData(book.getBestBid(), book.getBestAsk());
@@ -194,6 +196,7 @@ public class SingleRun {
                 if (write){
                     h.printTransactions(header, outputNameTransactions);
                     h.printBookData(header, outputNameBookData);
+                    trader.printDiagnostics();
                     trader.printDecisions();
                     trader.printHistogram();
                     trader.resetDecisionHistory();

@@ -29,6 +29,9 @@ public class Decision {
         AtSLO ->    [29] BMO [30] AggBLO [31] AtBLO [32] BelowBLO [50] count
         BelowBLO -> [33] BMO [34] AggBLO [35] AtBLO [36] BelowBLO [51] count
         AboveSLO -> [37] BMO [38] AggBLO [39] AtBLO [40] BelowBLO [52] count
+
+        Diagnostics: too many sellers
+        [53] count of sell orders
         */
 
     // constructor for Decision
@@ -37,7 +40,7 @@ public class Decision {
         this.FVpos = FVpos;
         this.e = e;
         this.breakPoint = bp;
-        counts = new int[53];
+        counts = new int[54];
     }
 
     // adds information to the decision
@@ -190,8 +193,20 @@ public class Decision {
                 }
             }
         }
+        if (ac < e + 1){
+            counts[53]++;
+        }
     }
 
+    // printing diagnostics here
+    public String printDiagnostics(){
+        String s = new String();
+        double d = (double)counts[53]/(double)counts[0];
+        s = s + d + "\r";
+        return s;
+    }
+
+    // printing decisions here
     public String printDecision(){
         int sz = counts.length;
         String s = new String();

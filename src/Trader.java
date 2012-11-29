@@ -8,6 +8,7 @@ import java.util.Vector;
  * Date: 22.3.12
  * Time: 19:24
  * To change this template use File | Settings | File Templates.
+ * class trader serves as (i) parameter container for individual traders (ii) individual trader object
  */
 public class Trader {
     private int traderID;               // initialized
@@ -59,9 +60,8 @@ public class Trader {
         this.traderID = TraderCount;
 
         if (privateValue > 0.0001){pv = 2;}
-        else if (privateValue < 0.0001){pv = 1;}
+        else if (privateValue < - 0.0001){pv = 1;}
         else {pv = 0;}
-
     }
 
     // constructor of the main trader- loads parameters from main
@@ -449,6 +449,19 @@ public class Trader {
             }
      }
 
+    // prints diagnostics collected from data in decisions
+    public void printDiagnostics(){
+        try{
+            String outputFileName = folder + "diagnostics.csv";
+            FileWriter writer = new FileWriter(outputFileName, true);
+            writer.write(decision.printDiagnostics());
+            writer.close();
+        }
+        catch (Exception e){
+            e.printStackTrace();
+            System.exit(1);
+        }
+    }
 
     // prints decisions data collected from actions in different states
     public void printDecisions(){
