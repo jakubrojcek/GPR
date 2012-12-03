@@ -69,7 +69,7 @@ public class History {
                     mo = t.getFV() + t.getBuyerPV() - t.getPrice();
                     lo = t.getPrice() - t.getSellerPV() - t.getFV();
                 }
-                //writer.write(history.get(i).printTrade());
+                //writer.writeDecisions(history.get(i).printTrade());
                 writer.write(mo + ";" + lo + ";" + "\r");
             }
             writer.close();

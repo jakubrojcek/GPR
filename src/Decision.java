@@ -40,7 +40,7 @@ public class Decision {
         this.FVpos = FVpos;
         this.e = e;
         this.breakPoint = bp;
-        counts = new int[54];
+        counts = new int[53];
     }
 
     // adds information to the decision
@@ -193,17 +193,6 @@ public class Decision {
                 }
             }
         }
-        if (ac < e + 1){
-            counts[53]++;
-        }
-    }
-
-    // printing diagnostics here
-    public String printDiagnostics(){
-        String s = new String();
-        double d = (double)counts[53]/(double)counts[0];
-        s = s + d + "\r";
-        return s;
     }
 
     // printing decisions here

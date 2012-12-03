@@ -26,7 +26,7 @@ public class SingleRun {
     String outputNameBookData;      // output file name
     String outputNameStatsData;     // output file name
 
-    boolean write = false;          // write output in this SingleRun?
+    boolean write = false;          // writeDecisions output in this SingleRun?
     boolean purge = false;          // purge in this SingleRun?
     boolean nReset = false;         // reset n in this SingleRun?
 
@@ -199,8 +199,10 @@ public class SingleRun {
                     trader.printDiagnostics();
                     trader.printDecisions();
                     trader.printHistogram();
+                    trader.printDiagnostics();
                     trader.resetDecisionHistory();
                     trader.resetHistogram();
+                    trader.resetDiagnostics();
                 }
                 h.printStatisticsData(header, outputNameStatsData);
                 h.resetHistory();

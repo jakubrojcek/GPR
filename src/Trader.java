@@ -1,6 +1,5 @@
 import java.io.FileWriter;
 import java.util.*;
-import java.util.Vector;
 
 /**
  * Created by IntelliJ IDEA.
@@ -43,9 +42,11 @@ public class Trader {
     static int fvPos;                   // tick of fundamental value
     static int HTinit;                  // initial capacity for Payoffs HashTable
     static double prTremble = 0.0;      // probability of trembling
-    static boolean write = false;              // to write things in trader?
+    static boolean writeDecisions = false; // to writeDecisions things in trader?
+    static boolean writeDiagnostics = false; // to writeDiagnostics things in trader?
     static String folder;
     static Decision decision;
+    static Diagnostics diag;
     static int [] bookSizesHistory;
     static int[] previousTraderAction;
 
@@ -93,6 +94,7 @@ public class Trader {
         prTremble = pt;
         folder = f;
         decision = new Decision(numberPrices, FVpos, e, bp);
+        diag = new Diagnostics(numberPrices, e);
         bookSizesHistory = new int[2 * nP + 1];
         bookSizesHistory[0] = 0;
         previousTraderAction = new int[3];
@@ -127,6 +129,7 @@ public class Trader {
 
         double continuationValue;
         byte action;
+        double diff = 0.0;        // TODO: delete, for diagnostics now
 
         float [] p = new float[nPayoffs];
         double sum = 0;                     // used to compute payoff to no-order
@@ -193,6 +196,7 @@ public class Trader {
                 action = ((MultiplePayoff) pay).getMaxIndex();
             }
         }
+
         // update old-state beliefs
         if (isReturning){
             if (Payoffs.containsKey(oldCode)){
@@ -201,6 +205,7 @@ public class Trader {
                     ((SinglePayoff) pay).update(oldAction, continuationValue, EventTime);
                 } else {                          // updating old MultiplePayoff
                     ((MultiplePayoff) pay).update(oldAction, continuationValue, EventTime);
+                    diff = ((MultiplePayoff) pay).getDiff();
                 }
             }
         } else {isReturning = true;} // sets to true even if hasn't submitted LO/MO
@@ -224,7 +229,7 @@ public class Trader {
         oldCode = code;                                          // save for later updating
         oldAction = action;                                      // save for later updating
 
-        if (write){                                              // printing data for output tables
+        if (writeDecisions){                                              // printing data for output tables
             // tables I, V
             decision.addDecision(BookInfo, (int) action, previousTraderAction);
             previousTraderAction[0] = (int)action;
@@ -244,6 +249,9 @@ public class Trader {
 
         if (action == end || action == 2 * end + 1) {
             isTraded = true;                                    // isTraded set to true if submitting MOs
+        }
+        if (writeDiagnostics){
+            diag.addDiff(diff);
         }
 
         return (action != 2 * end + 2) ? new PriceOrder(pricePosition, currentOrder) : null;
@@ -372,7 +380,7 @@ public class Trader {
                 }
 
                /* if (pay instanceof SinglePayoff){
-                    writer.write(et - ((SinglePayoff) pay).getEventTime() + ";" + "\r");
+                    writer.writeDecisions(et - ((SinglePayoff) pay).getEventTime() + ";" + "\r");
                 }*/
             }
             writer.close();
@@ -454,7 +462,7 @@ public class Trader {
         try{
             String outputFileName = folder + "diagnostics.csv";
             FileWriter writer = new FileWriter(outputFileName, true);
-            writer.write(decision.printDiagnostics());
+            writer.write(diag.printDiagnostics());
             writer.close();
         }
         catch (Exception e){
@@ -480,6 +488,10 @@ public class Trader {
     // resets Decision history, memory management
     public void resetDecisionHistory(){
         decision = new Decision(nP, fvPos, end, breakPoint);
+    }
+
+    public void resetDiagnostics(){
+        diag = new Diagnostics(nP, end);
     }
 
     // getters
@@ -532,8 +544,12 @@ public class Trader {
         prTremble = pt;
     }
 
-    public void setWrite(boolean b){
-        write = b;
+    public void setWriteDec(boolean b){
+        writeDecisions = b;
+    }
+
+    public void setWriteDiag(boolean b){
+        writeDiagnostics = b;
     }
 
 

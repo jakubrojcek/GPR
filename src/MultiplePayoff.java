@@ -19,6 +19,7 @@ public class MultiplePayoff extends Payoff{
     private boolean fromPreviousRound = false;// set to true when you move to the next round
     static int nSize;                         // current size of n array, for copying to +1 bigger
     static int nIndex;                        // holder for index of n, for updating ++
+    static double diff;
 
 
     public MultiplePayoff(float[] payoffs, double et, SinglePayoff sp){
@@ -121,8 +122,10 @@ public class MultiplePayoff extends Payoff{
 
         double alpha = (1.0/(1 + n[nIndex]));  // updating factor  // TODO: check if not zero
         //System.out.println(payoff - p[nIndex] + " before");
-        p[nIndex] = (float) ((1 - alpha) * p[nIndex] +
+        diff = payoff - p[nIndex];
+        p[nIndex] = (float) ((1.0 - alpha) * p[nIndex] +
                 + alpha * Math.exp( - rho * (et - EventTime)) * payoff); // TODO: check the values produced
+    //System.out.println("alpha: " + alpha + " 1-alpha: " + (1-alpha) + " 1.0-alpha: " + (1.0 - alpha));
     }
 
     public int getN(){
@@ -154,6 +157,10 @@ public class MultiplePayoff extends Payoff{
 
     public short [] getNarray(){
         return n;
+    }
+
+    public double getDiff(){
+        return diff;
     }
 
     public float getMax(){
