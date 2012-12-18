@@ -1,3 +1,12 @@
+import javafx.application.Application;
+import javafx.scene.Scene;
+import javafx.scene.chart.*;
+import javafx.scene.chart.CategoryAxis;
+import javafx.scene.chart.NumberAxis;
+import javafx.scene.chart.XYChart;
+import javafx.stage.Stage;
+
+
 import java.io.*;
 import java.util.*;
 
@@ -47,7 +56,7 @@ public class Test_various {
 //        the LO yields non-negative payoff */
 //        double[] tauS = new double[13]; /* expected time until the arrival of a new seller for whom picking up
 //        the LO yields non-negative payoff */
-//        for (int i = 0; i < 13; i++){ // TODO: use LL HL later on
+//        for (int i = 0; i < 13; i++){ //
 //            int denomB = 0; // denominator buyers
 //            int denomS = 0; // denominator sellers
 //            // buyers
@@ -85,7 +94,14 @@ public class Test_various {
 //            }
 //        }
 //
-//
+        //HashMap<Integer, Double> traders = new HashMap<Integer, Double>();
+     /*   IdentityHashMap<Integer, Double> traders2 = new IdentityHashMap<Integer, Double>();
+        for (int j = 0; j < 1000000000; j++){
+            //traders.put(j, Math.sqrt(j));
+            traders2.put(j, Math.sqrt(j));
+        }*/
+
+
 //
 //        int nP = 63; // number of prices tracked by the book
 //        double [] Prices = new double[nP]; // creates vector of the prices, not carrying about ticks now
@@ -106,7 +122,7 @@ public class Test_various {
 //        System.out.println("New arrival HFT");
 //        Trader tr = new Trader(true, 0);
 //        int ID = tr.getTraderID();
-//        traders.put(ID, tr);               // TODO: does this work in LOB as well?
+//        traders.put(ID, tr);
 //        PriceOrder PO = tr.decision(book.getRank(ID), book.getBookSizes(), book.getBookInfo(), EventTime);
 //        if (PO != null){
 //            book.transactionRule(PO.getPrice() , PO.getCurrentOrder());
@@ -119,7 +135,7 @@ public class Test_various {
 //        System.out.println("New arrival nonHFT");
 //        tr = new Trader(false, 4);
 //        ID = tr.getTraderID();
-//        traders.put(ID, tr);               // TODO: does this work in LOB as well?
+//        traders.put(ID, tr);
 //        PO = tr.decision(book.getRank(ID), book.getBookSizes(), book.getBookInfo(), EventTime);
 //        if (PO != null){
 //            book.transactionRule(PO.getPrice() , PO.getCurrentOrder());
@@ -144,8 +160,6 @@ public class Test_various {
 //
 //        book.FVup(34);
 //        System.out.println("Change in the fundamental value to " + FV);
-//
-//
 //        ID = 2;
 //        System.out.println("Returning nonHFT ID: " + ID);
 //        PO = traders.get(ID).decision(book.getRank(ID), book.getBookSizes(), book.getBookInfo(), EventTime);
@@ -162,30 +176,37 @@ public class Test_various {
         A = -4/3;
         System.out.println(A);*/
 
-        /*ArrayList<Byte> IDs = new ArrayList<Byte>(1);
+        ArrayList<Byte> IDs = new ArrayList<Byte>(1);
         Byte a = 5;
         Byte b = 3;
         IDs.add(a);
         IDs.add(b);
         System.out.println(IDs.indexOf(a));
-*/
-        FileWriter fw;
+
+
+/*        FileWriter fw;
         try{
             String outputFileName =  "D:\\_paper1 HFT, MM, rebates and market quality\\Matlab Analysis\\blabla.csv";
             fw = new FileWriter(outputFileName);
-            short[] n = {2,3,4};
-            int sz = n.length;
-            String s = new String();
-            for (int i = 0; i < sz; i++){
-                s = s + n[i] + ";";
+            for (int j = 0; j < 3; j++){
+                float [] p = {1.5f, 2.5f, 3.5f};
+                short[] n = {(short)j, (short) (2*j), (short) (3*j)};
+                int sz = n.length;
+                String s = new String();
+                for (int i = 0; i < sz; i++){
+                    s = s + n[i] + ";"  + p[i] + ";";
+                }
+                fw.writeDecisions(0 + "\r");
+                fw.writeDecisions(s + "\r");
             }
-            fw.write(s + "\r");
+            fw.writeDecisions(1 + ";" + 1.5f + ";" + 1 + ";" + 1.5f + ";" + 1 + ";" + 1.5f + ";" +
+                    1 + ";" + 1.5f + ";" + "\r");
             fw.close();
         }
         catch (Exception e) {
             e.printStackTrace();
             System.exit(1);
-        }
+        }*/
 
         /*
         // order 1

@@ -27,6 +27,7 @@ public class SingleRun {
     String outputNameStatsData;     // output file name
 
     boolean write = false;          // writeDecisions output in this SingleRun?
+    boolean writeDiagnostics = false;// write diagnostics
     boolean purge = false;          // purge in this SingleRun?
     boolean nReset = false;         // reset n in this SingleRun?
 
@@ -57,8 +58,9 @@ public class SingleRun {
 
     public double[] run(int nEvents, int nHFT, int NewNonHFT,
                       double EventTime, double FV,
-                      boolean w, boolean p, boolean n){
+                      boolean w, boolean p, boolean n, boolean wd){
         write = w;
+        writeDiagnostics = wd;
         purge = p;
         nReset = n;
         for (int i = 0; i < nEvents; i ++){
@@ -193,16 +195,19 @@ public class SingleRun {
             h.addOrderData(book.getBestBid(), book.getBestAsk());
             if (i % 100000 == 0) {
                 h.addStatisticsData(i, trader.getStatesCount());   // multiple payoffs count
+                if (writeDiagnostics){
+                    trader.printDiagnostics();
+                    trader.resetDiagnostics();
+                }
                 if (write){
                     h.printTransactions(header, outputNameTransactions);
                     h.printBookData(header, outputNameBookData);
-                    trader.printDiagnostics();
                     trader.printDecisions();
                     trader.printHistogram();
-                    trader.printDiagnostics();
+                    //trader.printDiagnostics();
                     trader.resetDecisionHistory();
                     trader.resetHistogram();
-                    trader.resetDiagnostics();
+                    //trader.resetDiagnostics();
                 }
                 h.printStatisticsData(header, outputNameStatsData);
                 h.resetHistory();

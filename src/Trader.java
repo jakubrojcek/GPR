@@ -323,9 +323,28 @@ public class Trader {
 
             /*Long code = (Bt<<50) + (At<<44) + (lBt<<40) + (lAt<<36) + (dBt<<29) + (dSt<<22) + (Pt<<16) + (b<<15) +
                     + (P<<9) + (q<<5) + (x<<3) + (a<<1) + l;*/
-            code = (Bt<<32) + (At<<27) + (lBt<<26) + (lAt<<25) + (dBt<<22) + (dSt<<19) + (Pt<<14) + (b<<13) +
+            code = (Bt<<34) + (At<<29) + (lBt<<27) + (lAt<<25) + (dBt<<22) + (dSt<<19) + (Pt<<14) + (b<<13) +
                     + (P<<8) + (q<<5) + (x<<3) + (a<<1) + l;
 
+            /*// Testing if hashCode works
+            //Long codeTest = code;
+            //System.out.println(code.toString());
+            boolean[] test = new boolean[13];
+            //String sCode = Long.toBinaryString(code);
+            test[0] = (code>>34 == Bt);
+            Long codeTest = code - (Bt<<34);
+            //String sCodeTest = Long.toBinaryString(codeTest);
+            //String sBt = Long.toBinaryString(Bt);
+            //long testAt = codeTest>>29;
+            test[1] = (codeTest>>29 == At);
+            //System.out.println(test[1]);
+            codeTest = codeTest - (At<<29);
+            test[2] = (codeTest>>27 == lBt);
+            //System.out.println(test[2]);
+            codeTest = codeTest - (lBt<<27) - ((lAt<<25) + (dBt<<22) + (dSt<<19) + (Pt<<14) + (b<<13) +
+                    + (P<<8) + (q<<5) + (x<<3) + (a<<1));
+            test[12] = (codeTest == l);
+            System.out.println(test[12]);*/
         }
         else if (infoSize == 8){
             long Bt = BookInfo[0];              // Best Bid position

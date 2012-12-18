@@ -290,7 +290,7 @@ public class LOB_LinkedHashMap {
              int size = book[i].size();
              if (size != 0){
                  boolean buy = book[i].get(book[i].keySet().iterator().next()).isBuyOrder();  // buy orders at book[i]?
-                 BookSizes[i] = buy ? Math.min(size, maxDepth) : - Math.min(size, maxDepth);   // max size at each tick is 15
+                 BookSizes[i] = buy ? Math.min(size, maxDepth) : - Math.min(size, maxDepth);   // max size at each tick is maxDepth- 7 or 15
              } else BookSizes[i] = 0;
          }
     }

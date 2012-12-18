@@ -20,13 +20,13 @@ public class ReducedStatesTest {
         int nNegativeNonHFT = 10;               // # of negative PV slow traders
         double lambdaArrival = 0.1;             // arrival frequency, same for all
         double ReturnFrequencyHFT = 1;          // returning frequency of HFT
-        double ReturnFrequencyNonHFT = 0.4;     // returning frequency of NonHFT
+        double ReturnFrequencyNonHFT = 0.1;     // returning frequency of NonHFT
         String folder = "D:\\_paper1 HFT, MM, rebates and market quality\\Matlab Analysis\\";
 
 
 
-        int infoSize = 8;                       // 2-bid, ask, 4-last price, direction, 6-depth at bid,ask, 8-depth off bid,ask
-        byte nP = 31;                           // number of prices tracked by the book
+        int infoSize = 7;                       // 2-bid, ask, 4-last price, direction, 6-depth at bid,ask, 8-depth off bid,ask
+        byte nP = 9;                           // number of prices tracked by the book
         int maxDepth = 7;                       // 0 to 7 which matter
         int FVpos = (int) nP/2;                 // position of the fundamental value
         double prTremble = 0.0;                 // probability of trembling
@@ -115,7 +115,7 @@ public class ReducedStatesTest {
         /* for (int j = 0; j < 13; j ++){
             System.out.println(tauB[j]);
             System.out.println(tauS[12-j]);
-        }*/       //computing taus
+        } */      //computing taus
 
 
 
@@ -134,54 +134,90 @@ public class ReducedStatesTest {
         SingleRun sr = new SingleRun(lambdaArrival, ReturnFrequencyHFT, ReturnFrequencyNonHFT,
                 FprivateValues, sigma, tickSize, FVplus, header, book, traders, h, trader, outputNameStatsData,
                 outputNameTransactions, outputNameBookData);
-        // gettting to equilibrium ballpark
-        int nEvents = 10000000;        // number of events
-        boolean write = false;         // write output in this SingleRun?
-        boolean purge = false;         // purge in this SingleRun?
-        boolean nReset = false;        // reset n in this SingleRun?
+        // getting to equilibrium ballpark
+        int nEvents = 100000000;        // number of events
+        boolean write = false;          // writeDecisions output in this SingleRun?
+        //boolean writeDecisions = true;         // writeDecisions output in this SingleRun?
+        boolean writeDiagnostics = true;// write diagnostics controls diagnostics
+        boolean purge = false;          // purge in this SingleRun?
+        boolean nReset = false;         // reset n in this SingleRun?
+        //trader.setWriteDec(true);
+        trader.setWriteDiag(true);
 
         double[] RunOutcome =
                 sr.run(nEvents, nHFT, NewNonHFT, EventTime, FV, write,
-                        purge, nReset);
+                        purge, nReset, writeDiagnostics);
         EventTime = RunOutcome[0];
         FV = RunOutcome[1];
 
-        nEvents = 1000000000;        // number of events
-        write = false;              // write output in this SingleRun?
-        purge = true;              // purge in this SingleRun?
+        //trader.printStatesDensity(EventTime); // occurrences of MPs now
+        //trader.printHistogram();
+
+        nEvents = 500000000;        // number of events
+        write = false;              // writeDecisions output in this SingleRun?
+        writeDiagnostics = true;    // write diagnostics controls diagnostics
+        purge = true;               // purge in this SingleRun?
+        nReset = true;              // reset n in this SingleRun?
+        trader.setPrTremble(0.1);
+
+        RunOutcome =
+                sr.run(nEvents, nHFT, NewNonHFT, EventTime, FV, write,
+                        purge, nReset, writeDiagnostics);
+        EventTime = RunOutcome[0];
+        FV = RunOutcome[1];
+
+        nEvents = 500000000;       // number of events
+        write = false;              // writeDecisions output in this SingleRun?
+        writeDiagnostics = true;    // write diagnostics controls diagnostics
+        purge = false;              // purge in this SingleRun?
         nReset = true;              // reset n in this SingleRun?
         trader.setPrTremble(0.05);
 
         RunOutcome =
                 sr.run(nEvents, nHFT, NewNonHFT, EventTime, FV, write,
-                        purge, nReset);
+                        purge, nReset, writeDiagnostics);
         EventTime = RunOutcome[0];
         FV = RunOutcome[1];
 
-        nEvents = 1000000000;       // number of events
-        write = false;              // write output in this SingleRun?
+        nEvents = 500000000;        // number of events
+        write = false;              // writeDecisions output in this SingleRun?
+        writeDiagnostics = true;    // write diagnostics controls diagnostics
         purge = false;              // purge in this SingleRun?
         nReset = true;              // reset n in this SingleRun?
         trader.setPrTremble(0.01);
 
         RunOutcome =
                 sr.run(nEvents, nHFT, NewNonHFT, EventTime, FV, write,
-                        purge, nReset);
+                        purge, nReset, writeDiagnostics);
+        EventTime = RunOutcome[0];
+        FV = RunOutcome[1];
+
+        nEvents = 500000000;        // number of events
+        write = false;              // writeDecisions output in this SingleRun?
+        writeDiagnostics = true;    // write diagnostics controls diagnostics
+        purge = false;              // purge in this SingleRun?
+        nReset = true;              // reset n in this SingleRun?
+        trader.setPrTremble(0.0);
+
+        RunOutcome =
+                sr.run(nEvents, nHFT, NewNonHFT, EventTime, FV, write,
+                        purge, nReset, writeDiagnostics);
         EventTime = RunOutcome[0];
         FV = RunOutcome[1];
 
         nEvents = 10000000;    // number of events
-        write = true;          // write output in this SingleRun?
+        write = true;          // writeDecisions output in this SingleRun?
+        writeDiagnostics = true;    // write diagnostics controls diagnostics
         purge = false;         // purge in this SingleRun?
         nReset = false;        // reset n in this SingleRun?
 
-        trader.setWrite(true);
+        trader.setWriteDec(true);
         trader.setTradeCount(0);
         trader.setTraderCount(book.getnReturningHFT() + book.getnReturningNonHFT());
 
         RunOutcome =
                 sr.run(nEvents, nHFT, NewNonHFT, EventTime, FV, write,
-                        purge, nReset);
+                        purge, nReset, writeDiagnostics);
         EventTime = RunOutcome[0];
         FV = RunOutcome[1];
 

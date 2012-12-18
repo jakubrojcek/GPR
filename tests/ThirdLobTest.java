@@ -133,13 +133,14 @@ public class ThirdLobTest {
                 outputNameTransactions, outputNameBookData);
 
         int nEvents = 1750000000;                 // number of events
-        boolean write = false;          // write output in this SingleRun?
-        boolean purge = true;          // purge in this SingleRun?
-        boolean nReset = true;         // reset n in this SingleRun?
+        boolean write = false;          // writeDecisions output in this SingleRun?
+        boolean writeDiagnostics = true;// write diagnostics controls diagnostics
+        boolean purge = true;           // purge in this SingleRun?
+        boolean nReset = true;          // reset n in this SingleRun?
 
         double[] RunOutcome =
                 sr.run(nEvents, nHFT, NewNonHFT, EventTime, FV, write,
-                        purge, nReset);
+                        purge, nReset, writeDiagnostics);
         EventTime = RunOutcome[0];
         FV = RunOutcome[1];
 
@@ -240,7 +241,7 @@ public class ThirdLobTest {
                  if (PO != null){
                      book.transactionRule(PO.getPrice() , PO.getCurrentOrder());
                  } else {
-                     book.tryCancel(ID);    //TODO: test
+                     book.tryCancel(ID);
                  }
 
              } else if (rn < x4){                   // Returning nonHFT

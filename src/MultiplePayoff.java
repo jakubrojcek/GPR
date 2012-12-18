@@ -30,6 +30,9 @@ public class MultiplePayoff extends Payoff{
         Actions.add(maxIndex);
 
         for(byte i = 0; i < nPayoffs; i++){ // searching for best payoff
+            if (i == maxIndex){
+                payoffs[i] = sp.getMax();
+            }
             if(payoffs[i] > max){
                 max = payoffs[i];
                 maxIndex = i;
@@ -53,6 +56,11 @@ public class MultiplePayoff extends Payoff{
     // update old state upon return of a trader whose previous state is captured in this MultiplePayoff
     public void updateMax(float[] payoffs, double et){ // overloading update method MP happens more times
         for (byte i = 0; i < nPayoffs; i++){
+            if (Actions.contains(i)){       //TODO:check
+                if (i == 7){ }
+                if (i == 15){ }
+                else {payoffs[i] = p[Actions.indexOf(i)];}
+            }
             if (payoffs[i] > max){
                 max = payoffs[i];
                 maxIndex = i;
@@ -84,6 +92,13 @@ public class MultiplePayoff extends Payoff{
     }
 
     public void updateMaxTremble(float[] payoffs, double et){
+        for (byte i = 0; i < nPayoffs; i++){
+            if (Actions.contains(i)){
+                if (i == 7){ }
+                if (i == 15){ }
+                else {payoffs[i] = p[Actions.indexOf(i)];}
+            }
+        }
         maxIndex = (byte) (Math.random() * payoffs.length); // TODO: maybe only buys for buyer, sells for seller?
         max = payoffs[maxIndex];
         if(!Actions.contains(maxIndex)){
@@ -121,10 +136,11 @@ public class MultiplePayoff extends Payoff{
         }*/
 
         double alpha = (1.0/(1 + n[nIndex]));  // updating factor  // TODO: check if not zero
-        //System.out.println(payoff - p[nIndex] + " before");
+        //System.out.println(p[nIndex] + " before " + payoff +  " now " + (payoff - p[nIndex]) + " difference");
         diff = payoff - p[nIndex];
         p[nIndex] = (float) ((1.0 - alpha) * p[nIndex] +
                 + alpha * Math.exp( - rho * (et - EventTime)) * payoff); // TODO: check the values produced
+        //System.out.println("updated: " + p[nIndex]);
     //System.out.println("alpha: " + alpha + " 1-alpha: " + (1-alpha) + " 1.0-alpha: " + (1.0 - alpha));
     }
 
