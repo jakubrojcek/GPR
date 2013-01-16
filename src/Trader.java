@@ -103,7 +103,9 @@ public class Trader {
     // decision about the price is made here, so far random
     public PriceOrder decision(Hashtable<Byte, Byte> Priorities, int[] BookSizes, int[] BookInfo,
                                double EventTime, double priceFV){
-        
+        /*if (isTraded){
+            System.out.println("What is this guy doing here?");
+        }*/
         // positions , priorities table, & isReturning? 1 if yes, last transaction pricePosition
         // signed sizes vector, (best Bid, Ask), (depth at B, A), (depth Buy, Sell), (last pricePosition, WasBuy)
         // event time
@@ -534,6 +536,10 @@ public class Trader {
         return isTraded;
     }
 
+    public boolean getIsReturning(){
+        return isReturning;
+    }
+
     public int getTraderCount(){
         return TraderCount;
     }
@@ -544,6 +550,10 @@ public class Trader {
 
     public int getPv(){
         return pv;
+    }
+
+    public byte getOldAction(){    //TODO: delete afterwards
+        return oldAction;
     }
 
     // setters
@@ -570,6 +580,5 @@ public class Trader {
     public void setWriteDiag(boolean b){
         writeDiagnostics = b;
     }
-
 
 }

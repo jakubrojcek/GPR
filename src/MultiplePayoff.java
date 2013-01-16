@@ -56,10 +56,9 @@ public class MultiplePayoff extends Payoff{
     // update old state upon return of a trader whose previous state is captured in this MultiplePayoff
     public void updateMax(float[] payoffs, double et){ // overloading update method MP happens more times
         for (byte i = 0; i < nPayoffs; i++){
+            boolean mo;
             if (Actions.contains(i)){       //TODO:check
-                if (i == 7){ }
-                if (i == 15){ }
-                else {payoffs[i] = p[Actions.indexOf(i)];}
+                payoffs[i] = p[Actions.indexOf(i)];
             }
             if (payoffs[i] > max){
                 max = payoffs[i];
@@ -93,10 +92,9 @@ public class MultiplePayoff extends Payoff{
 
     public void updateMaxTremble(float[] payoffs, double et){
         for (byte i = 0; i < nPayoffs; i++){
+            boolean mo;
             if (Actions.contains(i)){
-                if (i == 7){ }
-                if (i == 15){ }
-                else {payoffs[i] = p[Actions.indexOf(i)];}
+                payoffs[i] = p[Actions.indexOf(i)];
             }
         }
         maxIndex = (byte) (Math.random() * payoffs.length); // TODO: maybe only buys for buyer, sells for seller?
@@ -129,6 +127,13 @@ public class MultiplePayoff extends Payoff{
     // updates payoff from the oldAction upon execution
     public void update(byte oldAction, double payoff, double et){
         // after the new belief is computed, it comes back to payoff vector, max, maxIndex is updated
+        boolean mo;
+        if (oldAction == 7){
+            //System.out.println(mo = (payoff==p[Actions.indexOf(oldAction)]));
+        }
+        if (oldAction == 15){
+            //System.out.println(mo = (payoff==p[Actions.indexOf(oldAction)]));
+        }
         nIndex = Actions.indexOf(oldAction);
         /*if(n[nIndex] > 2){
             recursiveStatesCount++;

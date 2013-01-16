@@ -183,6 +183,25 @@ public class Test_various {
         IDs.add(b);
         System.out.println(IDs.indexOf(a));
 
+        boolean test = true != true;
+        System.out.println(test);
+
+        int[] BookSizes = {0,0,2,5,2,7,-1,-3,-3};
+
+        int At;
+        int Bt;
+        int j = 0;
+        while (BookSizes[j] >= 0 && j < 8){
+            j++;
+        }
+        At = j;
+        j = 8;
+        while (BookSizes[j] <= 0 && j > 0){
+            j--;
+        }
+        Bt = j;
+        System.out.println("Best bid: " + Bt + " Best ask: " + At);
+
 
 /*        FileWriter fw;
         try{

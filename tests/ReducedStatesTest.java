@@ -183,7 +183,7 @@ public class ReducedStatesTest {
         write = false;              // writeDecisions output in this SingleRun?
         writeDiagnostics = true;    // write diagnostics controls diagnostics
         purge = false;              // purge in this SingleRun?
-        nReset = true;              // reset n in this SingleRun?
+        nReset = false;             // reset n in this SingleRun?
         trader.setPrTremble(0.01);
 
         RunOutcome =

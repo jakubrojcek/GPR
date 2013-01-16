@@ -92,7 +92,8 @@ public class LOB_LinkedHashMap {
         System.arraycopy(Prices, 1, Prices, 0, nPoints - 1);
         Prices[nPoints - 1] = Prices[nPoints - 2] + tickSize;
         Pt = Math.max(Pt--, 0);                               // not to fall of the grid
-        FV = fv;      
+        FV = fv;
+        BookSizes();
     }
 
     public void FVdown(double fv, double et){
@@ -133,6 +134,7 @@ public class LOB_LinkedHashMap {
         Prices[0] = Prices[1] - tickSize;
         Pt = Math.min(Pt++, nPoints - 1);                        // not to fall of the grid
         FV = fv;
+        BookSizes();
     }
     
     public Hashtable<Byte, Byte> getRank (int traderID){
@@ -200,9 +202,6 @@ public class LOB_LinkedHashMap {
         BookInfo[5] = - Ds;               // depth sells
         BookInfo[6] = Pt;                 // last transaction position
         BookInfo[7] = b;                  // 1 if last transaction buy, 0 if sell
-        if (BookInfo[2] < 0){
-            //System.out.println("ou shit, negative depth at the best bid");
-        }
 
         return BookInfo;
     }
@@ -213,7 +212,7 @@ public class LOB_LinkedHashMap {
          // cancel previous LO unless not retained
          if(currentPosition.containsKey(oID)){
              oldPos = currentPosition.get(oID) - positionShift;
-             if (oldPos != pos){
+             if (oldPos != pos || o.isBuyOrder() != book[oldPos].get(oID).isBuyOrder()){
                  book[oldPos].remove(oID);
                  currentPosition.remove(oID);
              } else {
@@ -234,7 +233,7 @@ public class LOB_LinkedHashMap {
                 // enters transaction history
                 Pt = pos; // sets last transaction position
                 b = 1;            // sets last transaction direction, buy = 1
-                traders.get(cpID).execution(FV, cp.getTimeStamp());
+                traders.get(cpID).execution(FV, o.getTimeStamp());
                 hist.addTrade(o, cp, o.getTimeStamp(), Prices[pos], FV);
                 currentPosition.remove(cpID);
                 if (traders.get(cpID).getIsHFT()){
@@ -263,7 +262,7 @@ public class LOB_LinkedHashMap {
                 Integer cpID = cp.getTraderID();
                 Pt = pos; // set last transaction price
                 b = 0;            // set last transaction direction, 0=sell
-                traders.get(cpID).execution(FV, cp.getTimeStamp());
+                traders.get(cpID).execution(FV, o.getTimeStamp());
                 hist.addTrade(cp, o, o.getTimeStamp(), Prices[pos], FV);// enters transaction history
                 currentPosition.remove(cpID);
                 if (traders.get(cpID).getIsHFT()){
@@ -286,13 +285,17 @@ public class LOB_LinkedHashMap {
                 }
             }
         }
-         for (int i = 0; i < nPoints; i++){
-             int size = book[i].size();
-             if (size != 0){
-                 boolean buy = book[i].get(book[i].keySet().iterator().next()).isBuyOrder();  // buy orders at book[i]?
-                 BookSizes[i] = buy ? Math.min(size, maxDepth) : - Math.min(size, maxDepth);   // max size at each tick is maxDepth- 7 or 15
-             } else BookSizes[i] = 0;
-         }
+        BookSizes();
+    }
+
+    public void BookSizes(){
+        for (int i = 0; i < nPoints; i++){
+            int size = book[i].size();
+            if (size != 0){
+                boolean buy = book[i].get(book[i].keySet().iterator().next()).isBuyOrder();  // buy orders at book[i]?
+                BookSizes[i] = buy ? Math.min(size, maxDepth) : - Math.min(size, maxDepth);   // max size at each tick is maxDepth- 7 or 15
+            } else BookSizes[i] = 0;
+        }
     }
 
     public void tryCancel(int id){   // if order is null after returning, see if there's sth to cancel
@@ -300,6 +303,7 @@ public class LOB_LinkedHashMap {
             Integer oldPos = currentPosition.remove(id) - positionShift;
             book[oldPos].remove(id);
         }
+        BookSizes();
     }
 
     // returning random traderID either HFT or nonHFT

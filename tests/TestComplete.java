@@ -132,33 +132,93 @@ public class TestComplete {
         int[] BookInfo = new int[8];
         BookInfo[0] = 2;                 // best bid position
         BookInfo[1] = 6;                 // best ask position
-        BookInfo[2] = 1;      // depth at best bid
-        BookInfo[3] = 1;    // depth at best ask
+        BookInfo[2] = 1;                 // depth at best bid
+        BookInfo[3] = 1;                 // depth at best ask
         BookInfo[4] = 4;                 // depth buys
-        BookInfo[5] = 4;               // depth sells
+        BookInfo[5] = 4;                 // depth sells
         BookInfo[6] = 4;                 // last transaction position
-        BookInfo[7] = 0;                  // 1 if last transaction buy, 0 if sell
+        BookInfo[7] = 0;                 // 1 if last transaction buy, 0 if sell
         for (int i = 0; i < nP; i++){
             priorities.put((byte) i, (byte) 1);
             BookSizes[i] = 1;
         }
         priorities.put(nP, (byte)1);
 
+        boolean[] test = new boolean[10];
 
+        traders.put(1, new Trader(false, 0.0f));
+        traders.put(2, new Trader(false, 0.0f));
 
         Trader tr = new Trader(false, 0.0f);
-        int nEvents = 30;
+        traders.put(3, tr);
+        book.transactionRule(2, new Order(1, 0.001, true));
+        book.transactionRule(6, new Order(2, 0.002, false));
+        book.transactionRule(2, new Order(3, 0.003, false));
+        test[0] = !book.traderIDsNonHFT.contains(3);
+
+
+        Trader tr2 = new Trader(false, 0.0f);
+        traders.put(4, tr2);
+        book.transactionRule(3, new Order(4, 0.004, true));
+        test[1] = book.traderIDsNonHFT.contains(4);
+
+        Trader tr3 = new Trader(false, 0.0f);
+        traders.put(5, tr3);
+        book.addTrader(5);
+        test[2] = book.traderIDsNonHFT.contains(5);
+
+        book.transactionRule(3, new Order(5, 0.005, false));
+        test[3] = !book.traderIDsNonHFT.contains(4);
+        test[7] = !book.traderIDsNonHFT.contains(5);
+
+        Trader tr4 = new Trader(false, 0.0f);
+        traders.put(6, tr4);
+        book.transactionRule(3, new Order(6, 0.006, true));
+        book.transactionRule(6, new Order(6, 0.007, true));
+        test[4] = !book.traderIDsNonHFT.contains(6);
+
+        Trader tr5 = new Trader(false, 0.0f);
+        traders.put(7, tr5);
+        book.transactionRule(3, new Order(7, 0.008, true));
+        book.transactionRule(3, new Order(7, 0.008, true));
+        boolean part1 = book.traderIDsNonHFT.contains(7);
+        book.transactionRule(4, new Order(7, 0.009, true));
+        boolean part2 = book.traderIDsNonHFT.contains(7);
+        test[5] = part1&&part2;
+
+        book.tryCancel(7);
+        part1 = book.traderIDsNonHFT.contains(7);
+        part2 = !book.book[4].containsKey(7);
+        test[6] = part1&&part2;
+
+        Trader tr6 = new Trader(false, 0.0f);
+        traders.put(8, tr6);
+        book.addTrader(8);
+        book.transactionRule(7, new Order(8, 0.010, false));
+        test[8] = book.traderIDsNonHFT.contains(8);
+
+        Trader tr7 = new Trader(false, 0.0f);
+        traders.put(9, tr7);
+        book.addTrader(9);
+        book.tryCancel(9);
+        test[9] = book.traderIDsNonHFT.contains(9);
+
+        for (int i = 0; i < 10; i++){
+            System.out.println("test" + (i + 1) + ": " + test[i]);
+        }
+
+/*        int nEvents = 30;
         for (int i = 0; i < nEvents; i ++){
             EventTime = i * 0.05;
             tr.decision(priorities, BookSizes, BookInfo, EventTime, FV);
             tr.execution(Prices[2], EventTime);
         }
-        trader.nReset((byte)1, (byte)10);
+        //trader.nReset((byte)1, (byte)10);
         for (int i = 0; i < nEvents; i ++){
             EventTime = i * 0.05;
             tr.decision(priorities, BookSizes, BookInfo, EventTime, FV);
             tr.execution(Prices[2], EventTime);
-        }
+        }*/
 
         double timeStamp2 = System.nanoTime();
         System.out.println("running time = " + (timeStamp2 - timeStamp1));
