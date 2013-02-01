@@ -19,8 +19,7 @@ public class MultiplePayoff extends Payoff{
     private boolean fromPreviousRound = false;// set to true when you move to the next round
     static int nSize;                         // current size of n array, for copying to +1 bigger
     static int nIndex;                        // holder for index of n, for updating ++
-    static double diff;
-
+    private double diff;
 
     public MultiplePayoff(float[] payoffs, double et, SinglePayoff sp){
         this.EventTime = et;    // time when new action for the Payoff is chosen
@@ -56,7 +55,6 @@ public class MultiplePayoff extends Payoff{
     // update old state upon return of a trader whose previous state is captured in this MultiplePayoff
     public void updateMax(float[] payoffs, double et){ // overloading update method MP happens more times
         for (byte i = 0; i < nPayoffs; i++){
-            boolean mo;
             if (Actions.contains(i)){       //TODO:check
                 payoffs[i] = p[Actions.indexOf(i)];
             }
@@ -92,7 +90,6 @@ public class MultiplePayoff extends Payoff{
 
     public void updateMaxTremble(float[] payoffs, double et){
         for (byte i = 0; i < nPayoffs; i++){
-            boolean mo;
             if (Actions.contains(i)){
                 payoffs[i] = p[Actions.indexOf(i)];
             }
@@ -129,24 +126,23 @@ public class MultiplePayoff extends Payoff{
         // after the new belief is computed, it comes back to payoff vector, max, maxIndex is updated
         boolean mo;
         if (oldAction == 7){
-            //System.out.println(mo = (payoff==p[Actions.indexOf(oldAction)]));
+            System.out.println(mo = (payoff==p[Actions.indexOf(oldAction)]));
         }
         if (oldAction == 15){
-            //System.out.println(mo = (payoff==p[Actions.indexOf(oldAction)]));
+            System.out.println(mo = (payoff==p[Actions.indexOf(oldAction)]));
         }
         nIndex = Actions.indexOf(oldAction);
-        /*if(n[nIndex] > 2){
-            recursiveStatesCount++;
-            System.out.println("occurred " + n[nIndex] + " count " +recursiveStatesCount);
+        /*if(n[nIndex] > 20){
+            System.out.println("average diff: " + (double)(diff)/n[nIndex]);
         }*/
 
         double alpha = (1.0/(1 + n[nIndex]));  // updating factor  // TODO: check if not zero
         //System.out.println(p[nIndex] + " before " + payoff +  " now " + (payoff - p[nIndex]) + " difference");
-        diff = payoff - p[nIndex];
+        diff = diff + payoff - p[nIndex];
+        double previous = p[nIndex];
         p[nIndex] = (float) ((1.0 - alpha) * p[nIndex] +
                 + alpha * Math.exp( - rho * (et - EventTime)) * payoff); // TODO: check the values produced
-        //System.out.println("updated: " + p[nIndex]);
-    //System.out.println("alpha: " + alpha + " 1-alpha: " + (1-alpha) + " 1.0-alpha: " + (1.0 - alpha));
+        //System.out.println("diff MP: " + (p[nIndex] - previous));
     }
 
     public int getN(){
@@ -181,10 +177,10 @@ public class MultiplePayoff extends Payoff{
     }
 
     public double getDiff(){
-        return diff;
+        return (n[nIndex]>10)?diff:10.0;
     }
 
-    public float getMax(){
+    public double getMax(){
         return max;
     }
     public byte getMaxIndex(){

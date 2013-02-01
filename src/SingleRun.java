@@ -64,8 +64,6 @@ public class SingleRun {
         writeDiagnostics = wd;
         purge = p;
         nReset = n;
-        int lastEvent = 0;                         // TODO: delete afterwards
-        byte lastAction = 0;                        // TODO: delete afterwards
         for (int i = 0; i < nEvents; i ++){
 
             // 1. new HFT
@@ -91,7 +89,7 @@ public class SingleRun {
 
             // number of all agents to trade
 
-            double prob1 = (double) nHFT / nAll * 0.92;
+            double prob1 = (double) nHFT / nAll * 0.92;    //TODO: times 0.92
             double prob2 = (double) NewNonHFT / nAll * 0.92;
             double prob3 = (double) ReturningHFT / nAll * 0.92;
             double prob4 = (double) ReturningNonHFT / nAll * 0.92;
@@ -152,8 +150,6 @@ public class SingleRun {
                 if (PO != null){
                     book.transactionRule(PO.getPrice() , PO.getCurrentOrder());
                 } else {book.addTrader(ID);}
-                lastEvent = 2;
-                lastAction = tr.getOldAction();
             } else if (rn < x3){                   // Returning HFT
                 ID = book.randomHFTtraderID();
                 //System.out.println("Returning HFT ID: " + ID);
@@ -174,43 +170,19 @@ public class SingleRun {
                     System.out.println("old Zombie nonHFT");
                 }*/
                 //System.out.println("Returning nonHFT ID: " + ID);
-                boolean test;
-                test = traders.get(ID).getIsTraded();
-                LinkedHashMap<Integer, Order>[] book2 = book.book;
-                int[] bs = book.getBookSizes();
-                int[] bi = book.getBookInfo();
-                int[] bi2 = getBookInfo(bs);
-
-                int At;            //TODO: delete afterwards
-                int Bt;
-                int j = 0;
-                while (bs[j] >= 0 && j < 8){
-                    j++;
-                }
-                At = j;
-                j = 8;
-                while (bs[j] <= 0 && j > 0){
-                    j--;
-                }
-                Bt = j;
-                System.out.println("Best bid: " + Bt + " Best ask: " + At);
                 PriceOrder PO = traders.get(ID).decision(book.getRank(ID), book.getBookSizes(), book.getBookInfo(),
                         EventTime, FV);
-
                 if (PO != null){
                     book.transactionRule(PO.getPrice() , PO.getCurrentOrder());
                 } else {
                     book.tryCancel(ID);
                 }
 
-                int[] bi3 = getBookInfo(bs);
-
-                if (traders.containsKey(ID)){
+               /* if (traders.containsKey(ID)){
                     if(book.book[PO.getPrice()].containsKey(ID) && traders.get(ID).getIsTraded()){
                         System.out.println("problem");
                     }
-                }
-                lastEvent = 4;
+                }*/
             } else{                                // Change in FV
                 double rn3 = Math.random();
                 if (rn3 < FVplus){
@@ -222,7 +194,6 @@ public class SingleRun {
                     book.FVdown(FV, EventTime);
                     //System.out.println("down" + FV);
                 }
-                lastEvent = 5;
             }
             h.addOrderData(book.getBestBid(), book.getBestAsk());
             if (i % 100000 == 0) {
@@ -257,28 +228,4 @@ public class SingleRun {
         return new double[]{EventTime, FV};
     }
 
-    public int[] getBookInfo(int[] BookSizes){     //TODO:delete afterwards
-        /* (best Bid, Ask), (depth at B, A), (depth Buy, Sell),
-        (last price, WasBuy) */
-        int[] BookInfo = new int[8];
-        int nPoints = 9;
-        int Bt;         // best bid position in Prices
-        int At;         // best ask position in Prices
-
-        int j = 0;
-        while (BookSizes[j] >= 0 && j < 8){
-            j++;
-        }
-        At = j;
-        j = 8;
-        while (BookSizes[j] <= 0 && j > 0){
-            j--;
-        }
-        Bt = j;
-
-        BookInfo[0] = Bt;                 // best bid position
-        BookInfo[1] = At;                 // best ask position
-
-        return BookInfo;
-    }
 }

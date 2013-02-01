@@ -16,9 +16,9 @@ public class ReducedStatesTest {
         double timeStamp1 = System.nanoTime();
         int nHFT = 0;                           // # of HFT's fast traders, fixed
         int nPositiveNonHFT = 10;               // # of positive PV slow traders
-        int nZeroNonHFT = 10;                   // # of zero PV slow traders
+        int nZeroNonHFT = 20;                   // # of zero PV slow traders
         int nNegativeNonHFT = 10;               // # of negative PV slow traders
-        double lambdaArrival = 0.1;             // arrival frequency, same for all
+        double lambdaArrival = 1;             // arrival frequency, same for all
         double ReturnFrequencyHFT = 1;          // returning frequency of HFT
         double ReturnFrequencyNonHFT = 0.1;     // returning frequency of NonHFT
         String folder = "D:\\_paper1 HFT, MM, rebates and market quality\\Matlab Analysis\\";
@@ -26,26 +26,26 @@ public class ReducedStatesTest {
 
 
         int infoSize = 7;                       // 2-bid, ask, 4-last price, direction, 6-depth at bid,ask, 8-depth off bid,ask
-        byte nP = 9;                           // number of prices tracked by the book
+        byte nP = 19;                           // number of prices tracked by the book
         int maxDepth = 7;                       // 0 to 7 which matter
         int FVpos = (int) nP/2;                 // position of the fundamental value
         double prTremble = 0.0;                 // probability of trembling
 
-        /*int HL = FVpos + 6;                     // Lowest  allowed limit order price.  LL + HL = nP-1 for allowed orders centered around E(v)
+        int HL = FVpos + 6;                     // Lowest  allowed limit order price.  LL + HL = nP-1 for allowed orders centered around E(v)
         int LL = FVpos - 6;                    // Highest allowed limit order price
         float tickSize = 0.0625f;//0.125;       // size of one tick
         int PVsigma = 4;//4                     // # of ticks for negative and positive PVs
         String outputNameTransactions = "Transactions16.csv";  // output file name
         String outputNameBookData = "BookData16.csv";  // output file name
-        String outputNameStatsData = "stats16.csv";   // output file name*/
+        String outputNameStatsData = "stats16.csv";   // output file name
 
-        int HL = FVpos + 3; // + 6              // Lowest  allowed limit order price.  LL + HL = nP-1 for allowed orders centered around E(v)
+        /*int HL = FVpos + 3; // + 6              // Lowest  allowed limit order price.  LL + HL = nP-1 for allowed orders centered around E(v)
         int LL = FVpos - 3; //              // Highest allowed limit order price
         float tickSize = 0.125f;//0.125;        // size of one tick
         int PVsigma = 2;//4                     // # of ticks for negative and positive PVs
         String outputNameTransactions = "Transactions8.csv";  // output file name
         String outputNameBookData = "BookData8.csv";   // output file name
-        String outputNameStatsData = "stats8.csv";   // output file name
+        String outputNameStatsData = "stats8.csv";   // output file name*/
 
         int end = HL - LL + 1;                  // number of position on the grid for submitting LOs
         int breakPoint = end / 2;               // breaking point for positive, negative, represents FV position on the LO grid
@@ -135,13 +135,14 @@ public class ReducedStatesTest {
                 FprivateValues, sigma, tickSize, FVplus, header, book, traders, h, trader, outputNameStatsData,
                 outputNameTransactions, outputNameBookData);
         // getting to equilibrium ballpark
-        int nEvents = 100000000;        // number of events
+        int nEvents = 200000000;        // number of events
         boolean write = false;          // writeDecisions output in this SingleRun?
         //boolean writeDecisions = true;         // writeDecisions output in this SingleRun?
         boolean writeDiagnostics = true;// write diagnostics controls diagnostics
         boolean purge = false;          // purge in this SingleRun?
         boolean nReset = false;         // reset n in this SingleRun?
         //trader.setWriteDec(true);
+        //trader.setPrTremble(0.1);
         trader.setWriteDiag(true);
 
         double[] RunOutcome =
@@ -153,10 +154,10 @@ public class ReducedStatesTest {
         //trader.printStatesDensity(EventTime); // occurrences of MPs now
         //trader.printHistogram();
 
-        nEvents = 500000000;        // number of events
+        nEvents = 200000000;        // number of events
         write = false;              // writeDecisions output in this SingleRun?
         writeDiagnostics = true;    // write diagnostics controls diagnostics
-        purge = true;               // purge in this SingleRun?
+        purge = false;               // purge in this SingleRun?
         nReset = true;              // reset n in this SingleRun?
         trader.setPrTremble(0.1);
 
@@ -166,7 +167,7 @@ public class ReducedStatesTest {
         EventTime = RunOutcome[0];
         FV = RunOutcome[1];
 
-        nEvents = 500000000;       // number of events
+        nEvents = 200000000;       // number of events
         write = false;              // writeDecisions output in this SingleRun?
         writeDiagnostics = true;    // write diagnostics controls diagnostics
         purge = false;              // purge in this SingleRun?
@@ -179,11 +180,11 @@ public class ReducedStatesTest {
         EventTime = RunOutcome[0];
         FV = RunOutcome[1];
 
-        nEvents = 500000000;        // number of events
+        nEvents = 2000000000;        // number of events
         write = false;              // writeDecisions output in this SingleRun?
         writeDiagnostics = true;    // write diagnostics controls diagnostics
         purge = false;              // purge in this SingleRun?
-        nReset = false;             // reset n in this SingleRun?
+        nReset = true;             // reset n in this SingleRun?
         trader.setPrTremble(0.01);
 
         RunOutcome =
@@ -192,11 +193,11 @@ public class ReducedStatesTest {
         EventTime = RunOutcome[0];
         FV = RunOutcome[1];
 
-        nEvents = 500000000;        // number of events
+        nEvents = 2000000000;        // number of events
         write = false;              // writeDecisions output in this SingleRun?
         writeDiagnostics = true;    // write diagnostics controls diagnostics
         purge = false;              // purge in this SingleRun?
-        nReset = true;              // reset n in this SingleRun?
+        nReset = false;              // reset n in this SingleRun?
         trader.setPrTremble(0.0);
 
         RunOutcome =
@@ -205,7 +206,7 @@ public class ReducedStatesTest {
         EventTime = RunOutcome[0];
         FV = RunOutcome[1];
 
-        nEvents = 10000000;    // number of events
+        nEvents = 20000000;    // number of events
         write = true;          // writeDecisions output in this SingleRun?
         writeDiagnostics = true;    // write diagnostics controls diagnostics
         purge = false;         // purge in this SingleRun?

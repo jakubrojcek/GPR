@@ -27,8 +27,10 @@ public class SinglePayoff extends Payoff{
     }
 
     public void update(byte oldAction, double payoff, double et){ //only if executed-> can be only once
+        double previous = max; //TODO: delete afterwards
         max = (float) (0.5 * max + 0.5 * Math.exp( - rho * (et - EventTime)) * payoff);
         //System.out.println("maxIndex: " + maxIndex + " max: " + max);
+        //System.out.println("diff SP: " + (max - previous));
     }
 
     public boolean canBeDeleted(){

@@ -72,6 +72,7 @@ public class LOB_LinkedHashMap {
                     }
                     currentPosition.remove(id);
                     book[1].remove(id);
+                    traders.remove(id);
                     keys.remove(id);
                 }
             }
@@ -113,6 +114,7 @@ public class LOB_LinkedHashMap {
                     }
                     currentPosition.remove(id);
                     book[nPoints - 2].remove(id);
+                    traders.remove(id);
                     keys.remove(id);
                 }
             }
@@ -139,7 +141,7 @@ public class LOB_LinkedHashMap {
     
     public Hashtable<Byte, Byte> getRank (int traderID){
 
-        priorities.put(nPoints, (byte) 0); // trader's position in previous action
+        priorities.put(nPoints, (byte) (nPoints + 1)); // trader's position in previous action
         // positions , priorities table & last item is isReturning? 1 if yes, Price in previous action
         for (int i = 0; i < nPoints; i++){
             priorities.put((byte) i, (byte) Math.min(book[i].size(), maxDepth));
@@ -322,7 +324,7 @@ public class LOB_LinkedHashMap {
         for (int i = 0; i < nPoints; i ++){
             System.out.println(Prices[i] + ": " + book[i].keySet());
         }
-        System.out.println("non HFTs " + traderIDsNonHFT);
+        /*System.out.println("non HFTs " + traderIDsNonHFT);
         System.out.println("HFTs " + traderIDsHFT);
         System.out.println(BookInfo[0] + " best bid @ position = " + BookInfo[0] + " shift " + positionShift);
         System.out.println(BookInfo[1] + " best ask @ position = " + BookInfo[1] + " shift " + positionShift);
@@ -331,7 +333,7 @@ public class LOB_LinkedHashMap {
         System.out.println(BookInfo[4] + " depth buys");
         System.out.println(BookInfo[5] + " depth sells");
         System.out.println(BookInfo[6] + " last transaction price");
-        System.out.println(BookInfo[7] + " 1 if last transaction buy, 0 if sell");
+        System.out.println(BookInfo[7] + " 1 if last transaction buy, 0 if sell");*/
     }
 
 

@@ -176,31 +176,8 @@ public class Test_various {
         A = -4/3;
         System.out.println(A);*/
 
-        ArrayList<Byte> IDs = new ArrayList<Byte>(1);
-        Byte a = 5;
-        Byte b = 3;
-        IDs.add(a);
-        IDs.add(b);
-        System.out.println(IDs.indexOf(a));
 
-        boolean test = true != true;
-        System.out.println(test);
-
-        int[] BookSizes = {0,0,2,5,2,7,-1,-3,-3};
-
-        int At;
-        int Bt;
-        int j = 0;
-        while (BookSizes[j] >= 0 && j < 8){
-            j++;
-        }
-        At = j;
-        j = 8;
-        while (BookSizes[j] <= 0 && j > 0){
-            j--;
-        }
-        Bt = j;
-        System.out.println("Best bid: " + Bt + " Best ask: " + At);
+        System.out.println("float test: " + (0.1f - 0.099999999f));
 
 
 /*        FileWriter fw;

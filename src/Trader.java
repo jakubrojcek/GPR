@@ -113,15 +113,30 @@ public class Trader {
         int pricePosition;                  // pricePosition at which to submit
         boolean buyOrder = false;           // buy order?
 
+        int P = Priorities.get(nP);                             // pricePosition position in previous action
+        int q = (P != (nP + 1)) ? Priorities.get((byte)P) : 0;  // priority of the order at P
+        int x = 0;                                              // order was buy(2) or sell(1) or no order (0)
+        if (isReturning && P != nP + 1){
+            x = (BookSizes[P] > 0) ? 2 : 1;
+            if (P == BookInfo[0] && BookSizes[P] == 1 && x == 2){
+                BookSizes[P] = 0;
+                int j = nP - 1;
+                while (BookSizes[j] <= 0 && j > 0){
+                    j--;
+                }
+                BookInfo[0] = j;
+            } else if (P == BookInfo[1] && BookSizes[P] == -1 && x == 1){
+                BookSizes[P] = 0;
+                int j = 0;
+                while (BookSizes[j] >= 0 && j < nP - 1){
+                    j++;
+                }
+                BookInfo[1] = j;
+            }
+        }
         long Bt = BookInfo[0];              // Best Bid position
         long At = BookInfo[1];              // Best Ask position
-        int P = Priorities.get(nP);         // pricePosition position in previous action
-        int q = Priorities.get((byte)P);    // priority of the order at P
-        int x = 0;                          // order was buy(2) or sell(1) or no order (0)
-        if (isReturning){
-            x = (BookSizes[P] > 0) ? 2 : 1;
-        }
-        Long code = HashCode(Priorities, BookSizes, BookInfo);
+        Long code = HashCode(P, q, x, BookInfo);
         /*if (isReturning){
             System.out.println("Trader ID " + traderID);
             System.out.println("new hash code " + Long.toBinaryString(code));
@@ -133,7 +148,7 @@ public class Trader {
         byte action;
         double diff = 0.0;        // TODO: delete, for diagnostics now
 
-        float [] p = new float[nPayoffs];
+        float[] p = new float[nPayoffs];
         double sum = 0;                     // used to compute payoff to no-order
         for (int i = 0; i < end; i++){      // Limit order payoffs for ticks LL through HL
             p[i] = (float) (discountFactorB.get(i)[Math.abs(BookSizes[LL + i])] * ((i - breakPoint) * tickSize - privateValue));
@@ -252,7 +267,7 @@ public class Trader {
         if (action == end || action == 2 * end + 1) {
             isTraded = true;                                    // isTraded set to true if submitting MOs
         }
-        if (writeDiagnostics){
+        if (writeDiagnostics && (10.0 - diff) > 1.0){
             diag.addDiff(diff);
         }
 
@@ -283,14 +298,11 @@ public class Trader {
     }
 
     // Hash code computed dependent on various Information Size (2, 4, 6, 7, 8)
-    public Long HashCode(Hashtable<Byte, Byte> Priorities, int[] BookSizes, int[] BookInfo){
+    public Long HashCode(int P, int q, int x, int[] BookInfo){
         Long code = (long) 0;
         if (infoSize == 2){
             long Bt = BookInfo[0];                  // Best Bid position
             long At = BookInfo[1];                  // Best Ask position
-            int P = Priorities.get(nP);             // pricePosition position in previous action
-            int q = Priorities.get((byte)P);        // priority of the order at P
-            int x = 0;                              // order was buy(2) or sell(1) or no order (0)
             int a = pv;                             // private value zero(0), negative (1), positive (2)
             code = (Bt<<17) + (At<<12) + (P<<7) + (q<<4) + (x<<2) + a;
 
@@ -299,9 +311,6 @@ public class Trader {
             long At = BookInfo[1];                  // Best Ask position
             long lBt = BookInfo[2] / 3;             // depth at best Bid
             long lAt = BookInfo[3] / 3;             // depth at best Ask
-            int P = Priorities.get(nP);             // pricePosition position in previous action
-            int q = Priorities.get((byte)P);        // priority of the order at P
-            int x = 0;                              // order was buy(2) or sell(1) or no order (0)
             int a = pv;                             // private value zero(0), negative (1), positive (2)
             code = (Bt<<21) + (At<<16) + (lBt<<14) + (lAt<<12) + (P<<7) + (q<<4) + (x<<2) + a;
 
@@ -314,14 +323,8 @@ public class Trader {
             int dSt = (BookInfo[5] / maxDepth);     // depth at sell
             int Pt = BookInfo[6];                   // last transaction pricePosition position
             int b = BookInfo[7];                    // 1 if last transaction buy, 0 if sell
-            int P = Priorities.get(nP);             // pricePosition position in previous action
-            int q = Priorities.get((byte)P);        // priority of the order at P
-            int x = 0;                              // order was buy(2) or sell(1) or no order (0)
             int a = pv;                             // private value zero(0), negative (1), positive (2)
             int l = (isHFT) ? 1 : 0;                // arrival frequency slow (0), fast (1)
-            if (isReturning){
-                x = (BookSizes[P] > 0) ? 2 : 1;
-            }
 
             /*Long code = (Bt<<50) + (At<<44) + (lBt<<40) + (lAt<<36) + (dBt<<29) + (dSt<<22) + (Pt<<16) + (b<<15) +
                     + (P<<9) + (q<<5) + (x<<3) + (a<<1) + l;*/
@@ -357,14 +360,8 @@ public class Trader {
             int dSt = BookInfo[5];              // depth at sell
             int Pt = BookInfo[6];               // last transaction pricePosition position
             int b = BookInfo[7];                // 1 if last transaction buy, 0 if sell
-            int P = Priorities.get(nP);         // pricePosition position in previous action
-            int q = Priorities.get((byte)P);    // priority of the order at P
-            int x = 0;                          // order was buy(2) or sell(1) or no order (0)
             int a = pv;                         // private value zero(0), negative (1), positive (2)
             int l = (isHFT) ? 1 : 0;            // arrival frequency slow (0), fast (1)
-            if (isReturning){
-                x = (BookSizes[P] > 0) ? 2 : 1;
-            }
             //System.out.println(Bt + " : " + lBt + " ; " + At + " : " + lAt);
             /*Long code = (Bt<<50) + (At<<44) + (lBt<<40) + (lAt<<36) + (dBt<<29) + (dSt<<22) + (Pt<<16) + (b<<15) +
                     + (P<<9) + (q<<5) + (x<<3) + (a<<1) + l;*/
@@ -379,7 +376,7 @@ public class Trader {
     public void printStatesDensity(double et){
         Payoff pay;
         short [] n;
-        float [] p;
+        float[] p;
         try{
             String outputFileName = folder + "occurrences.csv";
             String outputFileName2 = folder + "payoffs.csv";
@@ -552,9 +549,6 @@ public class Trader {
         return pv;
     }
 
-    public byte getOldAction(){    //TODO: delete afterwards
-        return oldAction;
-    }
 
     // setters
     public void setIsTraded(boolean traded){
