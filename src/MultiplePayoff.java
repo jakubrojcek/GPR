@@ -12,14 +12,16 @@ public class MultiplePayoff extends Payoff{
 
     private float[] p = new float[1];         // vector of payoff beliefs 13x SLO, SMO, 13x BLO, BMO, No order/cancellation
     private float max = 0.0f;                 // max payoff belief in the state
-    private byte maxIndex;                    // index of max payoff belief in the state
+    private short maxIndex;                    // index of max payoff belief in the state
     private short[] n = new short[1];         // occurrences of action in the state for alpha
-    private ArrayList<Byte> Actions = new ArrayList<Byte>(1);  // actions for n's
+    private ArrayList<Short> Actions = new ArrayList<Short>(1);  // actions for n's
     private double EventTime = 0.0;           // event time
     private boolean fromPreviousRound = false;// set to true when you move to the next round
     static int nSize;                         // current size of n array, for copying to +1 bigger
     static int nIndex;                        // holder for index of n, for updating ++
-    private double diff;
+    private double diff = 0.0;                //TODO: delete afterwards
+    private int nDiff = 0;                    //TODO: delete afterwards
+    private int printIndex = 0;               //TODO: delete afterwards
 
     public MultiplePayoff(float[] payoffs, double et, SinglePayoff sp){
         this.EventTime = et;    // time when new action for the Payoff is chosen
@@ -53,9 +55,9 @@ public class MultiplePayoff extends Payoff{
     }
 
     // update old state upon return of a trader whose previous state is captured in this MultiplePayoff
-    public void updateMax(float[] payoffs, double et){ // overloading update method MP happens more times
+    public void updateMax(float[] payoffs, double et, boolean tremble){ // overloading update method MP happens more times
         for (byte i = 0; i < nPayoffs; i++){
-            if (Actions.contains(i)){       //TODO:check
+            if (Actions.contains(i)){
                 payoffs[i] = p[Actions.indexOf(i)];
             }
             if (payoffs[i] > max){
@@ -63,6 +65,10 @@ public class MultiplePayoff extends Payoff{
                 maxIndex = i;
             }
         }
+        if (tremble){
+            maxIndex = (byte) (Math.random() * payoffs.length);
+            max = payoffs[maxIndex];
+        }
         if(!Actions.contains(maxIndex)){
             nSize = Actions.size();
             short[] nNew = new short[nSize + 1];
@@ -80,40 +86,7 @@ public class MultiplePayoff extends Payoff{
             + "  n.length: " + n.length);*/
             //System.out.println("maxIndex:" + maxIndex + " max: " + max);
             nIndex = Actions.indexOf(maxIndex);
-            if (n[nIndex] < nResetMax){       //TODO: check if satisfied
-                n[Actions.indexOf(maxIndex)]++;
-            }
-        }
-        EventTime = et;
-        fromPreviousRound = false;
-    }
-
-    public void updateMaxTremble(float[] payoffs, double et){
-        for (byte i = 0; i < nPayoffs; i++){
-            if (Actions.contains(i)){
-                payoffs[i] = p[Actions.indexOf(i)];
-            }
-        }
-        maxIndex = (byte) (Math.random() * payoffs.length); // TODO: maybe only buys for buyer, sells for seller?
-        max = payoffs[maxIndex];
-        if(!Actions.contains(maxIndex)){
-            nSize = Actions.size();
-            short[] nNew = new short[nSize + 1];
-            System.arraycopy(n, 0, nNew, 0, nSize);
-            n = nNew;
-            n[nSize] = 1;
-
-            p = Arrays.copyOf(p, nSize + 1);
-            p[nSize] = max;
-
-            Actions.add(maxIndex);
-            //System.out.println("occurrences " + n[nIndex] + " size " + nSize);
-        } else {
-            /*System.out.println("maxIndex: " + maxIndex + "  actions size: " + Actions.size()
-            + "  n.length: " + n.length);*/
-            //System.out.println("maxIndex:" + maxIndex + " max: " + max);
-            nIndex = Actions.indexOf(maxIndex);
-            if (n[nIndex] < nResetMax){       //TODO: check if satisfied
+            if (n[nIndex] < nResetMax){
                 n[Actions.indexOf(maxIndex)]++;
             }
         }
@@ -122,7 +95,7 @@ public class MultiplePayoff extends Payoff{
     }
 
     // updates payoff from the oldAction upon execution
-    public void update(byte oldAction, double payoff, double et){
+    public void update(short oldAction, double payoff, double et){
         // after the new belief is computed, it comes back to payoff vector, max, maxIndex is updated
         boolean mo;
         if (oldAction == 7){
@@ -136,13 +109,38 @@ public class MultiplePayoff extends Payoff{
             System.out.println("average diff: " + (double)(diff)/n[nIndex]);
         }*/
 
-        double alpha = (1.0/(1 + n[nIndex]));  // updating factor  // TODO: check if not zero
+        double alpha = (1.0/(1 + n[nIndex]));  // updating factor
         //System.out.println(p[nIndex] + " before " + payoff +  " now " + (payoff - p[nIndex]) + " difference");
-        diff = diff + payoff - p[nIndex];
         double previous = p[nIndex];
         p[nIndex] = (float) ((1.0 - alpha) * p[nIndex] +
                 + alpha * Math.exp( - rho * (et - EventTime)) * payoff); // TODO: check the values produced
+        //diff = p[nIndex];
         //System.out.println("diff MP: " + (p[nIndex] - previous));
+    }
+
+    public String printDiff(int t2){
+        String s = new String();
+        int len = n.length;
+        int index = 0;
+        for (int i = 0; i < len; i++){
+            if (n[i] > n[index]){
+                index = i;
+            }
+        }
+        if (n[index] > t2 && index == printIndex){
+            dof++;
+            s = (n[index] - nDiff) + ";";
+            s = s + (p[index] - diff) + ";";
+            s = s + dof + "\r";
+            nDiff = n[index];
+            diff = p[index];
+            printIndex = index; //TODO: delete afterwards
+        } else {
+            nDiff = n[index];
+            diff = p[index];
+            printIndex = index; //TODO: delete afterwards
+        }
+        return s;
     }
 
     public int getN(){
@@ -183,7 +181,7 @@ public class MultiplePayoff extends Payoff{
     public double getMax(){
         return max;
     }
-    public byte getMaxIndex(){
+    public short getMaxIndex(){
         return maxIndex;
     }
 }

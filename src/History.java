@@ -1,5 +1,4 @@
 import java.io.FileWriter;
-import java.io.BufferedWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Vector;
@@ -17,6 +16,7 @@ public class History {
     ArrayList<Integer> Asks;
     ArrayList<Integer> Events;
     ArrayList<Integer> States;
+    ArrayList<Double> EffSpread;
     Vector<Trade> history;
     String folder;
 
@@ -24,6 +24,7 @@ public class History {
         traders = t;
         Asks = new ArrayList<Integer>();
         Bids = new ArrayList<Integer>();
+        EffSpread = new ArrayList<Double>();
         Events = new ArrayList<Integer>();
         States = new ArrayList<Integer>();
         history = new Vector<Trade>();
@@ -39,9 +40,8 @@ public class History {
                 buy.getTimeStamp(), sell.getTimeStamp(), timeTrade, price, fv));
     }
 
-    public void addOrderData(int BestBid, int BestAsk){
-        Bids.add(BestBid);
-        Asks.add(BestAsk);
+    public void addOrderData(Double spread){
+        EffSpread.add(spread);
     }
 
     public void addStatisticsData(int eventNum, int statesNum){
@@ -70,7 +70,7 @@ public class History {
                     lo = t.getPrice() - t.getSellerPV() - t.getFV();
                 }
                 //writer.writeDecisions(history.get(i).printTrade());
-                writer.write(mo + ";" + lo + ";" + "\r");
+                writer.write(mo + ";" + lo + ";" + (t.getFV() - t.getPrice()) + ";" + "\r");
             }
             writer.close();
         }
@@ -85,16 +85,12 @@ public class History {
             String outputFileName = folder + fileNameBookData;
             FileWriter writer = new FileWriter(outputFileName, true);
             if (writeHeader){
-                writer.write("BestBid;BestAsk;");
+                writer.write("EffSpread;");
             }
-            int sz = Bids.size();
-            int sumB = 0;
-            int sumA = 0;
+            int sz = EffSpread.size();
             for (int i = 0; i < sz; i++){
-                sumB += Bids.get(i);
-                sumA += Asks.get(i);
+                writer.write(EffSpread.get(i) + ";" + "\r");
             }
-            writer.write((double)sumB/sz + ";" + (double)sumA/sz + ";" + "\r");
             writer.close();
         }
         catch (Exception e){
@@ -133,6 +129,7 @@ public class History {
         Bids = new ArrayList<Integer>();
         Events = new ArrayList<Integer>();
         States = new ArrayList<Integer>();
+        EffSpread = new ArrayList<Double>();
         history = new Vector<Trade>();
     }
 

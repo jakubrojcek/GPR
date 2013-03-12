@@ -5,10 +5,11 @@ import javafx.scene.chart.CategoryAxis;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.stage.Stage;
+import org.apache.commons.math3.distribution.NormalDistribution;
 
 
 import java.io.*;
-import java.util.*;
+import java.util.*;   import org.apache.commons.math3.distribution.NormalDistribution;
 
 /**
  * Created by IntelliJ IDEA.
@@ -175,9 +176,11 @@ public class Test_various {
         /*long A;
         A = -4/3;
         System.out.println(A);*/
+        NormalDistribution nd = new NormalDistribution(0.0, 0.35);
+        for (int i = 0; i < 1000; i++){
+            System.out.println((float) nd.sample());
+        }
 
-
-        System.out.println("float test: " + (0.1f - 0.099999999f));
 
 
 /*        FileWriter fw;

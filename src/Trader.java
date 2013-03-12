@@ -1,5 +1,6 @@
 import java.io.FileWriter;
 import java.util.*;
+import org.apache.commons.math3.distribution.NormalDistribution;
 
 /**
  * Created by IntelliJ IDEA.
@@ -17,7 +18,7 @@ public class Trader {
     private boolean isTraded = false;   // set by TransactionRule in book
     private boolean isReturning = false;// is he returning this time? info from priorities
     private long oldCode;               // oldCode holds old hash code for the last state in which he took action
-    private byte oldAction;             // which action he took in the old state
+    private short oldAction;             // which action he took in the old state
     private float rho = 0.05f;          // trading "impatience" parameter
     private double PriceFV;             // current fundamental value-> price at middle position //TODO: should this be in the payoff?
 
@@ -49,7 +50,9 @@ public class Trader {
     static Diagnostics diag;
     static int [] bookSizesHistory;
     static int[] previousTraderAction;
-
+    static Payoff InitialPayoff;
+    static float[] mu;
+    static float[] deltaV0;
     //private double CFEE;              // cancellation fee
 
 
@@ -98,6 +101,7 @@ public class Trader {
         bookSizesHistory = new int[2 * nP + 1];
         bookSizesHistory[0] = 0;
         previousTraderAction = new int[3];
+        InitialPayoff = new Payoff(rho, nPayoffs, end);              // initialize static variables for Payoff class
     }
 
     // decision about the price is made here, so far random
@@ -145,7 +149,7 @@ public class Trader {
         }*/                      // printing code commented
 
         double continuationValue;
-        byte action;
+        short action;
         double diff = 0.0;        // TODO: delete, for diagnostics now
 
         float[] p = new float[nPayoffs];
@@ -172,7 +176,7 @@ public class Trader {
             int p25 = P - LL;
             if (x == 1){ // last LO was sell
                 sum -= p[p25];
-                p[p25] = (float)(discountFactorB.get(p25)[q] * ((p25 - breakPoint) * tickSize - privateValue));      //SLO
+                p[p25] = (float)(discountFactorB.get(p25)[q] * ((p25 - breakPoint) * tickSize - privateValue));  //TODO: breakPoint is correct here?    //SLO
                 sum += p[p25];
             } else {     // last LO was buy
                 sum -= p[p25 + end + 1];
@@ -191,7 +195,7 @@ public class Trader {
 
         if (!Payoffs.containsKey(code)){ // new state, new SinglePayoff created
             statesCount++;
-            SinglePayoff pay = new SinglePayoff(p, EventTime, rho, nPayoffs);
+            SinglePayoff pay = new SinglePayoff(p, EventTime);
             Payoffs.put(code, pay);      // insert a Payoff object made of SinglePayoff to the Payoffs table
             action = pay.getMaxIndex();
             continuationValue = pay.getMax();
@@ -205,9 +209,9 @@ public class Trader {
                 action = pay2.getMaxIndex();
             } else {                                                 // MultiplePayoff occurring again
                 if (prTremble > 0 && Math.random() < prTremble){     // trembling comes here
-                    ((MultiplePayoff) pay).updateMaxTremble(p, EventTime);
-                } else{
-                    ((MultiplePayoff) pay).updateMax(p, EventTime);
+                    ((MultiplePayoff) pay).updateMax(p, EventTime, true);
+                } else{                                              // here no trembling
+                    ((MultiplePayoff) pay).updateMax(p, EventTime, false);
                 }
                 continuationValue = ((MultiplePayoff) pay).getMax();
                 action = ((MultiplePayoff) pay).getMaxIndex();
@@ -246,32 +250,106 @@ public class Trader {
         oldCode = code;                                          // save for later updating
         oldAction = action;                                      // save for later updating
 
-        if (writeDecisions){                                              // printing data for output tables
-            // tables I, V
-            decision.addDecision(BookInfo, (int) action, previousTraderAction);
-            previousTraderAction[0] = (int)action;
-            previousTraderAction[1] = (int)Bt;
-            previousTraderAction[2] = (int)At;
-            // histogram
-            bookSizesHistory[0]++;
-            int sz = BookSizes.length;
-            for (int i = 0; i < sz; i++){
-                if (BookSizes[i] < 0){
-                    bookSizesHistory[i + 1] = bookSizesHistory[i + 1] + BookSizes[i];
-                } else {
-                    bookSizesHistory[nP + i + 1] = bookSizesHistory[nP + i + 1] + BookSizes[i];
-                }
-            }
-        }
+        if (writeDecisions){writeDecision(BookInfo, BookSizes, (int) action);}                                     // printing data for output tables
+        if (writeDiagnostics){ writeDiagnostics(diff, action);}
 
         if (action == end || action == 2 * end + 1) {
             isTraded = true;                                    // isTraded set to true if submitting MOs
         }
-        if (writeDiagnostics && (10.0 - diff) > 1.0){
-            diag.addDiff(diff);
-        }
+
 
         return (action != 2 * end + 2) ? new PriceOrder(pricePosition, currentOrder) : null;
+    }
+
+    // method for making decision based on GPR 2005
+    public PriceOrder decision(int[] BookSizes, int[] BookInfo, double EventTime, double priceFV){
+        PriceFV = priceFV;
+        int pricePosition;
+        boolean buyOrder = false;
+        short action;
+        double diff = 0.0;
+
+        long Bt = BookInfo[0];              // Best Bid position
+        long At = BookInfo[1];              // Best Ask position
+        Long code = HashCode(0, 0, 0, BookInfo);
+
+        // computing payoffs from different actions based on overly optimistic beliefs
+        float[] p = new float[nPayoffs];
+
+        // SMO
+        p[end] = (float)((Bt - fvPos) * tickSize - privateValue);
+        // BMO
+        p[2 * end + 1] = (float)((fvPos - At) * tickSize + privateValue);
+        p[2 * end + 2] = 0.0f;                  // payoff to no order- but that's also a choice
+
+        for (int i = 0; i < end; i++ ){
+            // SLO
+
+            p[i] = (LL + i < Bt) ?  p[i] = p[end] - 0.01f :             // marketable sell limit order
+                    (float)(mu[i] * ((i - breakPoint) * tickSize - privateValue - deltaV0[i]));
+            // BLO
+            p[end + i + 1] = (LL + i > At) ? p[2 * end + 1] - 0.01f :   // marketable buy limit order
+                    (float)((mu[end + i + 1]) *
+                            (privateValue + deltaV0[end + i + 1] - (i - breakPoint) * tickSize));
+        }
+
+        if (!Payoffs.containsKey(code)){ // new state, new SinglePayoff created
+            statesCount++;
+            System.out.println(statesCount);
+            GPR2005Payoff pay = new GPR2005Payoff(p);
+            Payoffs.put(code, pay);      // insert a Payoff object made of GPR2005Payoff to the Payoffs table
+            action = pay.getMaxIndex();
+        } else {
+            GPR2005Payoff pay = (GPR2005Payoff)Payoffs.get(code);
+            Iterator keys = pay.getX1().keySet().iterator();
+            while (keys.hasNext()){
+                short key = (Short) keys.next();
+                if (key < end){
+                    // SLO
+                    p[key] = (LL + key < Bt) ? p[end] - 0.01f :                      // marketable sell limit order
+                            (float)((pay.getX1().get(key).getMu()) *
+                            ((key - breakPoint) * tickSize - privateValue - pay.getX1().get(key).getDeltaV()));
+                } else if (key > end && key < (2 * end + 1)) {
+                    // BLO
+                    p[key] = (LL + key - end - 1 > At) ? p[2 * end + 1] - 0.01f :   // marketable buy limit order
+                            (float)((pay.getX1().get(key).getMu()) *
+                            (privateValue + pay.getX1().get(key).getDeltaV() - (key - breakPoint - end - 1) * tickSize));
+                }
+            }
+            if (prTremble > 0 && Math.random() < prTremble){
+                pay.updateMax(p, true);                               // TODO: change back
+            } else {
+                pay.updateMax(p, true);
+                diff = pay.getDiff();
+            }
+            action = pay.getMaxIndex();
+        }
+
+        if (action > end){
+            buyOrder = true;
+        }
+        pricePosition = (action < end) ? LL + action : LL + action - end - 1;
+       /* if (!buyOrder && pricePosition < Bt){                                   // TODO: change back
+            System.out.println("marketable limit order");
+        }*/
+        /*if (action == end || !buyOrder && pricePosition < Bt){pricePosition = BookInfo[0];}           // position is Bid
+        if (action == 2 * end + 1 || buyOrder && pricePosition > At){pricePosition = BookInfo[1];}*/    // position is Ask
+
+        oldCode = code;
+        oldAction = action;
+
+        if (action == end){action = (short)(2 * end + 2);}           // position is Bid
+        if (action == 2 * end + 1){action = (short)(2 * end + 2);}   // TODO: delete this later
+
+        if (writeDecisions){writeDecision(BookInfo, BookSizes, (int) action);}
+        if (writeDiagnostics){writeDiagnostics(diff, (short) pricePosition);}        // TODO: change back to action
+
+        //System.out.println("action = " + action);
+                /*System.out.println("action = " + action + " pricePosition = " + pricePosition
+           + " buy? " + buyOrder);*/
+        Order CurrentOrder = new Order(traderID, EventTime, buyOrder);
+        return (action != 2 * end + 2) ?
+                new PriceOrder(pricePosition, CurrentOrder) : null;
     }
 
     // used to update payoff of action taken in a state upon execution
@@ -286,7 +364,7 @@ public class Trader {
                     (fundamentalValue - PriceFV);
             //System.out.println("buyer oldAction = " + oldAction + " payoff: " + payoff);
         }
-        if (Payoffs.containsKey(oldCode)){ //TODO: check if deleting OK
+        if (Payoffs.containsKey(oldCode)){
             Payoff pay = Payoffs.get(oldCode);
             if (pay instanceof SinglePayoff){
                 ((SinglePayoff) pay).update(oldAction, payoff, EventTime);
@@ -297,6 +375,87 @@ public class Trader {
         isTraded = true;
     }
 
+    // execution as in GPR 2005 setting
+    public void execution(double fundamentalValue){
+        tradeCount++;
+        if (Payoffs.containsKey(oldCode)){
+            ((GPR2005Payoff) Payoffs.get(oldCode)).update(oldAction, (float)(fundamentalValue - PriceFV), false);
+        }
+    }
+
+    // use to cancel limit order in normal setting
+    public void cancel(double EventTime){
+        double payoff = 0.0;
+        if (Payoffs.containsKey(oldCode)){
+            Payoff pay = Payoffs.get(oldCode);
+            if (pay instanceof SinglePayoff){
+                ((SinglePayoff) pay).update(oldAction, payoff, EventTime);
+            } else {
+                ((MultiplePayoff) pay).update(oldAction, payoff, EventTime);
+            }
+        }
+        isTraded = true;
+    }
+
+    // use to cancel limit order in a GPR2005 setting
+    public void cancel(){
+        if (Payoffs.containsKey(oldCode)){
+            ((GPR2005Payoff) Payoffs.get(oldCode)).update(oldAction, 0.0f, true);
+        }
+    }
+
+    // writing decisions
+    private void writeDecision(int[] BookInfo, int[] BookSizes, int action){
+        // tables I, V
+        decision.addDecision(BookInfo, action, previousTraderAction);
+        previousTraderAction[0] = action;
+        previousTraderAction[1] = BookInfo[0];
+        previousTraderAction[2] = BookInfo[1];
+        // histogram
+        bookSizesHistory[0]++;
+        int sz = BookSizes.length;
+        for (int i = 0; i < sz; i++){
+            if (BookSizes[i] < 0){
+                bookSizesHistory[i + 1] = bookSizesHistory[i + 1] + BookSizes[i];
+            } else {
+                bookSizesHistory[nP + i + 1] = bookSizesHistory[nP + i + 1] + BookSizes[i];
+            }
+        }
+    }
+
+    // writing diagnostics
+    private void writeDiagnostics(double diff, short ac){
+        diag.addDiff(diff);
+        diag.addAction(ac);
+    }
+
+    // computes initial beliefs for GPR2005 Payoffs
+    public void computeInitialBeliefs(float deltaLow){
+        // compute execution probabilities
+        NormalDistribution nd = new NormalDistribution(0.0, 0.35);   // mean 0, stddev $0.35 - GPR 2005
+        double FB;
+        mu = new float[nPayoffs];
+        deltaV0 = new float[nPayoffs];
+        for (int i = 0; i < end; i++){      // Limit order payoffs for ticks LL through HL
+            FB = nd.cumulativeProbability((i - breakPoint) * tickSize);
+            mu[i] = (float) (((1.0 - deltaLow) * (1.0 - FB)) / (1.0 - (1.0 - deltaLow) * (FB)));
+            deltaV0[i] = (float)(- i * tickSize);
+            // SLOs
+            mu[i + end + 1] = (float) (((1.0 - deltaLow) * FB) / (1.0 - (1.0 - deltaLow) * (1.0 - FB)));
+            deltaV0[i + end + 1] = (float)((end - 1 - i) * tickSize);
+            // BLOs
+        }
+        mu[end] = 1.0f;                                 // market sell order
+        mu[2 * end + 1] = 1.0f;                         // market buy order
+        mu[2 * end + 2] = 0.0f;                         // no order
+
+        // compute FV change upon execution
+        deltaV0[end] = 0;                               // market sell order
+        deltaV0[2 * end + 1] = 0;                       // market buy order
+        deltaV0[2 * end + 2] = 0;                       // no order
+        InitialPayoff.setInitialBeliefs(mu, deltaV0);
+    }
+
     // Hash code computed dependent on various Information Size (2, 4, 6, 7, 8)
     public Long HashCode(int P, int q, int x, int[] BookInfo){
         Long code = (long) 0;
@@ -305,6 +464,89 @@ public class Trader {
             long At = BookInfo[1];                  // Best Ask position
             int a = pv;                             // private value zero(0), negative (1), positive (2)
             code = (Bt<<17) + (At<<12) + (P<<7) + (q<<4) + (x<<2) + a;
+
+            /*boolean[] test = new boolean[13];
+            long code2 = code;
+            test[0] = (code2>>17 == Bt);
+            System.out.println(test[0]);
+            code2 = code - (Bt<<17);
+            test[1] = (code2>>12 == At);
+            System.out.println(test[1]);
+            code2 = code2 - (At<<12);
+            test[2] = (code2>>10 == lBt);
+            System.out.println(test[2]);
+            code2 = code2 - (lBt<<10);
+            test[3] = (code2>>8 == lAt);
+            System.out.println(test[3]);
+            code2 = code2 - (lAt<<8);
+            test[4] = (code2>>5 == dBt);
+            System.out.println(test[4]);
+            code2 = code2 - (dBt<<5);
+            test[5] = (code2>>2 == dSt);
+            System.out.println(test[5]);
+            code2 = code2 - (dSt<<2);
+            test[6] = (code2>>14 == Pt);
+            System.out.println(test[6]);
+            code2 = code2 - (Pt<<14);
+            test[7] = (code2>>13 == b);
+            System.out.println(test[7]);
+            code2 = code2 - (b<<13);
+            test[8] = (code2>>7 == P);
+            System.out.println(test[8]);
+            code2 = code2 - (P<<7);
+            test[9] = (code2>>4 == q);
+            System.out.println(test[9]);
+            code2 = code2 - (q<<4);
+            test[10] = (code2>>2 == x);
+            System.out.println(test[10]);
+            code2 = code2 - (x<<2);
+            test[11] = (code2 == a);
+            System.out.println(test[11]);
+            code2 = code2 - a;
+            System.out.println(Long.toBinaryString(code));
+            if (code2 !=0){
+                System.out.println("problem");
+            }*/     // tests
+
+        } else if (infoSize == 5) {                 // GPR 2005 state space
+            /*long Bt = BookInfo[0];                  // Best Bid position
+            long At = BookInfo[1];                  // Best Ask position
+            long lBt = BookInfo[2];             // depth at best Bid
+            long lAt = BookInfo[3];             // depth at best Ask
+            long dBt = (BookInfo[4]);    // depth at buy
+            int dSt = (BookInfo[5]);     // depth at sell
+            code = (Bt<<23) + (At<<18) + (lBt<<14) + (lAt<<10) + (dBt<<5) + dSt;*/
+            long Bt = BookInfo[0];                  // Best Bid position
+            long At = BookInfo[1];                  // Best Ask position
+            long lBt = BookInfo[2] / 3;             // depth at best Bid
+            long lAt = BookInfo[3] / 3;             // depth at best Ask
+            long dBt = (BookInfo[4] / maxDepth);    // depth at buy
+            int dSt = (BookInfo[5] / maxDepth);     // depth at sell
+            code = (Bt<<15) + (At<<10) + (lBt<<8) + (lAt<<6) + (dBt<<3) + dSt;
+            /*boolean[] test = new boolean[13];
+            long code2 = code;
+            test[0] = (code2>>15 == Bt);
+            System.out.println(test[0]);
+            code2 = code - (Bt<<15);
+            test[1] = (code2>>10 == At);
+            System.out.println(test[1]);
+            code2 = code2 - (At<<10);
+            test[2] = (code2>>8 == lBt);
+            System.out.println(test[2]);
+            code2 = code2 - (lBt<<8);
+            test[3] = (code2>>6 == lAt);
+            System.out.println(test[3]);
+            code2 = code2 - (lAt<<6);
+            test[4] = (code2>>3 == dBt);
+            System.out.println(test[4]);
+            code2 = code2 - (dBt<<3);
+            test[5] = (code2 == dSt);
+            System.out.println(test[5]);
+            code2 = code2 - dSt;
+            System.out.println(Long.toBinaryString(code));
+            if (code2 !=0){
+                System.out.println("problem");
+            } */    // tests
 
         } else if (infoSize == 6) {
             long Bt = BookInfo[0];                  // Best Bid position
@@ -331,25 +573,6 @@ public class Trader {
             code = (Bt<<34) + (At<<29) + (lBt<<27) + (lAt<<25) + (dBt<<22) + (dSt<<19) + (Pt<<14) + (b<<13) +
                     + (P<<8) + (q<<5) + (x<<3) + (a<<1) + l;
 
-            /*// Testing if hashCode works
-            //Long codeTest = code;
-            //System.out.println(code.toString());
-            boolean[] test = new boolean[13];
-            //String sCode = Long.toBinaryString(code);
-            test[0] = (code>>34 == Bt);
-            Long codeTest = code - (Bt<<34);
-            //String sCodeTest = Long.toBinaryString(codeTest);
-            //String sBt = Long.toBinaryString(Bt);
-            //long testAt = codeTest>>29;
-            test[1] = (codeTest>>29 == At);
-            //System.out.println(test[1]);
-            codeTest = codeTest - (At<<29);
-            test[2] = (codeTest>>27 == lBt);
-            //System.out.println(test[2]);
-            codeTest = codeTest - (lBt<<27) - ((lAt<<25) + (dBt<<22) + (dSt<<19) + (Pt<<14) + (b<<13) +
-                    + (P<<8) + (q<<5) + (x<<3) + (a<<1));
-            test[12] = (codeTest == l);
-            System.out.println(test[12]);*/
         }
         else if (infoSize == 8){
             long Bt = BookInfo[0];              // Best Bid position
@@ -429,12 +652,6 @@ public class Trader {
         }
     }
 
-    // resets the history of bookSizes data used for histogram
-    public void resetHistogram(){
-        bookSizesHistory = new int[2 * nP + 1];
-        bookSizesHistory[0] = 0;
-    }
-
     // deletes the Payoff of a state which has fromPreviousRound set to true
     public void purge(){
         Long code;
@@ -469,7 +686,7 @@ public class Trader {
             pay.nReset();
                 if (pay instanceof SinglePayoff){
                     ((SinglePayoff) pay).setFromPreviousRound(true);
-                } else {
+                } else if (pay instanceof MultiplePayoff) {
                     ((MultiplePayoff) pay).setFromPreviousRound(true);
                 }
             }
@@ -480,7 +697,33 @@ public class Trader {
         try{
             String outputFileName = folder + "diagnostics.csv";
             FileWriter writer = new FileWriter(outputFileName, true);
-            writer.write(diag.printDiagnostics());
+            writer.write(diag.printDiagnostics("actions"));
+            writer.close();
+        }
+        catch (Exception e){
+            e.printStackTrace();
+            System.exit(1);
+        }
+    }
+
+    public void printConvergence(int t2){
+        Long code;
+        Payoff pay;
+        Enumeration keys = Payoffs.keys();
+        try{
+            String outputFileName = folder + "convergence.csv";
+            FileWriter writer = new FileWriter(outputFileName, true);
+            while (keys.hasMoreElements()){
+                code = (Long) keys.nextElement();
+                pay =  Payoffs.get(code);
+                if (pay instanceof MultiplePayoff){
+                    writer.write(((MultiplePayoff) pay).printDiff(t2));
+                }
+            }
+            keys = Payoffs.keys();
+            if (keys.hasMoreElements()){
+                Payoffs.get(keys.nextElement()).setDof(0);
+            }
             writer.close();
         }
         catch (Exception e){
@@ -512,6 +755,12 @@ public class Trader {
         diag = new Diagnostics(nP, end);
     }
 
+    // resets the history of bookSizes data used for histogram
+    public void resetHistogram(){
+        bookSizesHistory = new int[2 * nP + 1];
+        bookSizesHistory[0] = 0;
+    }
+
     // getters
     public int getTraderID(){
         return traderID;
@@ -537,17 +786,18 @@ public class Trader {
         return isReturning;
     }
 
-    public int getTraderCount(){
-        return TraderCount;
-    }
-
     public int getStatesCount(){
         return statesCount;
     }
 
-    public int getPv(){
-        return pv;
+    public double getPriceFV() {
+        return PriceFV;
     }
+
+    public short getOldAction(){
+        return oldAction;
+    }
+
 
 
     // setters

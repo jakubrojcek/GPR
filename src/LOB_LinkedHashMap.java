@@ -10,6 +10,8 @@ import java.lang.Math;
  * To change this template use File | Settings | File Templates.
  */
 public class LOB_LinkedHashMap {
+    String model;
+
     double[] Prices;                           // prices for trading
     private int[] BookSizes;                   // signed sizes of the book
     private int[] BookInfo;                    // info used in decision making
@@ -34,7 +36,8 @@ public class LOB_LinkedHashMap {
     History hist;
     HashMap<Integer, Trader> traders;
 
-    public LOB_LinkedHashMap(double fv, int FVpos, int md, int e, double ts, byte nP, History h, HashMap<Integer, Trader> t){
+    public LOB_LinkedHashMap(String m, double fv, int FVpos, int md, int e, double ts, byte nP, History h, HashMap<Integer, Trader> t){
+        model = m;
         hist = h;
         traders = t;
         nPoints = nP;
@@ -64,7 +67,9 @@ public class LOB_LinkedHashMap {
             if (! book[1].get(keys.iterator().next()).isBuyOrder()){
                 while (! keys.isEmpty()){          // this part executes the SLOs against fringe
                     int id = (Integer) keys.iterator().next();
-                    traders.get(id).execution(fv, et);
+                    if (model == "GPR2005") {
+                        traders.get(id).execution(fv);
+                    } else {traders.get(id).execution(fv, et);}
                     if (traderIDsNonHFT.contains(id)){
                         traderIDsNonHFT.remove(traderIDsNonHFT.indexOf(id));
                     } else if (traderIDsHFT.contains(id)){
@@ -83,6 +88,16 @@ public class LOB_LinkedHashMap {
         while (! keys.isEmpty()){                        // removing BLOs from the zero position
             int id = (Integer) keys.iterator().next();
             currentPosition.remove(id);
+            if (model == "GPR2005"){
+                book[0].remove(id);
+                traders.get(id).cancel();
+                if (traderIDsNonHFT.contains(id)){
+                    traderIDsNonHFT.remove(traderIDsNonHFT.indexOf(id));
+                } else if (traderIDsHFT.contains(id)){
+                    traderIDsHFT.remove(traderIDsHFT.indexOf(id));
+                }
+                traders.remove(id);
+            }
             keys.remove(id);
         }
 
@@ -106,7 +121,9 @@ public class LOB_LinkedHashMap {
             if ( book[nPoints - 2].get(keys.iterator().next()).isBuyOrder()){
                 while (! keys.isEmpty()){
                     int id = (Integer) keys.iterator().next();
-                    traders.get(id).execution(fv, et);
+                    if (model == "GPR2005") {
+                        traders.get(id).execution(fv);
+                    } else {traders.get(id).execution(fv, et);}
                     if (traderIDsNonHFT.contains(id)){
                         traderIDsNonHFT.remove(traderIDsNonHFT.indexOf(id));
                     } else if (traderIDsHFT.contains(id)){
@@ -125,6 +142,16 @@ public class LOB_LinkedHashMap {
         while (! keys.isEmpty()){                        // removing SLOs from the zero position
             int id = (Integer) keys.iterator().next();
             currentPosition.remove(id);
+            if (model == "GPR2005"){
+                book[nPoints - 1].remove(id);
+                traders.get(id).cancel();
+                if (traderIDsNonHFT.contains(id)){
+                    traderIDsNonHFT.remove(traderIDsNonHFT.indexOf(id));
+                } else if (traderIDsHFT.contains(id)){
+                    traderIDsHFT.remove(traderIDsHFT.indexOf(id));
+                }
+                traders.remove(id);
+            }
             keys.remove(id);
         }
 
@@ -233,20 +260,23 @@ public class LOB_LinkedHashMap {
                 Order cp = book[pos].remove(book[pos].keySet().iterator().next());
                 Integer cpID = cp.getTraderID();
                 // enters transaction history
-                Pt = pos; // sets last transaction position
-                b = 1;            // sets last transaction direction, buy = 1
-                traders.get(cpID).execution(FV, o.getTimeStamp());
+                Pt = pos;           // sets last transaction position
+                b = 1;              // sets last transaction direction, buy = 1
+                if (model == "GPR2005") {
+                    traders.get(cpID).execution(FV);
+                } else {traders.get(cpID).execution(FV, o.getTimeStamp());}
                 hist.addTrade(o, cp, o.getTimeStamp(), Prices[pos], FV);
+                hist.addOrderData(pos - (double)(BookInfo[1] + BookInfo[0]) / 2);
                 currentPosition.remove(cpID);
                 if (traders.get(cpID).getIsHFT()){
                     traderIDsHFT.remove(traderIDsHFT.indexOf(cpID)); // removes from the list of HFT traders
                 }else {
                     traderIDsNonHFT.remove(traderIDsNonHFT.indexOf(cpID));
                 }
-                traders.remove(oID);            //garbage collecting
+                traders.remove(oID);            //garbage collecting //TODO: is this needed?
                 traders.remove(cpID);
             } else if (pos == nPoints - 1){     // if BMO executed against fringe, just continue
-
+                traders.remove(oID);                    //TODO: this works?
             }
             else{
                 book[pos].put(oID, o);          // put some number here
@@ -262,10 +292,13 @@ public class LOB_LinkedHashMap {
             if (book[pos].size() > 0 && book[pos].get(book[pos].keySet().iterator().next()).isBuyOrder()){
                 Order cp = book[pos].remove(book[pos].keySet().iterator().next());
                 Integer cpID = cp.getTraderID();
-                Pt = pos; // set last transaction price
-                b = 0;            // set last transaction direction, 0=sell
-                traders.get(cpID).execution(FV, o.getTimeStamp());
+                Pt = pos;           // set last transaction price
+                b = 0;              // set last transaction direction, 0=sell
+                if (model == "GPR2005") {
+                    traders.get(cpID).execution(FV);
+                } else {traders.get(cpID).execution(FV, o.getTimeStamp());}
                 hist.addTrade(cp, o, o.getTimeStamp(), Prices[pos], FV);// enters transaction history
+                hist.addOrderData((double)(BookInfo[1] + BookInfo[0]) / 2 - pos);
                 currentPosition.remove(cpID);
                 if (traders.get(cpID).getIsHFT()){
                     traderIDsHFT.remove(traderIDsHFT.indexOf(cpID)); // removes from the list of HFT traders
@@ -275,7 +308,7 @@ public class LOB_LinkedHashMap {
                 traders.remove(oID);   // garbage collecting
                 traders.remove(cpID);
             } else if (pos == 0){      // if SMO executed against fringe, just continue
-
+                traders.remove(oID);
             }
             else{
                 book[pos].put(oID,o);// put some key number here
@@ -306,6 +339,15 @@ public class LOB_LinkedHashMap {
             book[oldPos].remove(id);
         }
         BookSizes();
+    }
+
+    public boolean isBuyOrder(int id){
+        boolean isBuy = false;
+        if(currentPosition.containsKey(id)){
+            Integer oldPos = currentPosition.get(id) - positionShift;
+            isBuy = book[oldPos].get(id).isBuyOrder();
+        }
+        return isBuy;
     }
 
     // returning random traderID either HFT or nonHFT
@@ -355,13 +397,5 @@ public class LOB_LinkedHashMap {
 
     public int getnReturningNonHFT(){
         return traderIDsNonHFT.size();
-    }
-
-    public int getBestBid(){
-        return BookInfo[0];
-    }
-
-    public int getBestAsk(){
-        return BookInfo[1];
     }
 }

@@ -11,17 +11,20 @@ public class ThirdLobTest {
     public static void main(String[] args) {
         /* categories of traders: fast, slow, private value: negative, zero, positive
   that means 4 categories of traders. Fast have zero PV */
-
-        // market parameters
         double timeStamp1 = System.nanoTime();
-        int nHFT = 5;                           // # of HFT's fast traders, fixed
+        // market parameters
+        int nHFT = 0;                           // # of HFT's fast traders, fixed
         int nPositiveNonHFT = 10;               // # of positive PV slow traders
-        int nZeroNonHFT = 10;                   // # of zero PV slow traders
+        int nZeroNonHFT = 20;                   // # of zero PV slow traders
         int nNegativeNonHFT = 10;               // # of negative PV slow traders
-        double lambdaArrival = 0.1;             // arrival frequency, same for all
+        double lambdaArrival = 1;               // arrival frequency, same for all
         double ReturnFrequencyHFT = 1;          // returning frequency of HFT
         double ReturnFrequencyNonHFT = 0.1;     // returning frequency of NonHFT
+        double privateValueMean = 0.0;          // mean of normal distribution of private values GPR 2005
+        double privateValueStdev = 0.35;        // standard deviation of normal distribution of private valus GPR 2005
+        float deltaLow = 0.04f;                 // minimum cancellation probability GPR 2005
         String folder = "D:\\_paper1 HFT, MM, rebates and market quality\\Matlab Analysis\\";
+        String model = "GPR2005";
 
 
         int infoSize = 8;                       // size of the BookInfo in LOB
@@ -122,14 +125,14 @@ public class ThirdLobTest {
 
         Trader trader = new Trader(infoSize, tauB, tauS, nP, FVpos, tickSize, ReturnFrequencyHFT,
                 ReturnFrequencyNonHFT, LL, HL, end, maxDepth, breakPoint, hti, prTremble, folder);
-        LOB_LinkedHashMap book = new LOB_LinkedHashMap(FV, FVpos, maxDepth, end, tickSize, nP ,h, traders);
+        LOB_LinkedHashMap book = new LOB_LinkedHashMap(model, FV, FVpos, maxDepth, end, tickSize, nP ,h, traders);
         // create book
         book.makeBook(Prices);
 
         int NewNonHFT = nNegativeNonHFT + nPositiveNonHFT + nZeroNonHFT;
 
-        SingleRun sr = new SingleRun(lambdaArrival, ReturnFrequencyHFT, ReturnFrequencyNonHFT,
-                 FprivateValues, sigma, tickSize, FVplus, header, book, traders, h, trader, outputNameStatsData,
+        SingleRun sr = new SingleRun(model, lambdaArrival, ReturnFrequencyHFT, ReturnFrequencyNonHFT,
+                FprivateValues, privateValueMean, privateValueStdev, deltaLow, sigma, tickSize, FVplus, header, book, traders, h, trader, outputNameStatsData,
                 outputNameTransactions, outputNameBookData);
 
         int nEvents = 1750000000;                 // number of events

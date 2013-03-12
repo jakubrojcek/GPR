@@ -11,9 +11,7 @@ public class SinglePayoff extends Payoff{
     private double EventTime;
     private boolean fromPreviousRound = false; // set to true when you move to the next round
 
-    public SinglePayoff(float[] payoffs, double et, float r, int nPay){
-        rho = r;
-        nPayoffs = nPay;
+    public SinglePayoff(float[] payoffs, double et){
         this.EventTime = et;
         max = payoffs[0];
         maxIndex = 0;
@@ -26,8 +24,7 @@ public class SinglePayoff extends Payoff{
         //System.out.println("maxIndex: " + maxIndex + " max: " + max);
     }
 
-    public void update(byte oldAction, double payoff, double et){ //only if executed-> can be only once
-        double previous = max; //TODO: delete afterwards
+    public void update(short oldAction, double payoff, double et){ //only if executed-> can be only once
         max = (float) (0.5 * max + 0.5 * Math.exp( - rho * (et - EventTime)) * payoff);
         //System.out.println("maxIndex: " + maxIndex + " max: " + max);
         //System.out.println("diff SP: " + (max - previous));
