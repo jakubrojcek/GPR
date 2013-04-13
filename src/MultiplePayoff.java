@@ -24,16 +24,22 @@ public class MultiplePayoff extends Payoff{
     private int printIndex = 0;               //TODO: delete afterwards
 
     public MultiplePayoff(float[] payoffs, double et, SinglePayoff sp){
+        diff = 0.0;
+        payoffs = new float[nPayoffs];
+        for (int j = 0; j < nPayoffs; j++){                //TODO: delete this part after testing
+            payoffs[j] = (float)Math.random() + 0.05f;
+            diff = diff + payoffs[j];
+        }
         this.EventTime = et;    // time when new action for the Payoff is chosen
-        max = sp.getMax();
-        maxIndex = sp.getMaxIndex();
+        max = payoffs[0];//sp.getMax();
+        maxIndex = 0;//sp.getMaxIndex();
         p[0] = max;
         Actions.add(maxIndex);
 
         for(byte i = 0; i < nPayoffs; i++){ // searching for best payoff
-            if (i == maxIndex){
+            /*if (i == maxIndex){
                 payoffs[i] = sp.getMax();
-            }
+            }*/
             if(payoffs[i] > max){
                 max = payoffs[i];
                 maxIndex = i;
@@ -56,11 +62,17 @@ public class MultiplePayoff extends Payoff{
 
     // update old state upon return of a trader whose previous state is captured in this MultiplePayoff
     public void updateMax(float[] payoffs, double et, boolean tremble){ // overloading update method MP happens more times
+        diff = 0.0;
+        payoffs = new float[nPayoffs];
+        for (int j = 0; j < nPayoffs; j++){                //TODO: delete this part after testing
+            payoffs[j] = (float)Math.random() + 0.05f;
+            diff = diff + payoffs[j];
+        }
         for (byte i = 0; i < nPayoffs; i++){
-            if (Actions.contains(i)){
+            /*if (Actions.contains(i)){
                 payoffs[i] = p[Actions.indexOf(i)];
-            }
-            if (payoffs[i] > max){
+            }*/
+            if(payoffs[i] > max){
                 max = payoffs[i];
                 maxIndex = i;
             }
@@ -98,12 +110,12 @@ public class MultiplePayoff extends Payoff{
     public void update(short oldAction, double payoff, double et){
         // after the new belief is computed, it comes back to payoff vector, max, maxIndex is updated
         boolean mo;
-        if (oldAction == 7){
+        /*if (oldAction == 7){
             System.out.println(mo = (payoff==p[Actions.indexOf(oldAction)]));
         }
         if (oldAction == 15){
             System.out.println(mo = (payoff==p[Actions.indexOf(oldAction)]));
-        }
+        }*/
         nIndex = Actions.indexOf(oldAction);
         /*if(n[nIndex] > 20){
             System.out.println("average diff: " + (double)(diff)/n[nIndex]);
@@ -112,8 +124,8 @@ public class MultiplePayoff extends Payoff{
         double alpha = (1.0/(1 + n[nIndex]));  // updating factor
         //System.out.println(p[nIndex] + " before " + payoff +  " now " + (payoff - p[nIndex]) + " difference");
         double previous = p[nIndex];
-        p[nIndex] = (float) ((1.0 - alpha) * p[nIndex] +
-                + alpha * Math.exp( - rho * (et - EventTime)) * payoff); // TODO: check the values produced
+        //p[nIndex] = (float) ((1.0 - alpha) * p[nIndex] +
+        //        + alpha * Math.exp( - rho * (et - EventTime)) * payoff); // TODO: check the values produced
         //diff = p[nIndex];
         //System.out.println("diff MP: " + (p[nIndex] - previous));
     }
@@ -175,7 +187,7 @@ public class MultiplePayoff extends Payoff{
     }
 
     public double getDiff(){
-        return (n[nIndex]>10)?diff:10.0;
+        return diff;
     }
 
     public double getMax(){

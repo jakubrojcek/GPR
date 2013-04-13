@@ -138,12 +138,13 @@ public class ThirdLobTest {
         int nEvents = 1750000000;                 // number of events
         boolean write = false;          // writeDecisions output in this SingleRun?
         boolean writeDiagnostics = true;// write diagnostics controls diagnostics
+        boolean writeHistogram = false;
         boolean purge = true;           // purge in this SingleRun?
         boolean nReset = true;          // reset n in this SingleRun?
 
         double[] RunOutcome =
                 sr.run(nEvents, nHFT, NewNonHFT, EventTime, FV, write,
-                        purge, nReset, writeDiagnostics);
+                        purge, nReset, writeDiagnostics, writeHistogram);
         EventTime = RunOutcome[0];
         FV = RunOutcome[1];
 

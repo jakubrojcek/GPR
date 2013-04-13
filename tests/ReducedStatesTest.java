@@ -21,8 +21,8 @@ public class ReducedStatesTest {
         double lambdaArrival = 1;               // arrival frequency, same for all
         double ReturnFrequencyHFT = 1;          // returning frequency of HFT
         double ReturnFrequencyNonHFT = 0.1;     // returning frequency of NonHFT
-        double privateValueMean = 0.0;          // mean of normal distribution of private values GPR 2005
-        double privateValueStdev = 0.35;        // standard deviation of normal distribution of private valus GPR 2005
+
+        double privateValueStdev = 0.35;        // standard deviation of normal distribution of private valus GPR 2005, 0.35 in base case
         float deltaLow = 0.04f;                 // minimum cancellation probability GPR 2005
         String folder = "D:\\_paper1 HFT, MM, rebates and market quality\\Matlab Analysis\\";
         String model = "GPR2005";
@@ -30,31 +30,35 @@ public class ReducedStatesTest {
 
 
         int infoSize = 5;                       // 2-bid, ask, 4-last price, direction, 5- GPR 2005, 6-depth at bid,ask, 8-depth off bid,ask
-        byte nP = 9;                            // number of prices tracked by the book
+        byte nP = 8;                           // number of prices tracked by the book, 8 in the base case, 6/11 in tick size experiment
         int maxDepth = 7;                       // 0 to 7 which matter
         int FVpos = (int) nP/2;                 // position of the fundamental value
         double prTremble = 0.0;                 // probability of trembling
 
-        /*int HL = FVpos + 6;                     // Lowest  allowed limit order price.  LL + HL = nP-1 for allowed orders centered around E(v)
-        int LL = FVpos - 6;                    // Highest allowed limit order price
-        float tickSize = 0.0625f;//0.125;       // size of one tick
-        int PVsigma = 4;//4                     // # of ticks for negative and positive PVs
+        /*double privateValueMean = 0.0;          // mean of normal distribution of private values GPR 2005
+        int HL = FVpos + 3;                     // Lowest  allowed limit order price.  LL + HL = nP-1 for allowed orders centered around E(v)
+        int LL = FVpos - 3;                     // Highest allowed limit order price
+        float tickSize = 0.0625f;               // size of one tick
+        int PVsigma = 4;                        // # of ticks for negative and positive PVs
         String outputNameTransactions = "Transactions16.csv";  // output file name
         String outputNameBookData = "BookData16.csv";  // output file name
-        String outputNameStatsData = "stats16.csv";   // output file name*/
+        String outputNameStatsData = "stats16.csv";   // output file name
+        double sigma = 2.0;                     // volatility of FV   1/8th 1.0 and 1/16th 2.0*/
 
-        int HL = FVpos + 3; // + 6              // Lowest  allowed limit order price.  LL + HL = nP-1 for allowed orders centered around E(v)
-        int LL = FVpos - 3; //              // Highest allowed limit order price
-        float tickSize = 0.125f;//0.125;        // size of one tick
+        double privateValueMean = -0.0625;      // mean of normal distribution of private values GPR 2005
+        int HL = FVpos + 2; //                  // Lowest  allowed limit order price.  LL + HL = nP-1 for allowed orders centered around E(v)
+        int LL = FVpos - 3; //                  // Highest allowed limit order price
+        float tickSize = 0.125f;                // size of one tick
         int PVsigma = 2;//4                     // # of ticks for negative and positive PVs
         String outputNameTransactions = "Transactions8.csv";  // output file name
         String outputNameBookData = "BookData8.csv";   // output file name
         String outputNameStatsData = "stats8.csv";   // output file name
+        double sigma = 1.0;                     // volatility of FV   1/8th 1.0 and 1/16th 2.0
 
         int end = HL - LL + 1;                  // number of position on the grid for submitting LOs
         int breakPoint = end / 2;               // breaking point for positive, negative, represents FV position on the LO grid
         double FV;                              // Fundamental value-> not position
-        double sigma = 1.0;                     // volatility of FV   1/8th 1.0 and 1/16th 2.0
+
 
         boolean header = false;                 // header yes ?
         int hti = 5000000;                      // initial capacity for Payoffs HashTable
@@ -67,7 +71,7 @@ public class ReducedStatesTest {
         for (int i = 0 ; i < nP ; i++){
             Prices[i] = i * tickSize;
         }
-        FV = Prices[FVpos];
+        FV = Prices[FVpos];   // TODO: put private value mean here if necessary later
 
         double[] tauB = new double[end];
         /* expected time until the arrival of a new buyer for whom trading on
@@ -129,7 +133,7 @@ public class ReducedStatesTest {
 
         Trader trader = new Trader(infoSize, tauB, tauS, nP, FVpos, tickSize, ReturnFrequencyHFT,
                 ReturnFrequencyNonHFT, LL, HL, end, maxDepth, breakPoint, hti, prTremble, folder);
-        if (model == "GPR2005"){trader.computeInitialBeliefs(deltaLow);}
+        if (model == "GPR2005"){trader.computeInitialBeliefs(deltaLow, privateValueMean, privateValueStdev);}
         LOB_LinkedHashMap book = new LOB_LinkedHashMap(model, FV, FVpos, maxDepth, end, tickSize, nP ,h, traders);
         // create book
         book.makeBook(Prices);
@@ -140,90 +144,111 @@ public class ReducedStatesTest {
                 FprivateValues, privateValueMean, privateValueStdev, deltaLow, sigma, tickSize, FVplus, header, book, traders, h, trader, outputNameStatsData,
                 outputNameTransactions, outputNameBookData);
         // getting to equilibrium ballpark
-        int nEvents = 10000000;        // number of events
+        int nEvents = 10000000;         // number of events
         boolean write = false;          // writeDecisions output in this SingleRun?
-        //boolean writeDecisions = true;         // writeDecisions output in this SingleRun?
         boolean writeDiagnostics = true;// write diagnostics controls diagnostics
+        boolean writeHistogram = false; // write histogram
         boolean purge = false;          // purge in this SingleRun?
         boolean nReset = false;         // reset n in this SingleRun?
-        trader.setWriteDec(true);
         //trader.setPrTremble(0.1);
-        trader.setWriteDiag(true);
+        //trader.setWriteDec(true);
+        trader.setWriteDiag(writeDiagnostics);
+        //trader.setWriteHist(writeHistogram);
 
         double[] RunOutcome =
                 sr.run(nEvents, nHFT, NewNonHFT, EventTime, FV, write,
-                        purge, nReset, writeDiagnostics);
+                        purge, nReset, writeDiagnostics, writeHistogram);
         EventTime = RunOutcome[0];
         FV = RunOutcome[1];
 
         //trader.printStatesDensity(EventTime); // occurrences of MPs now
         //trader.printHistogram();
 
-        nEvents = 10000000;        // number of events
+        nEvents = 10000000;         // number of events
         write = false;              // writeDecisions output in this SingleRun?
         writeDiagnostics = true;    // write diagnostics controls diagnostics
-        purge = false;               // purge in this SingleRun?
+        writeHistogram = false;     // write histogram
+        purge = false;              // purge in this SingleRun?
         nReset = true;              // reset n in this SingleRun?
         trader.setPrTremble(0.1);
+        //trader.setWriteDec(write);
+        trader.setWriteDiag(writeDiagnostics);
+        //trader.setWriteHist(writeHistogram);
+
 
         RunOutcome =
                 sr.run(nEvents, nHFT, NewNonHFT, EventTime, FV, write,
-                        purge, nReset, writeDiagnostics);
+                        purge, nReset, writeDiagnostics, writeHistogram);
         EventTime = RunOutcome[0];
         FV = RunOutcome[1];
 
-        nEvents = 10000000;       // number of events
+        nEvents = 10000000;         // number of events
         write = false;              // writeDecisions output in this SingleRun?
         writeDiagnostics = true;    // write diagnostics controls diagnostics
+        writeHistogram = false;     // write histogram
         purge = false;              // purge in this SingleRun?
         nReset = true;              // reset n in this SingleRun?
         trader.setPrTremble(0.05);
+        //trader.setWriteDec(write);
+        trader.setWriteDiag(writeDiagnostics);
+        //trader.setWriteHist(writeHistogram);
 
         RunOutcome =
                 sr.run(nEvents, nHFT, NewNonHFT, EventTime, FV, write,
-                        purge, nReset, writeDiagnostics);
+                        purge, nReset, writeDiagnostics, writeHistogram);
         EventTime = RunOutcome[0];
         FV = RunOutcome[1];
 
-        nEvents = 10000000;        // number of events
+        nEvents = 10000000;         // number of events
         write = false;              // writeDecisions output in this SingleRun?
         writeDiagnostics = true;    // write diagnostics controls diagnostics
+        writeHistogram = false;     // write histogram
         purge = false;              // purge in this SingleRun?
-        nReset = true;             // reset n in this SingleRun?
+        nReset = true;              // reset n in this SingleRun?
         trader.setPrTremble(0.01);
+        //trader.setWriteDec(write);
+        trader.setWriteDiag(writeDiagnostics);
+        //trader.setWriteHist(writeHistogram);
 
         RunOutcome =
                 sr.run(nEvents, nHFT, NewNonHFT, EventTime, FV, write,
-                        purge, nReset, writeDiagnostics);
+                        purge, nReset, writeDiagnostics, writeHistogram);
         EventTime = RunOutcome[0];
         FV = RunOutcome[1];
 
-        nEvents = 10000000;        // number of events
+        nEvents = 10000000;         // number of events
         write = false;              // writeDecisions output in this SingleRun?
         writeDiagnostics = true;    // write diagnostics controls diagnostics
+        writeHistogram = false;     // write histogram
         purge = false;              // purge in this SingleRun?
         nReset = true;              // reset n in this SingleRun?
         trader.setPrTremble(0.0);
+        //trader.setWriteDec(write);
+        trader.setWriteDiag(writeDiagnostics);
+        //trader.setWriteHist(writeHistogram);
 
         RunOutcome =
                 sr.run(nEvents, nHFT, NewNonHFT, EventTime, FV, write,
-                        purge, nReset, writeDiagnostics);
+                        purge, nReset, writeDiagnostics, writeHistogram);
         EventTime = RunOutcome[0];
         FV = RunOutcome[1];
 
-        nEvents = 10000000;    // number of events
-        write = true;          // writeDecisions output in this SingleRun?
+        nEvents = 500000;         // number of events
+        write = true;               // writeDecisions output in this SingleRun?
         writeDiagnostics = true;    // write diagnostics controls diagnostics
-        purge = false;         // purge in this SingleRun?
-        nReset = false;        // reset n in this SingleRun?
-
-        trader.setWriteDec(true);
+        writeHistogram = true;      // write histogram
+        purge = false;              // purge in this SingleRun?
+        nReset = false;             // reset n in this SingleRun?
+        //trader.setPrTremble(0.0);
+        trader.setWriteDec(write);
+        trader.setWriteDiag(writeDiagnostics);
+        trader.setWriteHist(writeHistogram);
         trader.setTradeCount(0);
         trader.setTraderCount(book.getnReturningHFT() + book.getnReturningNonHFT());
 
         RunOutcome =
                 sr.run(nEvents, nHFT, NewNonHFT, EventTime, FV, write,
-                        purge, nReset, writeDiagnostics);
+                        purge, nReset, writeDiagnostics, writeHistogram);
         EventTime = RunOutcome[0];
         FV = RunOutcome[1];
 

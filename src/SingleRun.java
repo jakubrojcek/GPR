@@ -30,14 +30,15 @@ public class SingleRun {
     LOB_LinkedHashMap book;
 
     boolean header = false;
-    String outputNameTransactions;  // output file name
-    String outputNameBookData;      // output file name
-    String outputNameStatsData;     // output file name
+    String outputNameTransactions;      // output file name
+    String outputNameBookData;          // output file name
+    String outputNameStatsData;         // output file name
 
-    boolean write = false;          // writeDecisions output in this SingleRun?
-    boolean writeDiagnostics = false;// write diagnostics
-    boolean purge = false;          // purge in this SingleRun?
-    boolean nReset = false;         // reset n in this SingleRun?
+    boolean write = false;              // writeDecisions output in this SingleRun?
+    boolean writeDiagnostics = false;   // write diagnostics
+    boolean writeHistogram = false;     // write histogram
+    boolean purge = false;              // purge in this SingleRun?
+    boolean nReset = false;             // reset n in this SingleRun?
 
     double Lambda;
 
@@ -69,9 +70,10 @@ public class SingleRun {
 
     public double[] run(int nEvents, int nHFT, int NewNonHFT,
                       double EventTime, double FV,
-                      boolean w, boolean p, boolean n, boolean wd){
+                      boolean w, boolean p, boolean n, boolean wd, boolean wh){
         write = w;
         writeDiagnostics = wd;
+        writeHistogram = wh;
         purge = p;
         nReset = n;
         if (nReset){
@@ -99,8 +101,8 @@ public class SingleRun {
                         int key = (Integer) keys.next();
                         double FVbefore = traders.get(key).getPriceFV();
                         boolean isBuy = book.isBuyOrder(key);
-                        double deltaHat = isBuy ? 0.2 * Math.max(FVbefore - FV, 0):
-                                0.2 * Math.max(FV - FVbefore, 0);
+                        double deltaHat = isBuy ? 0.2* Math.max(FVbefore - FV, 0)    // 0.2 * in base case
+                                                : 0.2 * Math.max(FV - FVbefore, 0);
                         double delta = Math.min(deltaLow + deltaHat, 0.64);
                         //System.out.println(delta);
                         double rn = Math.random();             // to determine cancellation
@@ -118,11 +120,11 @@ public class SingleRun {
                         }
                     }
                 // 5. innovation of fundamental value
-                double rn3 = 0.0;//Math.random();
+                double rn3 = Math.random();
                 if (rn3 < FVplus * 0.08){
                     FV = FV + sigma * tickSize;
                     book.FVup(FV, EventTime);
-                    //book.FVup(FV, EventTime);    //TODO: use twice for 1/16 ts
+                    //book.FVup(FV, EventTime); //TODO: use twice for 1/16 ts
                     //System.out.println("up" + FV);
                 } else if (rn3 < 0.08) {
                     FV = FV - sigma * tickSize;
@@ -135,7 +137,7 @@ public class SingleRun {
                     System.out.println(i + " events");
                 }
 
-                if (i % 10000 == 0) {
+                if (i % 100000 == 0) {
                     writePrint(i);
                 }
             }
@@ -244,33 +246,41 @@ public class SingleRun {
                 } else if (rn < x4){                   // Returning nonHFT
                     ID = book.randomNonHFTtraderID();
                     //System.out.println("Returning nonHFT ID: " + ID);
-                    PriceOrder PO = traders.get(ID).decision(book.getRank(ID), book.getBookSizes(), book.getBookInfo(),
+                    /*PriceOrder PO = traders.get(ID).decision(book.getRank(ID), book.getBookSizes(), book.getBookInfo(),
                             EventTime, FV);
                     if (PO != null){
                         book.transactionRule(PO.getPrice() , PO.getCurrentOrder());
                     } else {
                         book.tryCancel(ID);
-                    }
-                    /*traders.get(ID).cancel(EventTime);          //TODO: cancel and uncomment above
+                    }*/
+                    //traders.get(ID).cancel(EventTime);          //TODO: cancel and uncomment above
                     book.tryCancel(ID);
                     book.traderIDsNonHFT.remove(book.traderIDsNonHFT.indexOf(ID));
-                    traders.remove(ID);*/
+                    traders.remove(ID);
 
                 } else{                                // Change in FV
                     double rn3 = Math.random();
                     if (rn3 < FVplus){
-                        FV = FV + sigma * tickSize;
-                        book.FVup(FV, EventTime);
+                        //FV = FV + sigma * tickSize;
+                        //book.FVup(FV, EventTime);
                         //book.FVup(FV, EventTime);    //TODO: use twice for 1/16 ts
                         //System.out.println("up" + FV);
                     } else {
-                        FV = FV - sigma * tickSize;
-                        book.FVdown(FV, EventTime);
+                        //FV = FV - sigma * tickSize;
+                        //book.FVdown(FV, EventTime);
                         //book.FVdown(FV, EventTime); //TODO: use twice for 1/16 ts
                         //System.out.println("down" + FV);
                     }
                 }
-                if (i % 10000000 == 0) {              // TODO: put this printing outside the loop
+
+                if (i % 100000 == 0) {
+                    System.out.println(i + " events");
+                }
+
+                if (i % 10000 == 0) {
+                    writePrint(i);
+                }
+                /*if (i % 10000000 == 0) {              // TODO: put this printing outside the loop
                     h.addStatisticsData(i, trader.getStatesCount());   // multiple payoffs count
                     if (writeDiagnostics){
                         trader.printDiagnostics();
@@ -290,7 +300,7 @@ public class SingleRun {
                     h.printStatisticsData(header, outputNameStatsData);
                     h.resetHistory();
 
-                }   //where events happen
+                }*/   //where events happen
                /* if (i % 100000000 == 0) {
                     if (purge){
                         trader.purge();
@@ -309,19 +319,17 @@ public class SingleRun {
         if (writeDiagnostics){
             trader.printDiagnostics();
             trader.resetDiagnostics();
+            //trader.printConvergence(100);
+        }
+        if (writeHistogram){
             trader.printHistogram();
             trader.resetHistogram();
-            //trader.printConvergence(100);
         }
         if (write){
             h.printTransactions(header, outputNameTransactions);
             h.printBookData(header, outputNameBookData);
             trader.printDecisions();
-            //trader.printHistogram();
-            //trader.printDiagnostics();
             trader.resetDecisionHistory();
-            //trader.resetHistogram();
-            //trader.resetDiagnostics();
         }
         h.printStatisticsData(header, outputNameStatsData);
         h.resetHistory();

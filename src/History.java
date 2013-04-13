@@ -17,6 +17,7 @@ public class History {
     ArrayList<Integer> Events;
     ArrayList<Integer> States;
     ArrayList<Double> EffSpread;
+    ArrayList<Integer> QuotedSpread;
     Vector<Trade> history;
     String folder;
 
@@ -25,6 +26,7 @@ public class History {
         Asks = new ArrayList<Integer>();
         Bids = new ArrayList<Integer>();
         EffSpread = new ArrayList<Double>();
+        QuotedSpread = new ArrayList<Integer>();
         Events = new ArrayList<Integer>();
         States = new ArrayList<Integer>();
         history = new Vector<Trade>();
@@ -42,6 +44,10 @@ public class History {
 
     public void addOrderData(Double spread){
         EffSpread.add(spread);
+    }
+
+    public void addOrderData(Integer qspread){
+        QuotedSpread.add(qspread);
     }
 
     public void addStatisticsData(int eventNum, int statesNum){
@@ -97,6 +103,22 @@ public class History {
             e.printStackTrace();
             System.exit(1);
         }
+        try{
+            String outputFileName = folder + "QuotedSpread.csv";
+            FileWriter writer = new FileWriter(outputFileName, true);
+            if (writeHeader){
+                writer.write("QuotedSpread;");
+            }
+            int sz = QuotedSpread.size();
+            for (int i = 0; i < sz; i++){
+                writer.write(QuotedSpread.get(i) + ";" + "\r");
+            }
+            writer.close();
+        }
+        catch (Exception e){
+            e.printStackTrace();
+            System.exit(1);
+        }
     }
 
     public void printStatisticsData(boolean writeHeader, String fileNameStatisticsData){
@@ -130,6 +152,7 @@ public class History {
         Events = new ArrayList<Integer>();
         States = new ArrayList<Integer>();
         EffSpread = new ArrayList<Double>();
+        QuotedSpread = new ArrayList<Integer>();
         history = new Vector<Trade>();
     }
 

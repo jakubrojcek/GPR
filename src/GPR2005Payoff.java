@@ -20,29 +20,65 @@ public class GPR2005Payoff extends Payoff {
     // second available share action, belief
 
 
-    public GPR2005Payoff(float[] payoffs) {
-        max = 0.0f;
-        maxIndex = (short)(nPayoffs - 1);
-        for(short i = (short) (nPayoffs - 2); i >= 0 ; i--){ // searching for best payoff
+    public GPR2005Payoff(float[] payoffs, int Bid, int Ask) {
+        short b = (short) Math.max(Bid + 1, 0);             // + 1 in order to start from one above B
+        b = (short) Math.min(end, b); // TODO: test this change
+        short a = (short) Math.min(Ask + end, 2 * end);
+        a = (short) Math.max(end, a);
+        max = payoffs[b];
+        maxIndex = b;
+        for(short i = b; i < a; i++){            // searching for best payoff and not marketable LO
             if(payoffs[i] > max){
                 max = payoffs[i];
                 maxIndex = i;
             }
         }
+        if(payoffs[2 * end] > max){              // trying SMO
+            max = payoffs[2 * end];
+            maxIndex = (short) (2 * end);
+        }
+        if(payoffs[2 * end + 1] > max){          // trying BMO
+            max = payoffs[2 * end + 1];
+            maxIndex = (short) (2 * end + 1);
+        }
+        if(payoffs[2 * end + 2] > max){          // trying NO
+            max = payoffs[2 * end + 2];
+            maxIndex = (short) (2 * end + 2);
+        }
+
         x1.put(maxIndex, new Belief((short) 1, mu0[maxIndex], deltaV0[maxIndex]));
     }
 
-    public void updateMax(float[] payoffs, boolean tremble){ // overloading update method MP happens more times
-        max = 0.0f;
-        maxIndex = (short) (nPayoffs - 1);
-        for (short i = (short) (nPayoffs - 2); i >= 0 ; i--){
-            if (payoffs[i] > max){
+    public void updateMax(float[] payoffs, int Bid, int Ask, boolean tremble){ // overloading update method MP happens more times
+        short b = (short) Math.max(Bid + 1, 0);             // + 1 in order to start from one above B
+        b = (short) Math.min(end, b);
+        short a = (short) Math.min(Ask + end, 2 * end);
+        a = (short) Math.max(end, a);
+        max = payoffs[b];
+        maxIndex = b;
+        for(short i = b; i < a; i++){            // searching for the best payoff and not marketable LO
+            if(payoffs[i] > max){
                 max = payoffs[i];
                 maxIndex = i;
             }
         }
+
+        if(payoffs[2 * end] > max){              // trying SMO
+            max = payoffs[2 * end];
+            maxIndex = (short) (2 * end);
+        }
+        if(payoffs[2 * end + 1] > max){          // trying BMO
+            max = payoffs[2 * end + 1];
+            maxIndex = (short) (2 * end + 1);
+        }
+        if(payoffs[2 * end + 2] > max){          // trying NO
+            max = payoffs[2 * end + 2];
+            maxIndex = (short) (2 * end + 2);
+        }
         if (tremble){
-            maxIndex = (short) (Math.random() * payoffs.length);
+            short rIndex = (short) (Math.random() * payoffs.length);
+            maxIndex = ((rIndex >= b && rIndex <a) || (rIndex >= 2 * end)) ? rIndex
+                                                                          : maxIndex;
             max = payoffs[maxIndex];
         }
         if(!x1.containsKey(maxIndex)){

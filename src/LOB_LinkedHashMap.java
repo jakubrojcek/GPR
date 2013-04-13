@@ -221,7 +221,7 @@ public class LOB_LinkedHashMap {
             Ds += BookSizes[j];
             j--;
         }
-        Ds = Math.max(Ds, - maxSumDepth); // limited to 90
+        Ds = Math.max(Ds, - maxSumDepth); // limited to half of the LO grid at maxDepth
 
         BookInfo[0] = Bt;                 // best bid position
         BookInfo[1] = At;                 // best ask position
@@ -236,6 +236,7 @@ public class LOB_LinkedHashMap {
     }
        
      public void transactionRule(int pos, Order o){
+         hist.addOrderData(BookInfo[1] - BookInfo[0]);
          int oID = o.getTraderID();
          Integer oldPos = null;
          // cancel previous LO unless not retained
@@ -347,6 +348,7 @@ public class LOB_LinkedHashMap {
             Integer oldPos = currentPosition.get(id) - positionShift;
             isBuy = book[oldPos].get(id).isBuyOrder();
         }
+        // TODO: no order means sell order?
         return isBuy;
     }
 

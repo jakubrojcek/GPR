@@ -176,10 +176,12 @@ public class Test_various {
         /*long A;
         A = -4/3;
         System.out.println(A);*/
-        NormalDistribution nd = new NormalDistribution(0.0, 0.35);
+        /*NormalDistribution nd = new NormalDistribution(0.0, 0.35);
         for (int i = 0; i < 1000; i++){
             System.out.println((float) nd.sample());
         }
+        double sigma = 2.0;
+        System.out.println(sigma == 2.0);*/
 
 
 
@@ -231,6 +233,378 @@ public class Test_various {
         book.printBook(tb);
         System.out.println(book.randomNonHFTtraderID()+ " random guy");
         */
+        HashMap<Integer, Trader> traders = new HashMap<Integer, Trader>(); //trader ID, trader object
+        LinkedHashMap<Integer, Order_test>[] book = new LinkedHashMap[8];
+        book[1] = new LinkedHashMap<Integer, Order_test>();
+        book[2] = new LinkedHashMap<Integer, Order_test>();
+
+        Trader tr1 = new Trader(false, 0.0f);   // buyer
+        Trader tr2 = new Trader(false, 0.5f);   // buyer
+        Trader tr3 = new Trader(false, -0.5f);  // seller
+
+        traders.put(tr1.getTraderID(), tr1);
+        traders.put(tr2.getTraderID(), tr2);
+
+        // ID, time, buy, action, position
+        Order_test o1 = new Order_test(tr1.getTraderID(), 0.0, true, (short) 7, 1);
+        Order_test o2 = new Order_test(tr2.getTraderID(), 0.0, true, (short) 7, 1);
+        Order_test o3 = new Order_test(tr1.getTraderID(), 0.0, true, (short) 8, 2);
+        Order_test o4 = new Order_test(tr3.getTraderID(), 0.0, false, (short) 2, 1);
+        Order_test o5 = new Order_test(tr3.getTraderID(), 0.0, false, (short) 2, 1); // Big SMO
+
+
+        // book and currentPosition insertion
+        Hashtable<Integer, HashMap<Integer, Integer>> CurrentPosition1 =
+                new Hashtable<Integer, HashMap<Integer, Integer>>();
+        book[1].put(1, o1);
+        book[1].put(2, o2);
+        book[2].put(3, o3);
+        Integer tempSize1 = 0;
+        HashMap<Integer, Integer> tempHM1 = new HashMap<Integer, Integer>();
+        tempSize1 = o1.isBuyOrder() ? ++tempSize1 : --tempSize1;
+        tempHM1.put(1, tempSize1);
+        Integer tempSize2 = 0; tempSize2 = o3.isBuyOrder() ? ++tempSize2 : --tempSize2;
+        tempHM1.put(2, tempSize2);
+        CurrentPosition1.put(1, tempHM1);
+        tempHM1 = new HashMap<Integer, Integer>(); tempSize2 = 0;
+        tempSize2 = o2.isBuyOrder() ? ++tempSize2 : --tempSize2; tempHM1.put(1, tempSize2);
+        CurrentPosition1.put(2, tempHM1);
+        System.out.println("Order identification: " + (o1 == book[1].get(book[1].keySet().iterator().next())));
+
+        // execution and remove from book and currentPosition
+        Integer pos = 1;
+        if (book[pos].size() > 0 && book[pos].get(book[pos].keySet().iterator().next()).isBuyOrder()){
+            Order_test cp = book[pos].remove(book[1].keySet().iterator().next());
+            Integer id = cp.getTraderID();
+            System.out.println("Correct size at pos 1 for trader 1: " + (1 == CurrentPosition1.get(id).get(pos)));
+            Integer tempInt = CurrentPosition1.get(id).get(pos);
+            CurrentPosition1.get(id).put(pos, --tempInt);
+            System.out.println("Executed order removed: " + (0 == CurrentPosition1.get(id).get(pos)));
+        }
+
+
+
+
+        // comparing orders of returning traders
+
+        // random order for execution //TODO: will I need a list of Active orders here? No, over traders.keySet
+
+        // Transaction Rule complete with 1 order
+
+        // FVup/FVdown with 1 order
+
+
+        // Transaction Rule in general
+
+        // Transaction Rule, new trader
+        book[1] = new LinkedHashMap<Integer, Order_test>();
+        book[2] = new LinkedHashMap<Integer, Order_test>();
+        Hashtable<Integer, HashMap<Integer, Integer>> CurrentPosition =
+                new Hashtable<Integer, HashMap<Integer, Integer>>();
+
+        Order_test[] orders = {o1, o3};
+
+        Integer id = 1;                   // TODO: add trader ID to the transaction rule
+        HashMap<Integer, Integer> tempHM = new HashMap<Integer, Integer>();
+        Integer tempSize = 0;
+        pos = null;
+
+        for (Order_test o:orders){
+            if (pos == null || pos != o.getPosition()){
+                // put here tempSize to tempHM if not empty and position not null
+                if (pos != null && tempSize != 0) {tempHM.put(pos, tempSize);}
+                tempSize = 0;
+                pos = o.getPosition();
+            }
+            if (book[pos].size() > 0 && !book[pos].get(book[pos].keySet().iterator().next()).isBuyOrder()){
+                Order_test cp = book[pos].remove(book[1].keySet().iterator().next());
+                id = cp.getTraderID();
+                Integer tempSizeCP = CurrentPosition.get(id).get(pos);
+                if (++tempSizeCP == 7){                               // TODO: check if this works
+                    CurrentPosition.get(id).remove(pos);
+                } else {
+                    CurrentPosition.get(id).put(pos, tempSizeCP);
+                }
+                //System.out.println("Executed order removed: " + !CurrentPosition1.get(id).get(pos).contains(cp));
+            } else if (pos == 0){
+
+            } else {
+                tempSize++;
+                book[pos].put(o.getTraderID(),o);   // put some key number here
+            }
+        }
+        if (tempSize != 0){tempHM.put(pos, tempSize);}
+        if (!tempHM.isEmpty()){CurrentPosition.put(id, tempHM);}
+        CurrentPosition.get(id).get(1);
+        //System.out.println("Order 1 removed : " + !CurrentPosition.get(id).get(1).contains(o1));
+        //System.out.println("Order 3 inside: " + CurrentPosition.get(id).get(pos).contains(o3));
+        // expected outcome o1, o3 at pos = 1, CurrentPosition.put(trader), Traders.put(trader)
+
+        // Transaction rule, execution and remove from book and currentPosition, as well as traders
+        orders = new Order_test[1];
+        orders[0] = o2;
+
+        id = 2;                   // TODO: add trader ID to the transaction rule
+        tempHM = new HashMap<Integer, Integer>();
+        tempSize = 0;
+        pos = null;
+
+        for (Order_test o:orders){
+            if (pos == null || pos != o.getPosition()){
+                // put here tempSize to tempHM if not empty and position not null
+                if (pos != null && tempSize != 0) {tempHM.put(pos, tempSize);}
+                tempSize = 0;
+                pos = o.getPosition();
+            }
+            if (book[pos].size() > 0 && !book[pos].get(book[pos].keySet().iterator().next()).isBuyOrder()){
+                Order_test cp = book[pos].remove(book[1].keySet().iterator().next());
+                id = cp.getTraderID();
+                Integer tempSizeCP = CurrentPosition.get(id).get(pos);
+                if (++tempSizeCP == 0){                               // TODO: check if this works
+                    CurrentPosition.get(id).remove(pos);
+                } else {
+                    CurrentPosition.get(id).put(pos, tempSizeCP);
+                }
+                //System.out.println("Executed order removed: " + !CurrentPosition1.get(id).get(pos).contains(cp));
+            } else if (pos == 7){
+
+            } else {
+                tempSize++;
+                book[pos].put(o.getTraderID(),o);   // put some key number here
+            }
+        }
+        if (tempSize != 0){tempHM.put(pos, tempSize);}
+        if (!tempHM.isEmpty()){CurrentPosition.put(id, tempHM);}
+        System.out.println("Order 2 inside: " + (CurrentPosition.get(id).get(pos) == 1));
+
+        // the execution of a large market order
+        orders = new Order_test[2];
+        orders[0] = o4; orders[1] = o5;
+        id = 3;
+        tempHM = new HashMap<Integer, Integer>();
+        tempSize = 0;
+        pos = null;
+
+        for (Order_test o:orders){
+            if (pos == null || pos != o.getPosition()){
+                // put here tempSize to tempHM if not empty and position not null
+                if (pos != null && tempSize != 0) {tempHM.put(pos, tempSize);}
+                tempSize = 0;
+                pos = o.getPosition();
+            }
+            if (book[pos].size() > 0 && book[pos].get(book[pos].keySet().iterator().next()).isBuyOrder()){
+                Order_test cp = book[pos].remove(book[pos].keySet().iterator().next());
+                Integer CPid = cp.getTraderID();
+                Integer tempSizeCP = CurrentPosition.get(CPid).get(pos);
+                if (--tempSizeCP == 0){                               // TODO: check if this works
+                    CurrentPosition.get(CPid).remove(pos);
+                    if (CurrentPosition.get(CPid).isEmpty()){CurrentPosition.remove(CPid);}
+                } else {
+                    CurrentPosition.get(CPid).put(pos, tempSizeCP);
+                }
+                // TODO: history, trader.execution, Pt and b store
+            } else if (pos == 0){      // if SMO executed against fringe, just continue
+
+            }
+            else {
+                tempSize--;
+                book[pos].put(o.getTraderID(),o);   // put some key number here
+            }
+        }
+        if (tempSize != 0){tempHM.put(pos, tempSize);}
+        if (!tempHM.isEmpty()){CurrentPosition.put(id, tempHM);}
+
+
+
+        // TODO: remove LO counterparty trader if execution returns true (true if traded_shares == shares2trade)
+        // TODO  remove LO MO current trader if traders.get(id).isTraded == true at the end of transactionRule, also delete his CurrentPosition entry (test: check if CP.get(trader).isEmpty)
+
+        // Returning trader, has one buy order, wants to at the same pos
+        Order_test o6 = new Order_test(tr1.getTraderID(), 0.0, true, (short) 8, 2);
+        Order_test o7 = new Order_test(tr1.getTraderID(), 0.0, true, (short) 8, 2);
+        ArrayList<Order_test> Orders = new ArrayList<Order_test>();
+        Orders.add(o6); Orders.add(o7);
+
+        Integer OrderID = 1;
+        id = o6.getTraderID();                   // TODO: add trader ID to the transaction rule
+        pos = null;
+        ArrayList<Order_test> Orders2Remove = new ArrayList<Order_test>();
+        if (CurrentPosition.containsKey(id)){                   // returning trader
+            Integer sizeLeft = null;
+            for (Order_test o : Orders){
+                if (pos == null || pos != o.getPosition()){     // position changes here
+                    pos = o.getPosition();
+                    sizeLeft = null;
+                }
+                if (CurrentPosition.get(id).containsKey(pos)){  // TODO: pos - positionShift
+                    boolean buy = false;
+                    if (sizeLeft == null){                      // changed position
+                        sizeLeft = CurrentPosition.get(id).get(pos);
+                        buy = (sizeLeft > 0);                   // TODO: what if he wants b/s at the same position????
+                    }
+                    if (buy == o.isBuyOrder() || sizeLeft == 0){// sizeLeft == 0 bcz buy is false then
+                        if (sizeLeft != 0){
+                            sizeLeft = buy ? --sizeLeft : ++sizeLeft;
+                            Orders2Remove.add(o);
+                        }
+                    } else {
+                        CurrentPosition.get(id).remove(pos);    // TODO: you also need to remove orders at the position from the book
+                        if (CurrentPosition.get(id).isEmpty()){
+                            CurrentPosition.remove(id);
+                        }
+                    }
+                }
+                // not in CurrentPosition, don't touch orders
+            }
+            for (Order_test o : Orders2Remove){
+                Orders.remove(o);
+            }
+        }
+        // TODO: in "GPR2009" have active traders (in traders), in "GPR2005" have active orders (values at all book positions)
+
+        if (CurrentPosition.containsKey(id)){
+            tempHM = CurrentPosition.get(id);
+        } else {
+            tempHM = new HashMap<Integer, Integer>();
+        }
+        tempSize = 0;
+        pos = null;
+
+        for (Order_test o:Orders){
+            if (pos == null || pos != o.getPosition()){
+                // put here tempSize to tempHM if not empty and position not null
+                if (pos != null && tempSize != 0) {tempHM.put(pos, tempSize);}
+                pos = o.getPosition();
+                tempSize = tempHM.containsKey(pos) ? tempHM.get(pos)        // TODO: pos - positionShift
+                                                   : 0;
+            }
+            if (book[pos].size() > 0 && !book[pos].get(book[pos].keySet().iterator().next()).isBuyOrder()){
+                Order_test cp = book[pos].remove(book[pos].keySet().iterator().next());
+                Integer CPid = cp.getTraderID();
+                Integer tempSizeCP = CurrentPosition.get(CPid).get(pos);
+                if (++tempSizeCP == 0){                               // TODO: check if this works
+                    CurrentPosition.get(CPid).remove(pos);
+                    if (CurrentPosition.get(CPid).isEmpty()){CurrentPosition.remove(CPid);}
+                } else {
+                    CurrentPosition.get(CPid).put(pos, tempSizeCP);
+                }
+                // TODO: history, trader.execution, Pt and b store
+            } else if (pos == 7){      // if SMO executed against fringe, just continue
+
+            }
+            else {
+                tempSize++;
+                OrderID++;
+                book[pos].put(OrderID,o);   // put some key number here
+            }
+        }
+        if (tempSize != 0){tempHM.put(pos, tempSize);}                 // TODO: + positionShift
+        if (!tempHM.isEmpty()){CurrentPosition.put(id, tempHM);}
+        // Returning trader, has 2 buy orders, wants one
+        Order_test o8 = new Order_test(tr1.getTraderID(), 0.0, true, (short) 8, 2);
+        Orders = new ArrayList<Order_test>();
+        Orders.add(o8);
+
+        id = o8.getTraderID();                   // TODO: add trader ID to the transaction rule
+        pos = null;
+        Orders2Remove = new ArrayList<Order_test>();
+        if (CurrentPosition.containsKey(id)){                   // returning trader
+            Integer sizeLeft = null;
+            boolean buy = false;
+            for (Order_test o : Orders){
+                if (pos == null || pos != o.getPosition()){     // position changes here
+                    if (sizeLeft != null && Math.abs(sizeLeft) > 0){                // deleting unnecessary current orders
+                        CurrentPosition.get(id).put(pos, CurrentPosition.get(id).get(pos) - sizeLeft); // TODO: take this outside with number of orders to delete at each position, for opposite direction- the same = outside
+                        int sz = Math.abs(sizeLeft);
+                        for (int i = 0; i < sz; i++){
+                            ListIterator<Integer> iter =
+                                    new ArrayList(book[pos].keySet()).listIterator(book[pos].size());
+                            while (iter.hasPrevious()) {
+                                Integer key = iter.previous();
+                                System.out.println(key);
+                            }
+                        }
+                    }
+                    pos = o.getPosition();
+                    sizeLeft = null;
+                }
+                if (CurrentPosition.get(id).containsKey(pos)){  // TODO: pos - positionShift
+                    buy = false;
+                    if (sizeLeft == null){                      // changed position
+                        sizeLeft = CurrentPosition.get(id).get(pos);
+                        buy = (sizeLeft > 0);                   // TODO: what if he wants b/s at the same position????
+                    }
+                    if (buy == o.isBuyOrder() || sizeLeft == 0){// sizeLeft == 0 bcz buy is false then
+                        if (sizeLeft != 0){
+                            sizeLeft = buy ? --sizeLeft : ++sizeLeft;
+                            Orders2Remove.add(o);
+                        }
+                    } else {
+                        CurrentPosition.get(id).remove(pos);    // TODO: you also need to remove orders at the position from the book
+                        if (CurrentPosition.get(id).isEmpty()){
+                            CurrentPosition.remove(id);
+                        }
+                    }
+                }
+                // not in CurrentPosition, don't touch orders
+            }
+            for (Order_test o : Orders2Remove){
+                Orders.remove(o);
+            }
+        }
+        // TODO: in "GPR2009" have active traders (in traders), in "GPR2005" have active orders (values at all book positions)
+
+        if (CurrentPosition.containsKey(id)){
+            tempHM = CurrentPosition.get(id);
+        } else {
+            tempHM = new HashMap<Integer, Integer>();
+        }
+        tempSize = 0;
+        pos = null;
+
+        for (Order_test o:Orders){
+            if (pos == null || pos != o.getPosition()){
+                // put here tempSize to tempHM if not empty and position not null
+                if (pos != null && tempSize != 0) {tempHM.put(pos, tempSize);}
+                pos = o.getPosition();
+                tempSize = tempHM.containsKey(pos) ? tempHM.get(pos)        // TODO: pos - positionShift
+                        : 0;
+            }
+            if (book[pos].size() > 0 && !book[pos].get(book[pos].keySet().iterator().next()).isBuyOrder()){
+                Order_test cp = book[pos].remove(book[pos].keySet().iterator().next());
+                Integer CPid = cp.getTraderID();
+                Integer tempSizeCP = CurrentPosition.get(CPid).get(pos);
+                if (++tempSizeCP == 0){                               // TODO: check if this works
+                    CurrentPosition.get(CPid).remove(pos);
+                    if (CurrentPosition.get(CPid).isEmpty()){CurrentPosition.remove(CPid);}
+                } else {
+                    CurrentPosition.get(CPid).put(pos, tempSizeCP);
+                }
+                // TODO: history, trader.execution, Pt and b store
+            } else if (pos == 7){      // if SMO executed against fringe, just continue
+
+            }
+            else {
+                tempSize++;
+                OrderID++;
+                book[pos].put(OrderID,o);   // put some key number here
+            }
+        }
+        if (tempSize != 0){tempHM.put(pos, tempSize);}                 // TODO: + positionShift
+        if (!tempHM.isEmpty()){CurrentPosition.put(id, tempHM);}
+
+
+        Iterator it = CurrentPosition.keySet().iterator();
+        while (it.hasNext()){
+            Integer s = (Integer) it.next();
+            int sz = CurrentPosition.get(s).size();
+            for (int i = 0; i < sz; i++){
+                System.out.println(CurrentPosition.get(s));
+            }
+            System.out.println(sz);
+        }
+
+
 
     }
 }

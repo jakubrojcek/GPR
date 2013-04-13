@@ -14,8 +14,8 @@ public class Payoff {
     static byte nReset;                    // nReset-> resets n to specific value for "forced learning"
     static short nResetMax = 32767;        // nReset-> resets n to specific value for "forced learning" 32767 is max short
     static int dof = 0;                    // degrees of freedom for chi^2 TODO: delete afterwards
-    static float[] mu0;
-    static float[] deltaV0;
+    static Float[] mu0;
+    static Float[] deltaV0;
     static int end;
 
     // generic constructor
@@ -46,7 +46,7 @@ public class Payoff {
         dof = i;
     }
 
-    public void setInitialBeliefs(float mu[], float[] deltaV){
+    public void setInitialBeliefs(Float mu[], Float[] deltaV){
         mu0 = mu;
         deltaV0 = deltaV;
     }

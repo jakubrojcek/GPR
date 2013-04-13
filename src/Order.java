@@ -16,10 +16,6 @@ public class Order {
         this.buyOrder = buyOrder;
     }
     
-    public void setTraderID(int ID){
-        traderID = ID;
-    }
-    
     public int getTraderID(){
         return traderID;
     }
