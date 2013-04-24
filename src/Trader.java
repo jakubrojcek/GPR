@@ -15,6 +15,7 @@ public class Trader {
     private float privateValue;         // initialized, can be changed to double later on
     private int pv;                     // holder for private value 0(0), 1(negative), 2(positive)
     private boolean isHFT;              // initialized
+    private byte units2trade;           // zt in GPR2005 model
     private boolean isTraded = false;   // set by TransactionRule in book
     private boolean isReturning = false;// is he returning this time? info from priorities
     private long oldCode;               // oldCode holds old hash code for the last state in which he took action
@@ -54,13 +55,15 @@ public class Trader {
     static Payoff InitialPayoff;
     static Float[] mu;
     static Float[] deltaV0;
+    static ArrayList<Order> orders;     // result of decision, passed to LOB.transactionRule
     //private double CFEE;              // cancellation fee
 
 
     // constructor bool, bool, float, int
-    public Trader(boolean HFT, float privateValue) {
+    public Trader(boolean HFT, float privateValue, byte u2t) {
         this.isHFT = HFT;
         this.privateValue = privateValue;
+        this.units2trade = u2t;
         TraderCount++;
         this.traderID = TraderCount;
 
@@ -254,7 +257,7 @@ public class Trader {
             System.out.println(f);
         }*/
 
-        Order currentOrder = new Order(traderID, EventTime, buyOrder);
+        Order currentOrder = new Order(traderID, EventTime, buyOrder, action, pricePosition);
 
         oldCode = code;                                          // save for later updating
         oldAction = action;                                      // save for later updating
@@ -273,11 +276,12 @@ public class Trader {
     }
 
     // method for making decision based on GPR 2005
-    public PriceOrder decision(int[] BookSizes, int[] BookInfo, double EventTime, double priceFV){
+    public ArrayList decision(int[] BookSizes, int[] BookInfo, double EventTime, double priceFV){
         PriceFV = priceFV;
         int pricePosition;
         boolean buyOrder = false;
-        short action;
+        short[] action = {127, 127};        // 127 as second action signals units2trade == 1
+        short MaxIndex;
         double diff = 0.0;
 
         long Bt = BookInfo[0];              // Best Bid position
@@ -286,82 +290,137 @@ public class Trader {
 
         // computing payoffs from different actions based on overly optimistic beliefs
         float[] p = new float[nPayoffs];
+        HashMap<Short, Float> ps = new HashMap<Short, Float>();
 
-        p[2 * end] = (float)((Bt - fvPos) * tickSize - privateValue);       // SMO
+
+        p[2 * end] = (float)((Bt - fvPos) * tickSize - privateValue );      // SMO
         p[2 * end + 1] = (float)((fvPos - At) * tickSize + privateValue);   // BMO
         p[2 * end + 2] = 0.0f;                                              // payoff to no order- but that's also a choice
 
         for (int i = 0; i < end; i++ ){
             // SLO
-            /*p[i] = (LL + i <= Bt) ?  p[i] = p[2 * end] - 1.0f              // marketable sell limit order //TODO: run the for loop to find max from min- Bid to max Ask
-                                  : (float)(mu[i] * ((i - breakPoint) * tickSize - privateValue - deltaV0[i]));*/
             p[i] = (float)(mu[i] * ((i - breakPoint) * tickSize - privateValue - deltaV0[i]));
             // BLO
-            /*p[end + i] = (LL + i >= At) ? p[2 * end + 1] - 1.0f    // marketable buy limit order
-                                        : (float)((mu[end + i]) *
-                            (privateValue + deltaV0[end + i] - (i - breakPoint) * tickSize));*/
             p[end + i] = (float)((mu[end + i]) * (privateValue + deltaV0[end + i] - (i - breakPoint) * tickSize));
+        }
+
+        short b = (short) Math.max(BookInfo[0] - LL + 1, 0);             // + 1 in order to start from one above B
+        b = (short) Math.min(end, b); // TODO: test this change
+        short a = (short) Math.min(BookInfo[1] - LL + end, 2 * end);
+        a = (short) Math.max(end, a);
+
+        if (units2trade == 1){
+            for(short i = b; i < a; i++){            // searching for best payoff and not marketable LO
+                ps.put((short)((i<<7) + 127), p[i]);
+            }
+            ps.put((short)(((2 * end)<<7) + 127),     p[2 * end]);             // SMO
+            ps.put((short)(((2 * end + 1)<<7) + 127), p[2 * end + 1]);         // BMO
+            ps.put((short)(((2 * end + 2)<<7) + 127), p[2 * end + 2]);         // NO
+        } else if (units2trade == 2){
+            // Rule 1a and Rule 2
+            for(short i = b; i < a; i++){
+                for (int j = b; j < Math.min(i + 1, a); j++){                  // i + 1, bcz j can equal i
+                    if ((i - end) != j){                                       // TODO: check
+                        ps.put((short)((i<<7) + j), (p[i] + p[j]));
+                    }
+                }
+            }
+            // Rule 1b
+            short c = (BookInfo[2] == 1 || Bt == 0) ? (short)Math.max(0, b - 1) : b;    // SMO part
+            for (int i = c; i < a; i++){
+                ps.put((short)(((2 * end)<<7) + i), (p[2 * end] + p[i]));
+            }
+
+            c = (BookInfo[3] == 1 || (At == (nP - 1))) ? (short)Math.min(2 *end, a + 1) : a;
+            for (int i = b; i < c; i++){
+                ps.put((short)(((2 * end + 1)<<7) + i), (p[2 * end + 1] + p[i]));
+            }
+
+            // Rule 3
+            if (BookInfo[2] > 1 || Bt == 0){            // SMO
+                ps.put((short)(((2 * end)<<7) + (2 * end)), (p[2 * end] + p[2 * end]));
+            } else {
+                // TODO: find next best Bid
+            }
+            if (BookInfo[3] > 1 || (At == (nP - 1))){   // BMO
+                ps.put((short)(((2 * end + 1)<<7) + 2 * end + 1), (p[2 * end + 1] +p[2 * end + 1]));
+            } else {
+                // TODO: find next best Ask
+            }
+
+            // Rule 4 TODO: No Order payoffs - basically equal to units2trade == 1
         }
 
         if (!Payoffs.containsKey(code)){ // new state, new SinglePayoff created
             statesCount++;
             System.out.println(statesCount);
-            GPR2005Payoff pay = new GPR2005Payoff(p, BookInfo[0] - LL, BookInfo[1] - LL);
+            GPR2005Payoff_test pay = new GPR2005Payoff_test(ps, units2trade);
             Payoffs.put(code, pay);      // insert a Payoff object made of GPR2005Payoff to the Payoffs table
-            action = pay.getMaxIndex();
+            MaxIndex = pay.getMaxIndex();
+            action[0] = (short)(MaxIndex>>7);
+            action[1] = (short) (MaxIndex - (action[0]<<7));
         } else {
-            GPR2005Payoff pay = (GPR2005Payoff)Payoffs.get(code);
-            Iterator keys = pay.getX1().keySet().iterator();
+            GPR2005Payoff_test pay = (GPR2005Payoff_test)Payoffs.get(code);
+            Iterator keys = pay.getX().keySet().iterator();
             while (keys.hasNext()){
+                float tempPayoff = 0.0f;
+                boolean LO = false;
                 short key = (Short) keys.next();
-                if (key < end){
-                    // SLO
-                    /*p[key] = (LL + key <= Bt) ? p[end] - 1.0f                       // marketable sell limit order
-                                              :(float)((pay.getX1().get(key).getMu()) *
-                            ((key - breakPoint) * tickSize - privateValue - pay.getX1().get(key).getDeltaV()));*/
-                    p[key] = (float)((pay.getX1().get(key).getMu()) *
-                                    ((key - breakPoint) * tickSize - privateValue - pay.getX1().get(key).getDeltaV()));
-                } else if (key < (2 * end)) {
-                    /*p[key] = (LL + key - end >= At) ? p[2 * end + 1] - 1.0f   // marketable buy limit order
-                                                        : (float)((pay.getX1().get(key).getMu()) *
-                            (privateValue + pay.getX1().get(key).getDeltaV() - (key - breakPoint - end) * tickSize));*/
-                    p[key] = (float)((pay.getX1().get(key).getMu()) *
-                                    (privateValue + pay.getX1().get(key).getDeltaV() - (key - breakPoint - end) * tickSize));
+                action[0] = (short)(key>>7);
+                action[1] = (short) (key - (action[0]<<7));
+                for (int i = 0; i < units2trade; i++){
+                    if (action[i] < end){
+                        // SLO
+                        LO = true;
+                        tempPayoff = tempPayoff + (float)((pay.getX().get(key)[i].getMu()) *
+                                        ((action[i] - breakPoint) * tickSize - privateValue -
+                                                pay.getX().get(key)[i].getDeltaV()));
+                    } else if (action[i] < (2 * end)) {
+                        // BLO
+                        LO = true;
+                        tempPayoff = tempPayoff + (float)((pay.getX().get(key)[i].getMu()) *
+                                        (privateValue + pay.getX().get(key)[i].getDeltaV() -
+                                                (action[i] - breakPoint - end) * tickSize));
+                    }
                 }
+                if (LO){ps.put(key, tempPayoff);}
             }
             if (prTremble > 0 && Math.random() < prTremble){
-                pay.updateMax(p, BookInfo[0] - LL, BookInfo[1] - LL, true);
+                pay.updateMax(ps, units2trade, true);
             } else {
-                pay.updateMax(p, BookInfo[0] - LL, BookInfo[1] - LL, false);
+                pay.updateMax(ps, units2trade, false);
                 diff = pay.getDiff();
             }
-            action = pay.getMaxIndex();
+            MaxIndex = pay.getMaxIndex();
+            action[0] = (short)(MaxIndex>>7);
+            action[1] = (short) (MaxIndex - (action[0]<<7));
         }
 
-        if ((action >= end) && (action != 2 * end)){
-            buyOrder = true;
+        orders = new ArrayList<Order>();
+        for (int i = 0; i < units2trade; i++){
+            buyOrder = false;
+            if ((action[i] >= end) && (action[i] != 2 * end)){
+                buyOrder = true;
+            }
+            pricePosition = (action[i] < end) ? LL + action[i]
+                                              : LL + action[i] - end;
+            if (action[i] == 2 * end || (!buyOrder && pricePosition < Bt)){pricePosition = BookInfo[0];}       // position is Bid
+            if (action[i] == 2 * end + 1 || (buyOrder && pricePosition > At)){pricePosition = BookInfo[1];}    // TODO: for the second action, this is at second best Ask
+            Order CurrentOrder = new Order(traderID, EventTime, buyOrder, action[i], pricePosition);
+            orders.add(CurrentOrder);
         }
-        pricePosition = (action < end) ? LL + action
-                                       : LL + action - end;
-       /* if (!buyOrder && pricePosition < Bt){
-            System.out.println("marketable limit order");
-        }*/
-        if (action == 2 * end || (!buyOrder && pricePosition < Bt)){pricePosition = BookInfo[0];}       // position is Bid
-        if (action == 2 * end + 1 || (buyOrder && pricePosition > At)){pricePosition = BookInfo[1];}    // position is Ask
 
         oldCode = code;
-        oldAction = action;
+        oldAction = MaxIndex;
 
-        if (writeDiagnostics){writeDiagnostics(diff, action);}
-        if (writeDecisions){writeDecision(BookInfo, BookSizes, (int) action);}
+        if (writeDiagnostics){writeDiagnostics(diff, action[0]);}
+        //if (writeDecisions){writeDecision(BookInfo, BookSizes, (int) action);}
         if (writeHistogram){writeHistogram(BookSizes);}
         //System.out.println("action = " + action);
                 /*System.out.println("action = " + action + " pricePosition = " + pricePosition
            + " buy? " + buyOrder);*/
-        Order CurrentOrder = new Order(traderID, EventTime, buyOrder);
 
-        return (action != 2 * end + 2) ? new PriceOrder(pricePosition, CurrentOrder)
-                                       : null;
+        return orders;
     }
 
     // used to update payoff of action taken in a state upon execution
@@ -388,10 +447,14 @@ public class Trader {
     }
 
     // execution as in GPR 2005 setting
-    public void execution(double fundamentalValue){
+    public void execution(double fundamentalValue, Order o){
         tradeCount++;
+        byte unitTraded = 0;
+        if (units2trade > 1){
+            unitTraded = ((oldAction>>7) > o.getAction()) ? (byte) 1 : (byte) 0;
+        }
         if (Payoffs.containsKey(oldCode)){
-            ((GPR2005Payoff) Payoffs.get(oldCode)).update(oldAction, (float)(fundamentalValue - PriceFV), false);
+            ((GPR2005Payoff_test) Payoffs.get(oldCode)).update(oldAction, (float)(fundamentalValue - PriceFV), false, unitTraded);
         }
     }
 
@@ -410,9 +473,13 @@ public class Trader {
     }
 
     // use to cancel limit order in a GPR2005 setting
-    public void cancel(){
+    public void cancel(Order o){
+        byte unitTraded = 0;
+        if (units2trade > 1){
+            unitTraded = ((oldAction>>7) > o.getAction()) ? (byte) 1 : (byte) 0;
+        }
         if (Payoffs.containsKey(oldCode)){
-            ((GPR2005Payoff) Payoffs.get(oldCode)).update(oldAction, 0.0f, true);
+            ((GPR2005Payoff_test) Payoffs.get(oldCode)).update(oldAction, 0.0f, true, unitTraded);
         }
     }
 
@@ -530,11 +597,13 @@ public class Trader {
         } else if (infoSize == 5) {                 // GPR 2005 state space
             long Bt = BookInfo[0];                  // Best Bid position
             long At = BookInfo[1];                  // Best Ask position
-            long lBt = BookInfo[2];             // depth at best Bid
-            long lAt = BookInfo[3];             // depth at best Ask
-            long dBt = (BookInfo[4]);    // depth at buy
-            int dSt = (BookInfo[5]);     // depth at sell
-            code = (Bt<<25) + (At<<20) + (lBt<<16) + (lAt<<12) + (dBt<<6) + dSt;
+            long lBt = BookInfo[2];                 // depth at best Bid
+            long lAt = BookInfo[3];                 // depth at best Ask
+            long dBt = (BookInfo[4]);               // depth at buy
+            int dSt = (BookInfo[5]);                // depth at sell
+            int l = (isHFT) ? 1 : 0;                // arrival frequency slow (0), fast (1)
+
+            code = (Bt<<26) + (At<<21) + (lBt<<17) + (lAt<<13) + (dBt<<7) + (dSt<<1) + l;
             /*long Bt = BookInfo[0];                  // Best Bid position
             long At = BookInfo[1];                  // Best Ask position
             long lBt = BookInfo[2] / 3;             // depth at best Bid
@@ -544,24 +613,27 @@ public class Trader {
             code = (Bt<<15) + (At<<10) + (lBt<<8) + (lAt<<6) + (dBt<<3) + dSt;*/
             /*boolean[] test = new boolean[13];
             long code2 = code;
-            test[0] = (code2>>25 == Bt);
+            test[0] = (code2>>26 == Bt);
             System.out.println(test[0]);
-            code2 = code - (Bt<<25);
-            test[1] = (code2>>20 == At);
+            code2 = code - (Bt<<26);
+            test[1] = (code2>>21 == At);
             System.out.println(test[1]);
-            code2 = code2 - (At<<20);
-            test[2] = (code2>>16 == lBt);
+            code2 = code2 - (At<<21);
+            test[2] = (code2>>17 == lBt);
             System.out.println(test[2]);
-            code2 = code2 - (lBt<<16);
-            test[3] = (code2>>12 == lAt);
+            code2 = code2 - (lBt<<17);
+            test[3] = (code2>>13 == lAt);
             System.out.println(test[3]);
-            code2 = code2 - (lAt<<12);
-            test[4] = (code2>>6 == dBt);
+            code2 = code2 - (lAt<<13);
+            test[4] = (code2>>7 == dBt);
             System.out.println(test[4]);
-            code2 = code2 - (dBt<<6);
-            test[5] = (code2 == dSt);
+            code2 = code2 - (dBt<<7);
+            test[5] = (code2>>1 == dSt);
             System.out.println(test[5]);
-            code2 = code2 - dSt;
+            code2 = code2 - (dSt<<1);
+            test[6] = (code2 == l);
+            System.out.println(test[6]);
+            code2 = code2 - l;
             System.out.println(Long.toBinaryString(code));
             if (code2 !=0){
                 System.out.println("problem");
@@ -716,7 +788,7 @@ public class Trader {
         try{
             String outputFileName = folder + "diagnostics.csv";
             FileWriter writer = new FileWriter(outputFileName, true);
-            writer.write(diag.printDiagnostics("diffs"));
+            writer.write(diag.printDiagnostics("actions"));
             writer.close();
         }
         catch (Exception e){

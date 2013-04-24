@@ -63,5 +63,13 @@ public class Trade {
     public double getPrice() {
         return price;
     }
+
+    public boolean isSellerIsHFT() {
+        return sellerIsHFT;
+    }
+
+    public boolean isBuyerIsHFT() {
+        return buyerIsHFT;
+    }
 }
 

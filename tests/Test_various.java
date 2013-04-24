@@ -20,6 +20,22 @@ import java.util.*;   import org.apache.commons.math3.distribution.NormalDistrib
  */
 public class Test_various {
     public static void main(String[] args) {
+        short action1 = 0;
+        short action2 = 127;
+        short sh = (short)((action1<<7) + action2);
+        action1 = (short)(sh>>7);
+        action2 = (short)(sh - (action1<<7));
+        System.out.println(action1 + " " + action2);
+
+        IdentityHashMap<Short, Belief[]> x = new IdentityHashMap<Short, Belief[]>();
+        Belief[] beliefs = new Belief[2];
+        beliefs[0] = new Belief((short) 1, 0.5f, 0.5f);
+        beliefs[1] = new Belief((short) 1, 0.6f, 0.6f);
+        x.put((short)1, beliefs);
+        short oldAction = (short) 1;
+        System.out.println(beliefs[0].getMu());
+        Belief[] b = x.get(oldAction);
+        System.out.println((x.get(oldAction))[1].getMu());
         /*float[] f = {4.3f, 4.3f, 4.3f, 4.3f, 4.3f, 4.3f, 4.3f, 4.3f, 4.3f, 4.3f,
                 4.3f, 4.3f, 4.3f, 4.3f, 4.3f, 4.3f, 4.3f, 4.3f, 4.3f, 4.3f,
                 4.3f, 4.3f, 4.3f, 4.3f, 4.3f, 4.3f, 4.3f, 4.3f, 4.3f};*//*
@@ -233,7 +249,7 @@ public class Test_various {
         book.printBook(tb);
         System.out.println(book.randomNonHFTtraderID()+ " random guy");
         */
-        HashMap<Integer, Trader> traders = new HashMap<Integer, Trader>(); //trader ID, trader object
+       /* HashMap<Integer, Trader> traders = new HashMap<Integer, Trader>(); //trader ID, trader object
         LinkedHashMap<Integer, Order_test>[] book = new LinkedHashMap[8];
         book[1] = new LinkedHashMap<Integer, Order_test>();
         book[2] = new LinkedHashMap<Integer, Order_test>();
@@ -505,15 +521,15 @@ public class Test_various {
         Orders = new ArrayList<Order_test>();
         Orders.add(o8);
 
-        id = o8.getTraderID();                   // TODO: add trader ID to the transaction rule
+        id = o8.getTraderID(); // TODO: add trader ID to the transaction rule
         pos = null;
-        Orders2Remove = new ArrayList<Order_test>();
-        if (CurrentPosition.containsKey(id)){                   // returning trader
+        Orders2Remove = new ArrayList<Order_test>();    // these orders are not necessary in transaction rule
+        if (CurrentPosition.containsKey(id)){           // returning trader
             Integer sizeLeft = null;
             boolean buy = false;
             for (Order_test o : Orders){
-                if (pos == null || pos != o.getPosition()){     // position changes here
-                    if (sizeLeft != null && Math.abs(sizeLeft) > 0){                // deleting unnecessary current orders
+                if (pos == null || pos != o.getPosition()){ // position changes here
+                    if (sizeLeft != null && Math.abs(sizeLeft) > 0){ // deleting unnecessary current orders
                         CurrentPosition.get(id).put(pos, CurrentPosition.get(id).get(pos) - sizeLeft); // TODO: take this outside with number of orders to delete at each position, for opposite direction- the same = outside
                         int sz = Math.abs(sizeLeft);
                         for (int i = 0; i < sz; i++){
@@ -528,11 +544,11 @@ public class Test_various {
                     pos = o.getPosition();
                     sizeLeft = null;
                 }
-                if (CurrentPosition.get(id).containsKey(pos)){  // TODO: pos - positionShift
+                if (CurrentPosition.get(id).containsKey(pos)){ // TODO: pos - positionShift
                     buy = false;
-                    if (sizeLeft == null){                      // changed position
+                    if (sizeLeft == null){ // changed position
                         sizeLeft = CurrentPosition.get(id).get(pos);
-                        buy = (sizeLeft > 0);                   // TODO: what if he wants b/s at the same position????
+                        buy = (sizeLeft > 0); // TODO: what if he wants b/s at the same position????
                     }
                     if (buy == o.isBuyOrder() || sizeLeft == 0){// sizeLeft == 0 bcz buy is false then
                         if (sizeLeft != 0){
@@ -540,7 +556,7 @@ public class Test_various {
                             Orders2Remove.add(o);
                         }
                     } else {
-                        CurrentPosition.get(id).remove(pos);    // TODO: you also need to remove orders at the position from the book
+                        CurrentPosition.get(id).remove(pos); // TODO: you also need to remove orders at the position from the book
                         if (CurrentPosition.get(id).isEmpty()){
                             CurrentPosition.remove(id);
                         }
@@ -602,9 +618,9 @@ public class Test_various {
                 System.out.println(CurrentPosition.get(s));
             }
             System.out.println(sz);
-        }
-
+        } */
 
 
     }
+
 }

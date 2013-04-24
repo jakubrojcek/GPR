@@ -1,7 +1,6 @@
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.Set;
+import java.util.*;
+
+import com.sun.xml.internal.bind.v2.TODO;
 import org.apache.commons.math3.distribution.NormalDistribution;
 
 /**
@@ -86,49 +85,56 @@ public class SingleRun {
             int ID;
             for (int i = 0; i < nEvents; i ++){
                 // 1. new trader
-                privateValue = (float) nd.sample();
-                tr = new Trader(false, privateValue);
+                double rnHFT = 0.0;//Math.random();
+                privateValue = 0.0f;
+                boolean HFT = true;
+                if (rnHFT < 0.6){                         // proportion of nonHFT traders
+                    privateValue = (float) nd.sample();
+                    HFT = false;
+                }
+                tr = new Trader(HFT, privateValue, (byte)1);
                 ID = tr.getTraderID();
                 traders.put(ID, tr);
-                // 2. & 3. decision and transaction rule
-                PriceOrder PO = tr.decision(book.getBookSizes(), book.getBookInfo(), EventTime, FV);
-                if (PO != null){
-                    book.transactionRule(PO.getPrice() , PO.getCurrentOrder());
-                } else {book.addTrader(ID);}
+                // 2. & 3. decision and transaction rule    // TODO: he returns an ArrayList here
+                ArrayList<Order> orders = tr.decision(book.getBookSizes(), book.getBookInfo(), EventTime, FV);
+                if (!orders.isEmpty()){
+                    book.transactionRule(ID, orders);  // TODO: Insert ID & Orders
+                }
                 // 4. Cancellations
-                Iterator keys = traders.keySet().iterator();
-                    while (keys.hasNext()){
-                        int key = (Integer) keys.next();
-                        double FVbefore = traders.get(key).getPriceFV();
-                        boolean isBuy = book.isBuyOrder(key);
-                        double deltaHat = isBuy ? 0.2* Math.max(FVbefore - FV, 0)    // 0.2 * in base case
-                                                : 0.2 * Math.max(FV - FVbefore, 0);
-                        double delta = Math.min(deltaLow + deltaHat, 0.64);
-                        //System.out.println(delta);
-                        double rn = Math.random();             // to determine cancellation
-                        if (rn < delta){
-                            traders.get(key).cancel();
-                            book.tryCancel(key);
-                            if (book.traderIDsNonHFT.contains(key)){
-                                book.traderIDsNonHFT.remove(book.traderIDsNonHFT.indexOf(key));
-                            } else if (book.traderIDsHFT.contains(key)){
-                                book.traderIDsHFT.remove(book.traderIDsHFT.indexOf(key));
-                            } else {
-                                System.out.println("Where is this trader? " + key);
-                            }
-                            keys.remove();              // removes from traders as well = traders.remove(id);
-                        }
+                ArrayList<Order> ActiveOrders = book.getActiveOrders();
+                ArrayList<Order> orders2remove = new ArrayList<Order>();
+                for (Order ao : ActiveOrders){
+                    int aoID = ao.getTraderID();
+                    double FVbefore = traders.get(aoID).getPriceFV();         // TODO: separate for each order
+                    boolean isBuy = ao.isBuyOrder();
+                    boolean isHFT = traders.get(aoID).getIsHFT();
+                    double delta = 0.0;
+                    if (isHFT){
+                        double deltaHat = isBuy ? 7.2 * Math.max(FVbefore - FV, 0)    // 0.2 * in base case
+                                                : 7.2 * Math.max(FV - FVbefore, 0);
+                        delta = Math.min(deltaLow + deltaHat, 0.99);
+                    } else {
+                        double deltaHat = isBuy ? 2.4 * Math.max(FVbefore - FV, 0)    // 0.2 * in base case
+                                                : 2.4 * Math.max(FV - FVbefore, 0);
+                        delta = Math.min(deltaLow + deltaHat, 0.64);
                     }
+                    double rn = Math.random();             // to determine cancellation
+                    if (rn < delta){
+                        traders.get(aoID).cancel(ao);         // TODO: insert order here later
+                        orders2remove.add(book.tryCancel(ao)); // it's trying to remove the worst order of the trader at that position
+                    }
+                }
+                book.removeOrders(orders2remove);
                 // 5. innovation of fundamental value
                 double rn3 = Math.random();
                 if (rn3 < FVplus * 0.08){
                     FV = FV + sigma * tickSize;
-                    book.FVup(FV, EventTime);
+                    book.FVup(FV, EventTime, (int) sigma);
                     //book.FVup(FV, EventTime); //TODO: use twice for 1/16 ts
                     //System.out.println("up" + FV);
                 } else if (rn3 < 0.08) {
                     FV = FV - sigma * tickSize;
-                    book.FVdown(FV, EventTime);
+                    book.FVdown(FV, EventTime, (int) sigma);
                     //book.FVdown(FV, EventTime); //TODO: use twice for 1/16 ts
                     //System.out.println("down" + FV);
                 }
@@ -192,7 +198,7 @@ public class SingleRun {
                 int ID;
                 float FVrealization;
                 if (rn < x1){                          // New arrival HFT
-                    tr = new Trader(true, 0);
+                    tr = new Trader(true, 0, (byte) 1);
                     ID = tr.getTraderID();
                     /* if(book.removedTraders.contains(ID)){
                          System.out.println("new Zombie HFT");
@@ -202,7 +208,7 @@ public class SingleRun {
                     PriceOrder PO = tr.decision(book.getRank(ID), book.getBookSizes(), book.getBookInfo(),
                             EventTime, FV);
                     if (PO != null){
-                        book.transactionRule(PO.getPrice() , PO.getCurrentOrder());
+                        //book.transactionRule(PO.getPrice() , PO.getCurrentOrder());
                     } else {book.addTrader(ID);}
 
                 } else if (rn < x2){                   // New arrival nonHFT
@@ -215,7 +221,7 @@ public class SingleRun {
                         FVrealization = FprivateValues[2];
                     }
                     //System.out.println("FV realization = " + FVrealization);
-                    tr = new Trader(false, FVrealization);
+                    tr = new Trader(false, FVrealization, (byte)1);
                     ID = tr.getTraderID();
                     /* if(book.removedTraders.contains(ID)){
                          System.out.println("new zombie nonHFT");
@@ -227,7 +233,7 @@ public class SingleRun {
                             EventTime, FV);
 
                     if (PO != null){
-                        book.transactionRule(PO.getPrice() , PO.getCurrentOrder());
+                        //book.transactionRule(PO.getPrice() , PO.getCurrentOrder());
                     } else {book.addTrader(ID);}
                 } else if (rn < x3){                   // Returning HFT
                     ID = book.randomHFTtraderID();
@@ -238,9 +244,9 @@ public class SingleRun {
                     PriceOrder PO = traders.get(ID).decision(book.getRank(ID), book.getBookSizes(), book.getBookInfo(),
                             EventTime, FV);
                     if (PO != null){
-                        book.transactionRule(PO.getPrice() , PO.getCurrentOrder());
+                        //book.transactionRule(PO.getPrice() , PO.getCurrentOrder());
                     } else {
-                        book.tryCancel(ID);
+                        //book.tryCancel(ID);                     // TODO: pass order here
                     }
 
                 } else if (rn < x4){                   // Returning nonHFT
@@ -253,8 +259,8 @@ public class SingleRun {
                     } else {
                         book.tryCancel(ID);
                     }*/
-                    //traders.get(ID).cancel(EventTime);          //TODO: cancel and uncomment above
-                    book.tryCancel(ID);
+                    //traders.get(ID).cancel(EventTime);          // TODO: cancel and uncomment above
+                    //book.tryCancel(ID);                         // TODO: pass order here
                     book.traderIDsNonHFT.remove(book.traderIDsNonHFT.indexOf(ID));
                     traders.remove(ID);
 

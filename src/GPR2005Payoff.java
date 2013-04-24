@@ -14,11 +14,8 @@ public class GPR2005Payoff extends Payoff {
     private Short maxIndex = 0;
     private double diff;
 
-    private IdentityHashMap<Short, Belief> x1 = new IdentityHashMap<Short, Belief>();
+    private HashMap<Short, Belief> x1 = new HashMap<Short, Belief>();
     // action, belief- number times the action chose, execution probability, fv change upon execution
-    private IdentityHashMap<Short, Belief> x2 = new IdentityHashMap<Short, Belief>();
-    // second available share action, belief
-
 
     public GPR2005Payoff(float[] payoffs, int Bid, int Ask) {
         short b = (short) Math.max(Bid + 1, 0);             // + 1 in order to start from one above B
@@ -120,11 +117,7 @@ public class GPR2005Payoff extends Payoff {
         return diff;
     }
 
-    public IdentityHashMap<Short, Belief> getX1() {
+    public HashMap<Short, Belief> getX1() {
         return x1;
-    }
-
-    public IdentityHashMap<Short, Belief> getX2() {
-        return x2;
     }
 }

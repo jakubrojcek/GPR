@@ -9,11 +9,15 @@ public class Order {
     private int traderID;
     private double timeStamp;
     private boolean buyOrder;
+    private short action;
+    private int position;
 
-    public Order(int traderID, double timeStamp, boolean buyOrder){
+    public Order(int traderID, double timeStamp, boolean buyOrder, short action, int position){
         this.traderID = traderID;
         this.timeStamp = timeStamp;
         this.buyOrder = buyOrder;
+        this.action = action;
+        this.position = position;
     }
     
     public int getTraderID(){
@@ -26,7 +30,15 @@ public class Order {
         return buyOrder;
     }
 
+    public short getAction() {
+        return action;
+    }
 
-            
-    
+    public int getPosition() {
+        return position;
+    }
+
+    public void setPosition(int position) {   // used in the book, like CurrentPosition
+        this.position = position;
+    }
 }

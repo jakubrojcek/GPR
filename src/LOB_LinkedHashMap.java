@@ -23,16 +23,20 @@ public class LOB_LinkedHashMap {
     int maxSumDepth;
     private int Pt;                            // last transaction position
     private int b = 0;                         // 1 if last transaction buy, 0 if sell
-    Hashtable<Byte, Byte> priorities = new Hashtable<Byte, Byte>();
+    private int OrderID = 0;                   // id stamp for orders used as key in the book LHM
+    Hashtable<Byte, Byte> priorities    = new Hashtable<Byte, Byte>();
     // priorities HashTable <position, priority>
-    ArrayList<Integer> traderIDsHFT = new ArrayList<Integer>();
-    ArrayList<Integer> traderIDsNonHFT = new ArrayList<Integer>();
+    ArrayList<Integer> traderIDsHFT     = new ArrayList<Integer>();
+    ArrayList<Integer> traderIDsNonHFT  = new ArrayList<Integer>();
     //vectors holding traderIDs, HFT or nonHFT, traderID and position, price and position
-    Hashtable<Integer, Integer> currentPosition = new Hashtable<Integer, Integer>();
-    // traderID, position of price + positionShift
+    ArrayList<Order> ActiveOrders       = new ArrayList<Order>();
+    // holds orders which are in the book, remove from book: order.getPosition
+    Hashtable<Integer, HashMap<Integer, Integer>> CurrentPosition =
+            new Hashtable<Integer, HashMap<Integer, Integer>>();
+    // traderID, position, signed number of orders at position: price + positionShift
 
 
-    LinkedHashMap<Integer, Order>[] book; // price position and orders
+    LinkedHashMap<Integer, Order>[] book; // orderID and orders
     History hist;
     HashMap<Integer, Trader> traders;
 
@@ -59,109 +63,144 @@ public class LOB_LinkedHashMap {
         }
     }
 
-    public void FVup(double fv, double et){
+    public void FVup(double fv, double et, int tickChange){
         // (1) book shift, (2) 31+1, (3) currentPosition, (4) pricePosition
-        positionShift++;
-        Set keys = book[1].keySet();
-        if (!keys.isEmpty()){
-            if (! book[1].get(keys.iterator().next()).isBuyOrder()){
-                while (! keys.isEmpty()){          // this part executes the SLOs against fringe
-                    int id = (Integer) keys.iterator().next();
-                    if (model == "GPR2005") {
-                        traders.get(id).execution(fv);
-                    } else {traders.get(id).execution(fv, et);}
-                    if (traderIDsNonHFT.contains(id)){
-                        traderIDsNonHFT.remove(traderIDsNonHFT.indexOf(id));
-                    } else if (traderIDsHFT.contains(id)){
-                        traderIDsHFT.remove(traderIDsHFT.indexOf(id));
+
+        Set keys;
+        for (int i = tickChange; i > 0; i--){
+            keys = book[i].keySet();
+            if (!keys.isEmpty()){
+                if (! book[i].get(keys.iterator().next()).isBuyOrder()){
+                    while (! keys.isEmpty()){ // this part executes the SLOs against fringe
+                        int oID = (Integer) keys.iterator().next();
+                        Order o = book[i].remove(oID);
+                        ActiveOrders.remove(o);
+                        int traderID = o.getTraderID();
+                        if (model == "GPR2005") {
+                            traders.get(traderID).execution(fv, o);
+                        } else {traders.get(traderID).execution(fv, et);}
+                        int tempSizeCP = CurrentPosition.get(traderID).get(i + positionShift);
+                        if (++tempSizeCP == 0){
+                            CurrentPosition.get(traderID).remove(i + positionShift);
+                            if (CurrentPosition.get(traderID).isEmpty()){
+                                CurrentPosition.remove(traderID);
+                                traders.remove(traderID);
+                            }
+                        } else {
+                            CurrentPosition.get(traderID).put(i + positionShift, tempSizeCP);
+                        }
+                        keys.remove(oID);
                     }
-                    currentPosition.remove(id);
-                    book[1].remove(id);
-                    traders.remove(id);
-                    keys.remove(id);
                 }
             }
         }
 
-
-        keys = book[0].keySet();
-        while (! keys.isEmpty()){                        // removing BLOs from the zero position
-            int id = (Integer) keys.iterator().next();
-            currentPosition.remove(id);
-            if (model == "GPR2005"){
-                book[0].remove(id);
-                traders.get(id).cancel();
-                if (traderIDsNonHFT.contains(id)){
-                    traderIDsNonHFT.remove(traderIDsNonHFT.indexOf(id));
-                } else if (traderIDsHFT.contains(id)){
-                    traderIDsHFT.remove(traderIDsHFT.indexOf(id));
+        for (int i = tickChange - 1; i >= 0; i--){
+            keys = book[i].keySet();
+            while (! keys.isEmpty()){ // removing BLOs from the zero position
+                int oID = (Integer) keys.iterator().next();
+                Order o = book[i].remove(oID);
+                int traderID = o.getTraderID();
+                book[i].remove(oID);
+                ActiveOrders.remove(o);
+                if (model == "GPR2005"){
+                    traders.get(traderID).cancel(o);
                 }
-                traders.remove(id);
+                int tempSizeCP = CurrentPosition.get(traderID).get(i + positionShift);
+                if (--tempSizeCP == 0){
+                    CurrentPosition.get(traderID).remove(i + positionShift);
+                    if (CurrentPosition.get(traderID).isEmpty()){
+                        CurrentPosition.remove(traderID);
+                        traders.remove(traderID);
+                    }
+                } else {
+                    CurrentPosition.get(traderID).put(i + positionShift, tempSizeCP);
+                }
+                keys.remove(oID);
             }
-            keys.remove(id);
         }
 
-        for (int i = 0; i < nPoints - 1; i++){
-            book[i] = book[i + 1];
+        for (int i = 0; i < nPoints - tickChange; i++){
+            book[i] = book[i + tickChange];
         }
-        book[nPoints - 1] = new LinkedHashMap();
-        System.arraycopy(Prices, 1, Prices, 0, nPoints - 1);
-        Prices[nPoints - 1] = Prices[nPoints - 2] + tickSize;
-        Pt = Math.max(Pt--, 0);                               // not to fall of the grid
+
+        for (int i = tickChange; i > 0; i--){ // TODO: put positionShift change at the end
+            book[nPoints - i] = new LinkedHashMap();
+            System.arraycopy(Prices, 1, Prices, 0, nPoints - 1);
+            Prices[nPoints - 1] = Prices[nPoints - 2] + tickSize;
+            Pt = Math.max(Pt--, 0); // not to fall of the grid
+            positionShift++;
+        }
         FV = fv;
         BookSizes();
     }
 
-    public void FVdown(double fv, double et){
+    public void FVdown(double fv, double et, int tickChange){
         // (1) book shift, (2) 31-1, (3) currentPosition, (4) pricePosition
-        positionShift--;
-
-        Set keys = book[nPoints - 2].keySet();
-        if (!keys.isEmpty()){
-            if ( book[nPoints - 2].get(keys.iterator().next()).isBuyOrder()){
-                while (! keys.isEmpty()){
-                    int id = (Integer) keys.iterator().next();
-                    if (model == "GPR2005") {
-                        traders.get(id).execution(fv);
-                    } else {traders.get(id).execution(fv, et);}
-                    if (traderIDsNonHFT.contains(id)){
-                        traderIDsNonHFT.remove(traderIDsNonHFT.indexOf(id));
-                    } else if (traderIDsHFT.contains(id)){
-                        traderIDsHFT.remove(traderIDsHFT.indexOf(id));
+        Set keys;
+        for (int i = nPoints - 1 - tickChange; i < nPoints - 1; i++){
+            keys = book[i].keySet();
+            if (!keys.isEmpty()){
+                if ( book[i].get(keys.iterator().next()).isBuyOrder()){
+                    while (! keys.isEmpty()){
+                        int oID = (Integer) keys.iterator().next();
+                        Order o = book[i].remove(oID);
+                        ActiveOrders.remove(o);
+                        int traderID = o.getTraderID();
+                        if (model == "GPR2005") {
+                            traders.get(traderID).execution(fv, o);
+                        } else {traders.get(traderID).execution(fv, et);}
+                        int tempSizeCP = CurrentPosition.get(traderID).get(i + positionShift);
+                        if (--tempSizeCP == 0){                               // TODO: check if this works
+                            CurrentPosition.get(traderID).remove(i + positionShift);
+                            if (CurrentPosition.get(traderID).isEmpty()){
+                                CurrentPosition.remove(traderID);
+                                traders.remove(traderID);
+                            }
+                        } else {
+                            CurrentPosition.get(traderID).put(i + positionShift, tempSizeCP);
+                        }
+                        keys.remove(oID);
                     }
-                    currentPosition.remove(id);
-                    book[nPoints - 2].remove(id);
-                    traders.remove(id);
-                    keys.remove(id);
                 }
             }
         }
 
-
-        keys = book[nPoints - 1].keySet();
-        while (! keys.isEmpty()){                        // removing SLOs from the zero position
-            int id = (Integer) keys.iterator().next();
-            currentPosition.remove(id);
-            if (model == "GPR2005"){
-                book[nPoints - 1].remove(id);
-                traders.get(id).cancel();
-                if (traderIDsNonHFT.contains(id)){
-                    traderIDsNonHFT.remove(traderIDsNonHFT.indexOf(id));
-                } else if (traderIDsHFT.contains(id)){
-                    traderIDsHFT.remove(traderIDsHFT.indexOf(id));
+        for (int i = nPoints - tickChange; i <= nPoints - 1; i++){
+            keys = book[i].keySet();
+            while (! keys.isEmpty()){                        // removing SLOs from the zero position
+                int oID = (Integer) keys.iterator().next();
+                Order o = book[i].remove(oID);
+                ActiveOrders.remove(o);
+                int traderID = o.getTraderID();
+                book[i].remove(oID);
+                if (model == "GPR2005"){
+                    traders.get(traderID).cancel(o);
                 }
-                traders.remove(id);
+                int tempSizeCP = CurrentPosition.get(traderID).get(i + positionShift);
+                if (++tempSizeCP == 0){                               // TODO: check if this works
+                    CurrentPosition.get(traderID).remove(i + positionShift);
+                    if (CurrentPosition.get(traderID).isEmpty()){
+                        CurrentPosition.remove(traderID);
+                        traders.remove(traderID);
+                    }
+                } else {
+                    CurrentPosition.get(traderID).put(i + positionShift, tempSizeCP);
+                }
+                keys.remove(oID);
             }
-            keys.remove(id);
         }
 
-        for (int i = nPoints - 1; i > 0; i--){
-            book[i] = book[i - 1];
+        for (int i = nPoints - 1; i > tickChange - 1; i--){
+            book[i] = book[i - tickChange];
         }
-        book[0] = new LinkedHashMap();
-        System.arraycopy(Prices, 0, Prices, 1, nPoints - 1);
-        Prices[0] = Prices[1] - tickSize;
-        Pt = Math.min(Pt++, nPoints - 1);                        // not to fall of the grid
+        for (int i = 0; i < tickChange; i++){
+            book[i] = new LinkedHashMap();
+            System.arraycopy(Prices, 0, Prices, 1, nPoints - 1);
+            Prices[0] = Prices[1] - tickSize;
+            Pt = Math.min(Pt++, nPoints - 1);                        // not to fall of the grid
+            positionShift--;
+        }
         FV = fv;
         BookSizes();
     }
@@ -173,8 +212,8 @@ public class LOB_LinkedHashMap {
         for (int i = 0; i < nPoints; i++){
             priorities.put((byte) i, (byte) Math.min(book[i].size(), maxDepth));
         }
-        if (currentPosition.containsKey(traderID)){
-            int pos = currentPosition.get(traderID) - positionShift;
+        if (CurrentPosition.containsKey(traderID)){
+            int pos = 0; //CurrentPosition.get(traderID) - positionShift; TODO: fix this
             //System.out.println("getRank position is " + pos + " shift is " + positionShift);
             priorities.put(nPoints, (byte) pos); // trader's position from previous action
             int rank = 0;
@@ -235,12 +274,11 @@ public class LOB_LinkedHashMap {
         return BookInfo;
     }
        
-     public void transactionRule(int pos, Order o){
-         hist.addOrderData(BookInfo[1] - BookInfo[0]);
-         int oID = o.getTraderID();
+     public void transactionRule(int oID, ArrayList<Order> orders){
+         hist.addOrderData(BookInfo[1] - BookInfo[0]);          // quoted spread
          Integer oldPos = null;
          // cancel previous LO unless not retained
-         if(currentPosition.containsKey(oID)){
+         /*if(currentPosition.containsKey(oID)){
              oldPos = currentPosition.get(oID) - positionShift;
              if (oldPos != pos || o.isBuyOrder() != book[oldPos].get(oID).isBuyOrder()){
                  book[oldPos].remove(oID);
@@ -248,80 +286,99 @@ public class LOB_LinkedHashMap {
              } else {
                  return;
              }
-         }
+         }*/
 
-         if (traderIDsHFT.contains(oID)){
+        /* if (traderIDsHFT.contains(oID)){
             traderIDsHFT.remove(traderIDsHFT.indexOf(oID));
          } else if (traderIDsNonHFT.contains(oID)){
             traderIDsNonHFT.remove(traderIDsNonHFT.indexOf(oID));
+         }*/
+
+         HashMap<Integer, Integer> tempHM = new HashMap<Integer, Integer>();
+         if (CurrentPosition.containsKey(oID)){
+             tempHM = CurrentPosition.get(oID);
          }
+         Integer tempSize = 0;
+         Integer pos = null;
 
-         if (o.isBuyOrder()){
-            if (book[pos].size() > 0 && !book[pos].get(book[pos].keySet().iterator().next()).isBuyOrder()){
-                Order cp = book[pos].remove(book[pos].keySet().iterator().next());
-                Integer cpID = cp.getTraderID();
-                // enters transaction history
-                Pt = pos;           // sets last transaction position
-                b = 1;              // sets last transaction direction, buy = 1
-                if (model == "GPR2005") {
-                    traders.get(cpID).execution(FV);
-                } else {traders.get(cpID).execution(FV, o.getTimeStamp());}
-                hist.addTrade(o, cp, o.getTimeStamp(), Prices[pos], FV);
-                hist.addOrderData(pos - (double)(BookInfo[1] + BookInfo[0]) / 2);
-                currentPosition.remove(cpID);
-                if (traders.get(cpID).getIsHFT()){
-                    traderIDsHFT.remove(traderIDsHFT.indexOf(cpID)); // removes from the list of HFT traders
-                }else {
-                    traderIDsNonHFT.remove(traderIDsNonHFT.indexOf(cpID));
-                }
-                traders.remove(oID);            //garbage collecting //TODO: is this needed?
-                traders.remove(cpID);
-            } else if (pos == nPoints - 1){     // if BMO executed against fringe, just continue
-                traders.remove(oID);                    //TODO: this works?
-            }
-            else{
-                book[pos].put(oID, o);          // put some number here
-                currentPosition.put(oID, pos + positionShift);
-                if (traders.get(oID).getIsHFT()){
-                    traderIDsHFT.add(oID);
-                } else{
-                    traderIDsNonHFT.add(oID);
-                }
-            }
+         for (Order o : orders){
+             if (pos == null || pos != o.getPosition()){
+                 // put here tempSize to tempHM if not empty and position not null
+                 if (pos != null && tempSize != 0) {tempHM.put(pos + positionShift, tempSize);}
+                 pos = o.getPosition();
+                 tempSize = tempHM.containsKey(pos + positionShift) ? tempHM.get(pos + positionShift)
+                         : 0;
+             }
+             if (o.isBuyOrder()){
+                 if (book[pos].size() > 0 && !book[pos].get(book[pos].keySet().iterator().next()).isBuyOrder()){
+                     Order cp = book[pos].remove(book[pos].keySet().iterator().next());
+                     Integer CPid = cp.getTraderID();
+                     ActiveOrders.remove(cp);
+                     if (model == "GPR2005") {
+                         traders.get(CPid).execution(FV, o);
+                     } else {traders.get(CPid).execution(FV, o.getTimeStamp());}
+                     Pt = pos;                                       // sets last transaction position
+                     b = 1;                                          // sets last transaction direction, buy = 1
+                     hist.addTrade(o, cp, o.getTimeStamp(), Prices[pos], FV);
+                     hist.addOrderData(pos - (double)(BookInfo[1] + BookInfo[0]) / 2); // effective spread
+                     Integer tempSizeCP = CurrentPosition.get(CPid).get(pos + positionShift);
+                     if (++tempSizeCP == 0){                               // TODO: check if this works
+                         CurrentPosition.get(CPid).remove(pos + positionShift);
+                         if (CurrentPosition.get(CPid).isEmpty()){
+                             CurrentPosition.remove(CPid);
+                             traders.remove(CPid);
+                         }
+                     } else {
+                         CurrentPosition.get(CPid).put(pos + positionShift, tempSizeCP);
+                     }
+                 } else if (pos == nPoints - 1){        // if BMO executed against fringe, just continue
+                 } else{
+                     tempSize++;
+                     OrderID++;
+                     o.setPosition(pos + positionShift);
+                     book[pos].put(OrderID,o);           // put some key number here
+                     ActiveOrders.add(o);
+                 }
 
+             } else {
+                 if (book[pos].size() > 0 && book[pos].get(book[pos].keySet().iterator().next()).isBuyOrder()){
+                     Order cp = book[pos].remove(book[pos].keySet().iterator().next());
+                     Integer CPid = cp.getTraderID();
+                     ActiveOrders.remove(cp);
+                     if (model == "GPR2005") {
+                         traders.get(CPid).execution(FV, o);
+                     } else {traders.get(CPid).execution(FV, o.getTimeStamp());}
+                     Pt = pos;           // set last transaction price
+                     b = 0;              // set last transaction direction, 0=sell
+                     hist.addTrade(cp, o, o.getTimeStamp(), Prices[pos], FV);
+                     hist.addOrderData((double)(BookInfo[1] + BookInfo[0]) / 2 - pos);
+                     Integer tempSizeCP = CurrentPosition.get(CPid).get(pos + positionShift);
+                     if (--tempSizeCP == 0){                               // TODO: check if this works
+                         CurrentPosition.get(CPid).remove(pos + positionShift);
+                         if (CurrentPosition.get(CPid).isEmpty()){
+                             CurrentPosition.remove(CPid);
+                             traders.remove(CPid);                          // TODO: remove when isTraded?
+                         }
+                     } else {
+                         CurrentPosition.get(CPid).put(pos + positionShift, tempSizeCP);
+                     }
+                 } else if (pos == 0){      // if SMO executed against fringe, just continue
+                 } else{
+                     tempSize--;
+                     OrderID++;
+                     o.setPosition(pos + positionShift);
+                     book[pos].put(OrderID,o);           // put some key number here
+                     ActiveOrders.add(o);
+                 }
+             }
+         }
+         if (tempSize != 0){tempHM.put(pos + positionShift, tempSize);}                 // TODO: + positionShift
+         if (!tempHM.isEmpty()){
+             CurrentPosition.put(oID, tempHM);
          } else {
-            if (book[pos].size() > 0 && book[pos].get(book[pos].keySet().iterator().next()).isBuyOrder()){
-                Order cp = book[pos].remove(book[pos].keySet().iterator().next());
-                Integer cpID = cp.getTraderID();
-                Pt = pos;           // set last transaction price
-                b = 0;              // set last transaction direction, 0=sell
-                if (model == "GPR2005") {
-                    traders.get(cpID).execution(FV);
-                } else {traders.get(cpID).execution(FV, o.getTimeStamp());}
-                hist.addTrade(cp, o, o.getTimeStamp(), Prices[pos], FV);// enters transaction history
-                hist.addOrderData((double)(BookInfo[1] + BookInfo[0]) / 2 - pos);
-                currentPosition.remove(cpID);
-                if (traders.get(cpID).getIsHFT()){
-                    traderIDsHFT.remove(traderIDsHFT.indexOf(cpID)); // removes from the list of HFT traders
-                }else {
-                    traderIDsNonHFT.remove(traderIDsNonHFT.indexOf(cpID));
-                }
-                traders.remove(oID);   // garbage collecting
-                traders.remove(cpID);
-            } else if (pos == 0){      // if SMO executed against fringe, just continue
-                traders.remove(oID);
-            }
-            else{
-                book[pos].put(oID,o);// put some key number here
-                currentPosition.put(oID, pos + positionShift);
-                if (traders.get(oID).getIsHFT()){
-                    traderIDsHFT.add(oID);
-                } else{
-                    traderIDsNonHFT.add(oID);
-                }
-            }
-        }
-        BookSizes();
+             traders.remove(oID);
+         }
+         BookSizes();
     }
 
     public void BookSizes(){
@@ -334,26 +391,32 @@ public class LOB_LinkedHashMap {
         }
     }
 
-    public void tryCancel(int id){   // if order is null after returning, see if there's sth to cancel
-        if(currentPosition.containsKey(id)){
-            Integer oldPos = currentPosition.remove(id) - positionShift;
-            book[oldPos].remove(id);
+    public Order tryCancel(Order o){   // if order is null after returning, see if there's sth to cancel
+        int id = o.getTraderID();         // TODO: try to remove the worst order of this trader at this position
+        int tempSize = CurrentPosition.get(id).get(o.getPosition());
+        boolean buy = o.isBuyOrder();
+        tempSize = buy ? --tempSize : ++ tempSize;
+        if (tempSize == 0){
+            CurrentPosition.get(id).remove(o.getPosition());
+            if (CurrentPosition.get(id).isEmpty()){
+                CurrentPosition.remove(id);
+                traders.remove(id);       // TODO: remove from traders if isTraded
+            }
+        } else {
+            CurrentPosition.get(id).put(o.getPosition(), tempSize);
         }
+        book[o.getPosition() - positionShift].values().remove(o);
         BookSizes();
+        return o;
     }
 
-    public boolean isBuyOrder(int id){
-        boolean isBuy = false;
-        if(currentPosition.containsKey(id)){
-            Integer oldPos = currentPosition.get(id) - positionShift;
-            isBuy = book[oldPos].get(id).isBuyOrder();
+    public void removeOrders(ArrayList<Order> o2r){
+        for (Order ao : o2r){
+            ActiveOrders.remove(ao);
         }
-        // TODO: no order means sell order?
-        return isBuy;
     }
 
     // returning random traderID either HFT or nonHFT
-
     public int randomHFTtraderID(){
         return traderIDsHFT.get((int) (Math.random() * traderIDsHFT.size()));
     }
@@ -362,7 +425,6 @@ public class LOB_LinkedHashMap {
         //System.out.println("IDs = " + traderIDsNonHFT);
         return traderIDsNonHFT.get((int) (Math.random() * traderIDsNonHFT.size()));
     }
-
 
     public void printBook(){
         for (int i = 0; i < nPoints; i ++){
@@ -399,5 +461,13 @@ public class LOB_LinkedHashMap {
 
     public int getnReturningNonHFT(){
         return traderIDsNonHFT.size();
+    }
+
+    public LinkedHashMap<Integer, Order>[] getBook() {
+        return book;
+    }
+
+    public ArrayList<Order> getActiveOrders() {
+        return ActiveOrders;
     }
 }
