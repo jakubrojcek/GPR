@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Random;
 
 /**
  * Created by IntelliJ IDEA.
@@ -17,6 +18,7 @@ public class Payoff {
     static Float[] mu0;
     static Float[] deltaV0;
     static int end;
+    static Random random = new Random();
 
     // generic constructor
     public Payoff(){}

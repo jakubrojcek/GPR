@@ -83,23 +83,31 @@ public class SingleRun {
             float privateValue;
             Trader tr;
             int ID;
+            byte u2t;
             for (int i = 0; i < nEvents; i ++){
                 // 1. new trader
                 double rnHFT = 0.0;//Math.random();
+                double rnU2T = Math.random();
                 privateValue = 0.0f;
                 boolean HFT = true;
+                u2t = 1;
                 if (rnHFT < 0.6){                         // proportion of nonHFT traders
                     privateValue = (float) nd.sample();
                     HFT = false;
                 }
-                tr = new Trader(HFT, privateValue, (byte)1);
+
+                if (rnU2T < 0.5){
+                    u2t = 2;
+                }
+
+                tr = new Trader(HFT, privateValue, u2t);
                 ID = tr.getTraderID();
                 traders.put(ID, tr);
-                // 2. & 3. decision and transaction rule    // TODO: he returns an ArrayList here
+                // 2. & 3. decision and transaction rule
                 ArrayList<Order> orders = tr.decision(book.getBookSizes(), book.getBookInfo(), EventTime, FV);
                 if (!orders.isEmpty()){
-                    book.transactionRule(ID, orders);  // TODO: Insert ID & Orders
-                }
+                    book.transactionRule(ID, orders);
+                } else traders.remove(ID);
                 // 4. Cancellations
                 ArrayList<Order> ActiveOrders = book.getActiveOrders();
                 ArrayList<Order> orders2remove = new ArrayList<Order>();
@@ -114,14 +122,15 @@ public class SingleRun {
                                                 : 7.2 * Math.max(FV - FVbefore, 0);
                         delta = Math.min(deltaLow + deltaHat, 0.99);
                     } else {
-                        double deltaHat = isBuy ? 2.4 * Math.max(FVbefore - FV, 0)    // 0.2 * in base case
-                                                : 2.4 * Math.max(FV - FVbefore, 0);
+                        double deltaHat = isBuy ? 0.2 * Math.max(FVbefore - FV, 0)    // 0.2 * in base case
+                                                : 0.2 * Math.max(FV - FVbefore, 0);
                         delta = Math.min(deltaLow + deltaHat, 0.64);
                     }
                     double rn = Math.random();             // to determine cancellation
                     if (rn < delta){
-                        traders.get(aoID).cancel(ao);         // TODO: insert order here later
-                        orders2remove.add(book.tryCancel(ao)); // it's trying to remove the worst order of the trader at that position
+                        traders.get(aoID).cancel(ao);
+                        book.tryCancel(ao); // it's trying to remove the worst order of the trader at that position
+                        orders2remove.add(ao);
                     }
                 }
                 book.removeOrders(orders2remove);
@@ -339,6 +348,7 @@ public class SingleRun {
         }
         h.printStatisticsData(header, outputNameStatsData);
         h.resetHistory();
+
 
         /* if (i % 100000000 == 0) {
             if (purge){

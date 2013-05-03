@@ -11,7 +11,6 @@ public class GPR2005Payoff_test extends Payoff {
     private float max = 0.0f;
     private Short maxIndex = 0;
     private double diff;
-
     private HashMap<Short, Belief[]> x;
     // action, belief- number times the action chose, execution probability, fv change upon execution
 
@@ -27,10 +26,14 @@ public class GPR2005Payoff_test extends Payoff {
         }
 
         short[] ac =  new short[2];
-        ac[0] = (short)(maxIndex>>7);
+        ac[0] = (short) (maxIndex>>7);
         ac[1] = (short) (maxIndex - (ac[0]<<7));
         Belief[] beliefs = new Belief[units2trade];
-
+        if (ac[1] == 2 * end + 3){             // SMO at second best Bid
+            ac[1] = (short)(2 * end);
+        } else if (ac[1] == 2 * end + 4){      // BMO at second best Ask
+            ac[1] = (short)(2 * end + 1);
+        }
         for (int i = 0; i < units2trade; i++){
             beliefs[i] = new Belief((short) 1, mu0[ac[i]], deltaV0[ac[i]]);
         }
@@ -50,18 +53,25 @@ public class GPR2005Payoff_test extends Payoff {
         }
 
         if (tremble){
-            Random random = new Random();
             List<Short> keys = new ArrayList<Short>(hm.keySet());
-            maxIndex = keys.get(random.nextInt(keys.size()));
+            maxIndex = keys.get(random.nextInt(keys.size()));        // TODO: make sure
             max = hm.get(maxIndex);
+            if (!hm.containsKey(maxIndex)){
+                System.out.println("Key not in the HashMap");
+            }
         }
 
         short[] ac =  new short[2];
-        ac[0] = (short)(maxIndex>>7);
+        ac[0] = (short) (maxIndex>>7);
         ac[1] = (short) (maxIndex - (ac[0]<<7));
 
         if(!x.containsKey(maxIndex)){
             Belief[] beliefs = new Belief[units2trade];
+            if (ac[1] == 2 * end + 3){             // SMO at second best Bid
+                ac[1] = (short)(2 * end);
+            } else if (ac[1] == 2 * end + 4){      // BMO at second best Ask
+                ac[1] = (short)(2 * end + 1);
+            }
             for (int i = 0; i < units2trade; i++){
                 beliefs[i] = new Belief((short) 1, mu0[ac[i]], deltaV0[ac[i]]);
             }
@@ -73,7 +83,7 @@ public class GPR2005Payoff_test extends Payoff {
         }
     }
 
-    public void update(short oldAction, float realDelta, boolean cancelled, byte unitTraded){   // TODO: this part works?
+    public double update(short oldAction, float realDelta, boolean cancelled, byte unitTraded){   // TODO: this part works?
     // TODO: unitTraded 0- first action, 1- second action
 
         Belief[] b = x.get(oldAction);
@@ -87,11 +97,28 @@ public class GPR2005Payoff_test extends Payoff {
             x.get(oldAction)[unitTraded].setDeltaV((float) ((1.0 - alpha) * x.get(oldAction)[unitTraded].getDeltaV() +
                     alpha * realDelta));
         }
-        diff = x.get(oldAction)[unitTraded].getMu() - previousMu;
+
+        diff = Math.abs(x.get(oldAction)[unitTraded].getMu() - previousMu);
+        if (unitTraded == 0){
+            diff = 0.0;
+        }
+        return diff;
     }
 
     public void nReset(){
+        Iterator it = x.keySet().iterator();
+        short[] ac =  new short[2];
 
+        while (it.hasNext()){
+            int bound = 1;
+            short key = (Short) it.next();
+            ac[0] = (short) (key>>7);
+            ac[1] = (short) (key - (ac[0]<<7));
+            if (ac[1] != 127){bound = 2;}
+            for (int i = 0; i < bound; i++){
+                x.get(key)[i].setN(nReset);
+            }
+        }
     }
 
     public short getMaxIndex(){
@@ -104,5 +131,9 @@ public class GPR2005Payoff_test extends Payoff {
 
     public HashMap<Short, Belief[]> getX() {
         return x;
+    }
+
+    public float getMax() {
+        return max;
     }
 }

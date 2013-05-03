@@ -17,7 +17,7 @@ public class TestComplete {
         HashMap<String, ArrayList<Boolean>> TestResults = new HashMap<String,ArrayList<Boolean>>();
 
          // market parameters
-        double timeStamp1 = System.nanoTime();
+       /* double timeStamp1 = System.nanoTime();
         int nHFT = 0;                           // # of HFT's fast traders, fixed
         int nPositiveNonHFT = 1;               // # of positive PV slow traders
         int nZeroNonHFT = 2;                   // # of zero PV slow traders
@@ -37,13 +37,13 @@ public class TestComplete {
         int FVpos = (int) nP/2;                 // position of the fundamental value
         double prTremble = 0.0;                 // probability of trembling
 
-        /*int HL = FVpos + 6;                     // Lowest  allowed limit order price.  LL + HL = nP-1 for allowed orders centered around E(v)
+        *//*int HL = FVpos + 6;                     // Lowest  allowed limit order price.  LL + HL = nP-1 for allowed orders centered around E(v)
         int LL = FVpos - 6;                    // Highest allowed limit order price
         float tickSize = 0.0625f;//0.125;       // size of one tick
         int PVsigma = 4;//4                     // # of ticks for negative and positive PVs
         String outputNameTransactions = "Transactions16.csv";  // output file name
         String outputNameBookData = "BookData16.csv";  // output file name
-        String outputNameStatsData = "stats16.csv";   // output file name*/
+        String outputNameStatsData = "stats16.csv";   // output file name*//*
 
         double privateValueMean = 0.0;      // mean of normal distribution of private values GPR 2005
         int HL = FVpos + 3; //                  // Lowest  allowed limit order price.  LL + HL = nP-1 for allowed orders centered around E(v)
@@ -176,7 +176,7 @@ public class TestComplete {
         Trader tr0 = new Trader(false, 0.0f, (byte)1);       traders.put(tr0.getTraderID(), tr0);
         Trader tr4 = new Trader(false, 1.0f, (byte)1);       traders.put(tr4.getTraderID(), tr4);
         ArrayList orders = tr0.decision(book.getBookSizes(), book.getBookInfo(), EventTime, FV);
-        /*InitialPayoffs.add(PO.getPrice() == 7 && !PO.getCurrentOrder().isBuyOrder());
+        *//*InitialPayoffs.add(PO.getPrice() == 7 && !PO.getCurrentOrder().isBuyOrder());
         if(PO.getPrice() != 7){
             System.out.println(PO.getPrice() + " is the price position, not 7");
         }
@@ -189,7 +189,7 @@ public class TestComplete {
         InitialPayoffs.add(PO.getPrice() == 1 && PO.getCurrentOrder().isBuyOrder());
         if(PO.getPrice() != 1){
             System.out.println(PO.getPrice() + " is the price position, not 1");
-        }*/
+        }*//*
 
         TestResults.put("InitialPayoffs", InitialPayoffs);
 
@@ -236,7 +236,7 @@ public class TestComplete {
         //tr1.cancel();
         Updated.add(0.3865<((GPR2005Payoff) trader.getPayoffs().get((long) 16777216)).getX1().get((short) 7).getMu() &&
         0.3866 > ((GPR2005Payoff) trader.getPayoffs().get((long) 16777216)).getX1().get((short) 7).getMu());
-        /*PO = tr4.decision(book.getBookSizes(), BookInfo, EventTime, FV);
+        *//*PO = tr4.decision(book.getBookSizes(), BookInfo, EventTime, FV);
         tr4.execution(FV + 2 * tickSize);
 
         Updated.add(0.8865<((GPR2005Payoff) trader.getPayoffs().get((long) 151134730)).getX1().get((short) 7).getMu() &&
@@ -244,7 +244,7 @@ public class TestComplete {
         Updated.add(((GPR2005Payoff) trader.getPayoffs().get((long) 151134730)).getX1().get((short) 7).getDeltaV() == 0.5);
         PO = tr4.decision(book.getBookSizes(), BookInfo, EventTime, FV);
         Updated.add(PO.getPrice() == 1 && PO.getCurrentOrder().isBuyOrder());
-        TestResults.put("Updated", Updated);*/
+        TestResults.put("Updated", Updated);*//*
 
         // HashCode tests
         BookInfo[1] = 7; BookInfo[2] = 2; BookInfo[3] = 3; BookInfo[4] = 5; BookInfo[5] = 3; int l = 0;
@@ -291,7 +291,7 @@ public class TestComplete {
         TestResults.put("ChooseMaxIndex", ChooseMaxIndex);
 
         // IDs workflow test
-        /*int NewNonHFT = nNegativeNonHFT + nPositiveNonHFT + nZeroNonHFT;
+        *//*int NewNonHFT = nNegativeNonHFT + nPositiveNonHFT + nZeroNonHFT;
         double Lambda;
         int nEvents = 10000000;
         trader.setWriteDiag(true);
@@ -320,7 +320,7 @@ public class TestComplete {
         IDsWorkflow.add(traders.size() == 1);
         sr.run(1000, nHFT, NewNonHFT, EventTime, FV, write,
                 purge, nReset, writeDiagnostics, writeHistogram);
-        IDsWorkflow.add(traders.size() == book.traderIDsNonHFT.size());*/
+        IDsWorkflow.add(traders.size() == book.traderIDsNonHFT.size());*//*
         TestResults.put("IDsWorkflow", IDsWorkflow);
 
         // testing LOB_test
@@ -413,7 +413,7 @@ public class TestComplete {
         //tr1.cancel();
         tr1.decision(BookSizes, BookInfo, EventTime, FV);
 
-        /*for (int i = 0; i < nEvents; i ++){
+        *//*for (int i = 0; i < nEvents; i ++){
 
             // 1. new HFT
             // 2. new nonHFT
@@ -460,12 +460,12 @@ public class TestComplete {
             double rn = Math.random();             // to determine event
             int ID;
             float FVrealization;
-            *//*if (rn < x1){                          // New arrival HFT
+            *//**//*if (rn < x1){                          // New arrival HFT
                 tr = new Trader(true, 0);
                 ID = tr.getTraderID();
-                *//**//* if(book.removedTraders.contains(ID)){
+                *//**//**//**//* if(book.removedTraders.contains(ID)){
                      System.out.println("new Zombie HFT");
-                 }*//**//*
+                 }*//**//**//**//*
                 //System.out.println("New arrival HFT ID: " + ID);
                 traders.put(ID, tr);
                 PriceOrder PO = tr.decision(book.getRank(ID), book.getBookSizes(), book.getBookInfo(),
@@ -486,9 +486,9 @@ public class TestComplete {
                 //System.out.println("FV realization = " + FVrealization);
                 tr = new Trader(false, FVrealization);
                 ID = tr.getTraderID();
-                *//**//* if(book.removedTraders.contains(ID)){
+                *//**//**//**//* if(book.removedTraders.contains(ID)){
                      System.out.println("new zombie nonHFT");
-                 }*//**//*
+                 }*//**//**//**//*
 
                 //System.out.println("New arrival nonHFT ID: " + ID);
                 traders.put(ID, tr);
@@ -501,9 +501,9 @@ public class TestComplete {
             } else if (rn < x3){                   // Returning HFT
                 ID = book.randomHFTtraderID();
                 //System.out.println("Returning HFT ID: " + ID);
-                *//**//* if(book.removedTraders.contains(ID)){
+                *//**//**//**//* if(book.removedTraders.contains(ID)){
                      System.out.println("old Zombie HFT");
-                 }*//**//*
+                 }*//**//**//**//*
                 PriceOrder PO = traders.get(ID).decision(book.getRank(ID), book.getBookSizes(), book.getBookInfo(),
                         EventTime, FV);
                 if (PO != null){
@@ -514,9 +514,9 @@ public class TestComplete {
 
             } else if (rn < x4){                   // Returning nonHFT
                 ID = book.randomNonHFTtraderID();
-                *//**//*if(book.removedTraders.contains(ID)){
+                *//**//**//**//*if(book.removedTraders.contains(ID)){
                     System.out.println("old Zombie nonHFT");
-                }*//**//*
+                }*//**//**//**//*
                 //System.out.println("Returning nonHFT ID: " + ID);
                 PriceOrder PO = traders.get(ID).decision(book.getRank(ID), book.getBookSizes(), book.getBookInfo(),
                         EventTime, FV);
@@ -526,11 +526,11 @@ public class TestComplete {
                     book.tryCancel(ID);
                 }
 
-                *//**//* if (traders.containsKey(ID)){
+                *//**//**//**//* if (traders.containsKey(ID)){
                     if(book.book[PO.getPrice()].containsKey(ID) && traders.get(ID).getIsTraded()){
                         System.out.println("problem");
                     }
-                }*//**//*
+                }*//**//**//**//*
             } else{                                // Change in FV
                 double rn3 = Math.random();
                 if (rn3 < FVplus){
@@ -542,21 +542,21 @@ public class TestComplete {
                     book.FVdown(FV, EventTime);
                     //System.out.println("down" + FV);
                 }
-            }*//*
-            *//*if (i % 1000 == 0) {
+            }*//**//*
+            *//**//*if (i % 1000 == 0) {
                 h.addStatisticsData(i, trader.getStatesCount());   // multiple payoffs count
                 trader.printDiagnostics();
                 trader.resetDiagnostics();
                 h.printStatisticsData(header, outputNameStatsData);
                 h.resetHistory();
-             }*//*
-        } // random events*/          // events workflow
+             }*//**//*
+        } // random events*//*          // events workflow
 
 
 
 
         double timeStamp2 = System.nanoTime();
-        System.out.println("running time = " + (timeStamp2 - timeStamp1));
+        System.out.println("running time = " + (timeStamp2 - timeStamp1)); */
 
     }
 

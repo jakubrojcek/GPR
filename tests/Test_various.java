@@ -20,8 +20,26 @@ import java.util.*;   import org.apache.commons.math3.distribution.NormalDistrib
  */
 public class Test_various {
     public static void main(String[] args) {
-        short action1 = 0;
-        short action2 = 127;
+
+        HashMap<Short, Float[]> hm = new HashMap<Short, Float[]>();
+        Random random = new Random();
+        Float[] f = {0.0f, 1.0f};
+        hm.put((short)2, f);
+        hm.put((short)0, f);
+        hm.put((short)5, f);
+        hm.put((short)0, f);
+        hm.put((short)19, f);
+        int maxIndex;
+        for (int i = 0; i < 100; i ++){
+            List<Short> keys = new ArrayList<Short>(hm.keySet());
+            maxIndex = keys.get(random.nextInt(keys.size()));        // TODO: make sure
+            System.out.println(maxIndex);
+        }
+
+
+
+        short action1 = 15;
+        short action2 = 15;
         short sh = (short)((action1<<7) + action2);
         action1 = (short)(sh>>7);
         action2 = (short)(sh - (action1<<7));
