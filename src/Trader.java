@@ -389,40 +389,33 @@ public class Trader {
             GPR2005Payoff_test pay = (GPR2005Payoff_test)Payoffs.get(code);
             Iterator keys = pay.getX().keySet().iterator();
             while (keys.hasNext()){
+                float tempPayoff = 0.0f;
+                float tempDiff = 0.0f;
                 boolean LO = false;
                 short key = (Short) keys.next();
-                float tempDiff = 0.0f;
-                float tempPayoff = 0.0f;
-                action[0] = (short)(key>>7);
+                action[0] = (short) (key>>7);
                 action[1] = (short) (key - (action[0]<<7));
-
-                if ((action[1] == 127 && units2trade == 1) ||
-                        (action[1] != 127 && units2trade == 2 && ps.containsKey(key))){
-                    /*if (!ps.containsKey(key)){
-                        System.out.println("no key");
-                    }*/
-                    tempPayoff = ps.get(key);
-                    for (int i = 0; i < units2trade; i++){
-                        if (action[i] < end){
-                            // SLO
-                            LO = true;
-                            tempDiff += (float)((pay.getX().get(key)[i].getMu()) *
-                                            ((action[i] - breakPoint) * tickSize - privateValue -
-                                                    pay.getX().get(key)[i].getDeltaV())) - p[action[i]];
-                        } else if (action[i] < (2 * end)) {
-                            // BLO
-                            LO = true;
-                            tempDiff += (float)((pay.getX().get(key)[i].getMu()) *
-                                            (privateValue + pay.getX().get(key)[i].getDeltaV() -
-                                                    (action[i] - breakPoint - end) * tickSize)) - p[action[i]];
-                        }
+                for (int i = 0; i < units2trade; i++){
+                    if (action[i] < end){
+                        // SLO
+                        LO = true;
+                        tempDiff += (float)((pay.getX().get(key)[i].getMu()) *
+                                ((action[i] - breakPoint) * tickSize - privateValue -
+                                        pay.getX().get(key)[i].getDeltaV())) - p[action[i]];
+                    } else if (action[i] < (2 * end)) {
+                        // BLO
+                        LO = true;
+                        tempDiff += (float)((pay.getX().get(key)[i].getMu()) *
+                                (privateValue + pay.getX().get(key)[i].getDeltaV() -
+                                        (action[i] - breakPoint - end) * tickSize)) - p[action[i]];
                     }
-                    if (LO){ps.put(key, tempPayoff + tempDiff);}    // TODO: if LO and BO at the same time- BAAAD
                 }
+                if (LO && ps.containsKey(key)){
+                    tempPayoff = ps.get(key);
+                    ps.put(key, tempDiff + tempPayoff);}
             }
             if (prTremble > 0 && Math.random() < prTremble){
-                pay.updateMax(ps, units2trade, true); // TODO: tremble to true
-                diff = pay.getDiff();
+                pay.updateMax(ps, units2trade, true);
             } else {
                 pay.updateMax(ps, units2trade, false);
                 diff = pay.getDiff();
@@ -436,13 +429,14 @@ public class Trader {
         byte outstanding = units2trade;
         for (int i = 0; i < units2trade; i++){
             buyOrder = false;
-            if ((action[i] >= end) && ((action[i] != 2 * end))){       //  || (action[i] != 2 * end + 3)
+            if (action[i] >= end){       //  || (action[i] != 2 * end + 3)
                 buyOrder = true;
             }
             pricePosition = (action[i] < end) ? LL + action[i]
                                               : LL + action[i] - end;
             if (action[i] == 2 * end){                                      // position is Bid
                 pricePosition = BookInfo[0];
+                buyOrder = false;
                 outstanding--;
             }
             if (action[i] == 2 * end + 1){                                  // position is Ask
@@ -504,12 +498,17 @@ public class Trader {
     public void execution(double fundamentalValue, Order o){
         tradeCount++;
 
-        short[] action = {0, 0};
+        short[] action = new short[2];
         action[0] = (short) (oldAction>>7);
         action[1] = (short) (oldAction - (action[0]<<7));
+
+
         byte unitTraded = 0;
         if (action[1] != 127){
             unitTraded = (action[0] > o.getAction()) ? (byte) 1 : (byte) 0;
+            if ((action[0] == action[1]) && units2trade == 1){
+                unitTraded = 1;
+            }
         }
         if (Payoffs.containsKey(oldCode)){
             ((GPR2005Payoff_test) Payoffs.get(oldCode)).update(oldAction, (float)(fundamentalValue - PriceFV), false, unitTraded);
@@ -538,19 +537,22 @@ public class Trader {
 
     // use to cancel limit order in a GPR2005 setting
     public void cancel(Order o){
-        short[] action = {0, 0};
-        units2trade--;
+        short[] action = new short[2];
         action[0] = (short) (oldAction>>7);
         action[1] = (short) (oldAction - (action[0]<<7));
+
         byte unitTraded = 0;
         if (action[1] != 127){
             unitTraded = (action[0] > o.getAction()) ? (byte) 1 : (byte) 0;
+            if ((action[0] == action[1]) && units2trade == 1){
+                unitTraded = 1;
+            }
         }
         if (Payoffs.containsKey(oldCode)){
             ((GPR2005Payoff_test) Payoffs.get(oldCode)).update(oldAction, 0.0f, true, unitTraded);
         }
 
-        if (units2trade == 0){isTraded = true;}
+        if (--units2trade == 0){isTraded = true;}
 
         /*if (writeDiagnostics && (action[1] != 127)){
             action[0] = (short)(unitTraded + 2); action[1] = (short)(unitTraded + 2);
@@ -677,7 +679,8 @@ public class Trader {
             long dBt = (BookInfo[4]);               // depth at buy
             int dSt = (BookInfo[5]);                // depth at sell
             int l = (isHFT) ? 1 : 0;                // arrival frequency slow (0), fast (1)
-            int u2t = (units2trade == 2) ? 1 : 0;
+            //int u2t = (units2trade == 2) ? 1 : 0;
+            int u2t = 0;
 
             code = (Bt<<27) + (At<<22) + (lBt<<18) + (lAt<<14) + (dBt<<8) + (dSt<<2) + (l<<1) + u2t;
 
