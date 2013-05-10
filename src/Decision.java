@@ -56,15 +56,23 @@ public class Decision {
     // adds information to the decision
     public int addDecision(int[] bi, short [] ac , int[] prevTrAc){              //TODO: repair this piece
         byte t = 0;                                         // designates which action matters
-        if (ac[1] == 2 * e + 3){t = 1;}                     // large sell order
-        else if (ac[1] == 2 * e + 4){t = 1;}                // large buy order
-        else if (ac[1] != 127 && ac[0] < (2 * e)){          // two units to trade && second one is LO
+        if (ac[1] == 2 * e + 3){
+            t = 1;}                     // large sell order
+        else if (ac[1] == 2 * e + 4){
+            t = 1;}                // large buy order
+        else if (ac[1] != 127 && ac[0] < (2 * e)){          // two units to trade && both are LO
             double rn = Math.random();                      // else take first action
             if (rn < 0.5){
                 t = 1;
             }
         }
-        if (ac[0] == (2 * e + 2) && ac[1] != 127){t = 1;}   // no order, take second action
+        if ((ac[0] == (short) (2 * e + 1)) && (ac[1] == (short) (2 * e))){
+            double rn = Math.random();                      // else take first action
+            if (rn < 0.5){
+                t = 1;
+            }
+        }
+        if ((ac[0] == (2 * e + 2)) && (ac[1] != 127)){t = 1;}   // no order, take second action
 
         counts[0]++;
         // table III & V
@@ -136,7 +144,7 @@ public class Decision {
         }
 
         // table I
-        if (prevTrAc[0] == 2 * e + 1){                              // BMO past event
+        if (prevTrAc[0] == (2 * e + 1)){                              // BMO past event
             counts[45]++;
             if (ac[t] == 2 * e + 1){                                   // Small BMO
                 counts[9]++;
@@ -146,13 +154,13 @@ public class Decision {
             if (ac[t] >= e && ac[t] < 2 * e){
                 if ((ac[t] - e) < (bi[0] - LL)){                       // BelowBLO
                     counts[12]++;
-                } else if ((ac[t] - e) == bi[0] - LL){                 // AtBLO
+                } else if ((ac[t] - e) == (bi[0] - LL)){                 // AtBLO
                     counts[11]++;
                 } else if ((ac[t] - e) > (bi[0] - LL)){                // AggBLO
                     counts[10]++;
                 }
             }
-        } else if (prevTrAc[0] == 2 * e + 4){                              // Large BMO past event
+        } else if (prevTrAc[0] == (2 * e + 4)){                              // Large BMO past event
             counts[72]++;
             if (ac[t] == 2 * e + 1){                                   // Small BMO
                 counts[68]++;
@@ -162,13 +170,13 @@ public class Decision {
             if (ac[t] >= e && ac[t] < 2 * e){
                 if ((ac[t] - e) < (bi[0] - LL)){                       // BelowBLO
                     counts[71]++;
-                } else if ((ac[t] - e) == bi[0] - LL){                 // AtBLO
+                } else if ((ac[t] - e) == (bi[0] - LL)){                 // AtBLO
                     counts[70]++;
                 } else if ((ac[t] - e) > (bi[0] - LL)){                // AggBLO
                     counts[69]++;
                 }
             }
-        } else if (prevTrAc[0] == 2 * e){                           // SMO past event
+        } else if (prevTrAc[0] == (2 * e)){                           // SMO past event
             counts[46]++;
             if (ac[t] == 2 * e + 1){                                   // BMO
                 counts[13]++;
@@ -179,13 +187,13 @@ public class Decision {
             if (ac[t] >= e && ac[t] < 2 * e){
                 if ((ac[t] - e) < (bi[0] - LL)){                       // BelowBLO
                     counts[16]++;
-                } else if ((ac[t] - e) == bi[0] - LL){                 // AtBLO
+                } else if ((ac[t] - e) == (bi[0] - LL)){                 // AtBLO
                     counts[15]++;
                 } else if ((ac[t] - e) > (bi[0] - LL)){                // AggBLO
                     counts[14]++;
                 }
             }
-        } else if (prevTrAc[0] == 2 * e + 3){                          // Large SMO past event
+        } else if (prevTrAc[0] == (2 * e + 3)){                          // Large SMO past event
             counts[79]++;
             if (ac[t] == 2 * e + 1){                                   // Small BMO
                 counts[75]++;
@@ -195,7 +203,7 @@ public class Decision {
             if (ac[t] >= e && ac[t] < 2 * e){
                 if ((ac[t] - e) < (bi[0] - LL)){                       // BelowBLO
                     counts[78]++;
-                } else if ((ac[t] - e) == bi[0] - LL){                 // AtBLO
+                } else if ((ac[t] - e) == (bi[0] - LL)){                 // AtBLO
                     counts[77]++;
                 } else if ((ac[t] - e) > (bi[0] - LL)){                // AggBLO
                     counts[76]++;
@@ -212,7 +220,7 @@ public class Decision {
                 if (ac[t] >= e && ac[t] < 2 * e){
                     if ((ac[t] - e) < (bi[0] - LL)){                   // BelowBLO
                         counts[36]++;
-                    } else if ((ac[t] - e) == bi[0] - LL){             // AtBLO
+                    } else if ((ac[t] - e) == (bi[0] - LL)){             // AtBLO
                         counts[35]++;
                     } else if ((ac[t] - e) > (bi[0] - LL)){            // AggBLO
                         counts[34]++;
@@ -229,7 +237,7 @@ public class Decision {
                 if (ac[t] >= e && ac[t] < 2 * e){
                     if ((ac[t] - e) < (bi[0] - LL)){                   // BelowBLO
                         counts[28]++;
-                    } else if ((ac[t] - e) == bi[0] - LL){             // AtBLO
+                    } else if ((ac[t] - e) == (bi[0] - LL)){             // AtBLO
                         counts[27]++;
                     } else if ((ac[t] - e) > (bi[0] - LL)){            // AggBLO
                         counts[26]++;
@@ -245,7 +253,7 @@ public class Decision {
                 if (ac[t] >= e && ac[t] < 2 * e){
                     if ((ac[t] - e) < (bi[0] - LL)){                   // BelowBLO
                         counts[20]++;
-                    } else if ((ac[t] - e) == bi[0] - LL){             // AtBLO
+                    } else if ((ac[t] - e) == (bi[0] - LL)){             // AtBLO
                         counts[19]++;
                     } else if ((ac[t] - e) > (bi[0] - LL)){            // AggBLO
                         counts[18]++;
@@ -263,7 +271,7 @@ public class Decision {
                 if (ac[t] >= e && ac[t] < 2 * e){
                     if ((ac[t] - e) < (bi[0] - LL)){                   // BelowBLO
                         counts[40]++;
-                    } else if ((ac[t] - e) == bi[0] - LL){             // AtBLO
+                    } else if ((ac[t] - e) == (bi[0] - LL)){             // AtBLO
                         counts[39]++;
                     } else if ((ac[t] - e) > (bi[0] - LL)){            // AggBLO
                         counts[38]++;
@@ -279,7 +287,7 @@ public class Decision {
                 if (ac[t] >= e && ac[t] < 2 * e){
                     if ((ac[t] - e) < (bi[0] - LL)){                   // BelowBLO
                         counts[32]++;
-                    } else if ((ac[t] - e) == bi[0] - LL){             // AtBLO
+                    } else if ((ac[t] - e) == (bi[0] - LL)){             // AtBLO
                         counts[31]++;
                     } else if ((ac[t] - e) > (bi[0] - LL)){            // AggBLO
                         counts[30]++;
@@ -295,7 +303,7 @@ public class Decision {
                 if (ac[t] >= e && ac[t] < 2 * e){
                     if ((ac[t] - e) < (bi[0] - LL)){                   // BelowBLO
                         counts[24]++;
-                    } else if ((ac[t] - e) == bi[0] - LL){             // AtBLO
+                    } else if ((ac[t] - e) == (bi[0] - LL)){             // AtBLO
                         counts[23]++;
                     } else if ((ac[t] - e) > (bi[0] - LL)){            // AggBLO
                         counts[22]++;
