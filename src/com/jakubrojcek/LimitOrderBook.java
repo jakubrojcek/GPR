@@ -1,4 +1,4 @@
-/**
+package com.jakubrojcek; /**
  * Created by IntelliJ IDEA.
  * User: Jakub
  * Date: 5.3.12

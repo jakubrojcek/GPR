@@ -1,3 +1,9 @@
+package com.jakubrojcek.gpr2005a;
+
+import com.jakubrojcek.Order;
+import com.jakubrojcek.Trade;
+import com.jakubrojcek.gpr2005a.Trader;
+
 import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -33,13 +39,13 @@ public class History {
         folder = f;
     }
     
-    public void addTrade(Order buy, Order sell, double timeTrade, double price,
-                         double fv){
+    public void addTrade(Order buy, Order sell, double timeTrade, double price, double fv){
         int bID = buy.getTraderID();
         int sID = sell.getTraderID();
         history.add(new Trade(bID, traders.get(bID).getPrivateValue(), traders.get(bID).getIsHFT(),
                 sID, traders.get(sID).getPrivateValue(), traders.get(sID).getIsHFT(),
-                buy.getTimeStamp(), sell.getTimeStamp(), timeTrade, price, fv));
+                buy.getTimeStamp(), sell.getTimeStamp(),
+                traders.get(bID).getPriceFV(), traders.get(sID).getPriceFV(), timeTrade, price, fv));
     }
 
     public void addOrderData(Double spread){

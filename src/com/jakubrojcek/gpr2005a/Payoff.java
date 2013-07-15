@@ -1,3 +1,6 @@
+package com.jakubrojcek.gpr2005a;
+
+import java.util.Random;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
@@ -15,19 +18,27 @@ public class Payoff {
     static byte nReset;                    // nReset-> resets n to specific value for "forced learning"
     static short nResetMax = 32767;        // nReset-> resets n to specific value for "forced learning" 32767 is max short
     static int dof = 0;                    // degrees of freedom for chi^2 TODO: delete afterwards
-    static Float[] mu0;
-    static Float[] deltaV0;
+    static Float[][] mu0;
+    static Float[][] deltaV0;
     static int end;
+    static int LL;
+    static int maxDepth;
+    static int nP;
     static Random random = new Random();
+    static short[] ac =  new short[2];
+    static short[] q =  new short[2];
 
     // generic constructor
     public Payoff(){}
 
     // constructor
-    public Payoff(float r, int nP, int e){
+    public Payoff(float r, int nPs, int e, int ll, int md, int nPrices){
         rho = r;
-        nPayoffs = nP;
+        nPayoffs = nPs;
         end = e;
+        LL = ll;
+        maxDepth = md;
+        nP = nPrices;
     }
 
     public void update(){
@@ -48,7 +59,7 @@ public class Payoff {
         dof = i;
     }
 
-    public void setInitialBeliefs(Float mu[], Float[] deltaV){
+    public void setInitialBeliefs(Float[][] mu, Float[][] deltaV){
         mu0 = mu;
         deltaV0 = deltaV;
     }

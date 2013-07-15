@@ -1,3 +1,5 @@
+package com.jakubrojcek;
+
 /**
  * Created with IntelliJ IDEA.
  * User: rojcek

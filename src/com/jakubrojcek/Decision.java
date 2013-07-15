@@ -1,3 +1,5 @@
+package com.jakubrojcek;
+
 import java.util.IdentityHashMap;
 
 /**
@@ -15,11 +17,11 @@ public class Decision {
     private int breakPoint;
     private int[] counts;           // holds counts of decisions. [0] overall count
         /*
-        Table V
-        depth at ask 1-2, spread 1, [41] count, [1] count of BMOs, [2] count of BLOs
-        depth at ask 1-2, spread > 1, [42] count, [3] count of BMOs, [4] count of BLOs
-        depth at ask > 2, spread 1, [43] count, [5] count of BMOs, [6] count of BLOs
-        depth at ask > 2, spread > 1, [44] count, [7] count of BMOs, [8] count of BLOs
+        Table V, DA = depth at ask
+        DA 1-2, spread 1,   [41] count, [1] SBMOs, [86] LBO, [2] AggBLO [94] AtBLO [95] BelowBLO
+        DA 1-2, spread > 1, [42] count, [3] SBMOs, [87] LBO, [4] AggBLO [96] AtBLO [97] BelowBLO
+        DA > 2, spread 1,   [43] count, [5] SBMOs, [88] LBO, [6] AggBLO [98] AtBLO [99] BelowBLO
+        DA > 2, spread > 1, [44] count, [7] SBMOs, [89] LBO, [8] AggBLO [100] AtBLO [101] BelowBLO
 
         Table I: conditional frequencies of buy orders at t+1 given order at t
         BMO ->      [66] LBM [9]  BMO [10] AggBLO [11] AtBLO [12] BelowBLO [45] count
@@ -33,28 +35,28 @@ public class Decision {
         BelowBLO -> [84] LBM [33] BMO [34] AggBLO [35] AtBLO [36] BelowBLO [51] count
         AboveSLO -> [85] LBM [37] BMO [38] AggBLO [39] AtBLO [40] BelowBLO [52] count
 
-        Table III
-        depth at bid 1-2, spread 1, [53] count, [54] count of BMOs, [55] count of BLOs
-        depth at bid 1-2, spread > 1, [56] count, [57] count of BMOs, [58] count of BLOs
-        depth at bid > 2, spread 1, [59] count, [60] count of BMOs, [61] count of BLOs
-        depth at bid > 2, spread > 1, [62] count, [63] count of BMOs, [64] count of BLOs
+        Table III, DB = depth at bid
+        DB 1-2, spread 1,   [53] count, [54] BMOs, [90] LBO, [55] AggBLO [102] AtBLO [103] BelowBLO
+        DB 1-2, spread > 1, [56] count, [57] BMOs, [91] LBO, [58] AggBLO [104] AtBLO [105] BelowBLO
+        DB > 2, spread 1,   [59] count, [60] BMOs, [92] LBO, [61] AggBLO [106] AtBLO [107] BelowBLO
+        DB > 2, spread > 1, [62] count, [63] BMOs, [93] LBO, [64] AggBLO [108] AtBLO [109] BelowBLO
 
-        Diagnostics: too many sellers
+        com.jakubrojcek.Diagnostics: too many sellers
         [65] count of sell orders
         */
 
-    // constructor for Decision
+    // constructor for com.jakubrojcek.Decision
     public Decision(byte numberPrices, int FVpos, int e, int bp, int ll){
         this.nP = numberPrices;
         this.FVpos = FVpos;
         this.e = e;
         this.breakPoint = bp;
         this.LL = ll;
-        counts = new int[86];
+        counts = new int[110];
     }
 
     // adds information to the decision
-    public int addDecision(int[] bi, short [] ac , int[] prevTrAc){              //TODO: repair this piece
+    public int addDecision(int[] bi, Short [] ac , int[] prevTrAc){              //TODO: repair this piece
         byte t = 0;                                         // designates which action matters
         if (ac[1] == 2 * e + 3){
             t = 1;}                     // large sell order
@@ -81,63 +83,127 @@ public class Decision {
             if(spread == 1){                                // spread = 1
                 if (bi[3] < 3){                             // depth at ask is 1-2
                     counts[41]++;
-                    if (ac[t] == (2 * e + 1) || ac[t] == (2 * e + 4)){        // Buy market order
+                    if (ac[t] == (2 * e + 1)){        // Buy market order
                         counts[1]++;
+                    } else if (ac[t] == (2 * e + 4)){
+                        counts[86]++;
                     } else if (ac[t] >= e && ac[t] < 2 * e){      // Buy Limit order
-                        counts[2]++;
+                        if ((ac[t] - e) < (bi[0] - LL)){                   // BelowBLO
+                            counts[95]++;
+                        } else if ((ac[t] - e) == (bi[0] - LL)){             // AtBLO
+                            counts[94]++;
+                        } else if ((ac[t] - e) > (bi[0] - LL)){            // AggBLO
+                            counts[2]++;
+                        }
                     }
                 } else{                                     // depth at ask > 1-2
                     counts[43]++;
-                    if (ac[t] == (2 * e + 1) || ac[t] == (2 * e + 4)){                 // Buy market order
+                    if (ac[t] == (2 * e + 1)){                 // Buy market order
                         counts[5]++;
+                    } else if (ac[t] == (2 * e + 4)){
+                        counts[88]++;
                     } else if (ac[t] >= e && ac[t] < 2 * e){      // Buy Limit order
-                        counts[6]++;
+                        if ((ac[t] - e) < (bi[0] - LL)){                   // BelowBLO
+                            counts[99]++;
+                        } else if ((ac[t] - e) == (bi[0] - LL)){             // AtBLO
+                            counts[98]++;
+                        } else if ((ac[t] - e) > (bi[0] - LL)){            // AggBLO
+                            counts[6]++;
+                        }
                     }
                 }
                 if (bi[2] < 3){                             // depth at bid is 1-2
                     counts[53]++;
-                    if (ac[t] == (2 * e + 1) || ac[t] == (2 * e + 4)){                 // Buy market order
+                    if (ac[t] == (2 * e + 1)){                 // Buy market order
                         counts[54]++;
+                    } else if (ac[t] == (2 * e + 4)){
+                        counts[90]++;
                     } else if (ac[t] >= e && ac[t] < 2 * e){      // Buy Limit order
-                        counts[55]++;
+                        if ((ac[t] - e) < (bi[0] - LL)){                   // BelowBLO
+                            counts[103]++;
+                        } else if ((ac[t] - e) == (bi[0] - LL)){             // AtBLO
+                            counts[102]++;
+                        } else if ((ac[t] - e) > (bi[0] - LL)){            // AggBLO
+                            counts[55]++;
+                        }
                     }
-                } else{                                     // depth at ask > 1-2
+                } else{                                     // depth at bid > 1-2
                     counts[59]++;
-                    if (ac[t] == (2 * e + 1) || ac[t] == (2 * e + 4)){                 // Buy market order
+                    if (ac[t] == (2 * e + 1)){                 // Buy market order
                         counts[60]++;
+                    } else if (ac[t] == (2 * e + 4)){
+                        counts[92]++;
                     } else if (ac[t] >= e && ac[t] < 2 * e){      // Buy Limit order
-                        counts[61]++;
+                        if ((ac[t] - e) < (bi[0] - LL)){                   // BelowBLO
+                            counts[107]++;
+                        } else if ((ac[t] - e) == (bi[0] - LL)){             // AtBLO
+                            counts[106]++;
+                        } else if ((ac[t] - e) > (bi[0] - LL)){            // AggBLO
+                            counts[61]++;
+                        }
                     }
                 }
             } else {                                        // spread > 1
                 if (bi[3] < 3){                             // depth at ask is 1-2
                     counts[42]++;
-                    if (ac[t] == (2 * e + 1) || ac[t] == (2 * e + 4)){                 // Buy market order
+                    if (ac[t] == (2 * e + 1)){                 // Buy market order
                         counts[3]++;
+                    } else if (ac[t] == (2 * e + 4)){
+                        counts[87]++;
                     } else if (ac[t] >= e && ac[t] < 2 * e){      // Buy Limit order
-                        counts[4]++;
+                        if ((ac[t] - e) < (bi[0] - LL)){                   // BelowBLO
+                            counts[97]++;
+                        } else if ((ac[t] - e) == (bi[0] - LL)){             // AtBLO
+                            counts[96]++;
+                        } else if ((ac[t] - e) > (bi[0] - LL)){            // AggBLO
+                            counts[4]++;
+                        }
                     }
                 } else{                                     // depth at ask > 1-2
                     counts[44]++;
-                    if (ac[t] == (2 * e + 1) || ac[t] == (2 * e + 4)){                 // Buy market order
+                    if (ac[t] == (2 * e + 1)){                 // Buy market order
                         counts[7]++;
+                    } else if (ac[t] == (2 * e + 4)){
+                        counts[89]++;
                     } else if (ac[t] >= e && ac[t] < 2 * e){      // Buy Limit order
-                        counts[8]++;
+                        if ((ac[t] - e) < (bi[0] - LL)){                   // BelowBLO
+                            counts[101]++;
+                        } else if ((ac[t] - e) == (bi[0] - LL)){             // AtBLO
+                            counts[100]++;
+                        } else if ((ac[t] - e) > (bi[0] - LL)){            // AggBLO
+                            counts[8]++;
+                        }
                     }
                 }
                 if (bi[2] < 3){                             // depth at bid is 1-2
                     counts[56]++;
-                    if (ac[t] == (2 * e + 1) || ac[t] == (2 * e + 4)){                 // Buy market order
+                    if (ac[t] == (2 * e + 1)){                 // Buy market order
                         counts[57]++;
+                    } else if (ac[t] == (2 * e + 4)){
+                        counts[91]++;
                     } else if (ac[t] >= e && ac[t] < 2 * e){      // Buy Limit order
-                        counts[58]++;
+                        if ((ac[t] - e) < (bi[0] - LL)){                   // BelowBLO
+                            counts[105]++;
+                        } else if ((ac[t] - e) == (bi[0] - LL)){             // AtBLO
+                            counts[104]++;
+                        } else if ((ac[t] - e) > (bi[0] - LL)){            // AggBLO
+                            counts[58]++;
+                        }
                     }
                 } else{                                     // depth at ask > 1-2
                     counts[62]++;
-                    if (ac[t] == (2 * e + 1) || ac[t] == (2 * e + 4)){                 // Buy market order
+                    if (ac[t] == (2 * e + 1)){                 // Buy market order
                         counts[63]++;
+                    } else if (ac[t] == (2 * e + 4)){
+                        counts[93]++;
                     } else if (ac[t] >= e && ac[t] < 2 * e){      // Buy Limit order
-                        counts[64]++;
+                        if ((ac[t] - e) < (bi[0] - LL)){                   // BelowBLO
+                            counts[109]++;
+                        } else if ((ac[t] - e) == (bi[0] - LL)){             // AtBLO
+                            counts[108]++;
+                        } else if ((ac[t] - e) > (bi[0] - LL)){            // AggBLO
+                            counts[64]++;
+                        }
                     }
                 }
             }

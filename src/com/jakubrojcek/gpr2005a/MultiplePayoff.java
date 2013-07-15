@@ -1,3 +1,5 @@
+package com.jakubrojcek.gpr2005a;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -8,7 +10,7 @@ import java.util.Arrays;
  * Time: 16:44
  * To change this template use File | Settings | File Templates.
  */
-public class MultiplePayoff extends Payoff{
+public class MultiplePayoff extends Payoff {
 
     private float[] p = new float[1];         // vector of payoff beliefs 13x SLO, SMO, 13x BLO, BMO, No order/cancellation
     private float max = 0.0f;                 // max payoff belief in the state
@@ -25,18 +27,18 @@ public class MultiplePayoff extends Payoff{
 
     public MultiplePayoff(float[] payoffs, double et, SinglePayoff sp){
         diff = 0.0;
-        payoffs = new float[nPayoffs];
-        for (int j = 0; j < nPayoffs; j++){                //TODO: delete this part after testing
+        payoffs = new float[Payoff.nPayoffs];
+        for (int j = 0; j < Payoff.nPayoffs; j++){                //TODO: delete this part after testing
             payoffs[j] = (float)Math.random() + 0.05f;
             diff = diff + payoffs[j];
         }
-        this.EventTime = et;    // time when new action for the Payoff is chosen
+        this.EventTime = et;    // time when new action for the com.jakubrojcek.gpr2005a.Payoff is chosen
         max = payoffs[0];//sp.getMax();
         maxIndex = 0;//sp.getMaxIndex();
         p[0] = max;
         Actions.add(maxIndex);
 
-        for(byte i = 0; i < nPayoffs; i++){ // searching for best payoff
+        for(byte i = 0; i < Payoff.nPayoffs; i++){ // searching for best payoff
             /*if (i == maxIndex){
                 payoffs[i] = sp.getMax();
             }*/
@@ -60,15 +62,15 @@ public class MultiplePayoff extends Payoff{
         }
     }
 
-    // update old state upon return of a trader whose previous state is captured in this MultiplePayoff
+    // update old state upon return of a trader whose previous state is captured in this com.jakubrojcek.gpr2005a.MultiplePayoff
     public void updateMax(float[] payoffs, double et, boolean tremble){ // overloading update method MP happens more times
         diff = 0.0;
-        payoffs = new float[nPayoffs];
-        for (int j = 0; j < nPayoffs; j++){                //TODO: delete this part after testing
+        payoffs = new float[Payoff.nPayoffs];
+        for (int j = 0; j < Payoff.nPayoffs; j++){                //TODO: delete this part after testing
             payoffs[j] = (float)Math.random() + 0.05f;
             diff = diff + payoffs[j];
         }
-        for (byte i = 0; i < nPayoffs; i++){
+        for (byte i = 0; i < Payoff.nPayoffs; i++){
             /*if (Actions.contains(i)){
                 payoffs[i] = p[Actions.indexOf(i)];
             }*/
@@ -98,7 +100,7 @@ public class MultiplePayoff extends Payoff{
             + "  n.length: " + n.length);*/
             //System.out.println("maxIndex:" + maxIndex + " max: " + max);
             nIndex = Actions.indexOf(maxIndex);
-            if (n[nIndex] < nResetMax){
+            if (n[nIndex] < Payoff.nResetMax){
                 n[Actions.indexOf(maxIndex)]++;
             }
         }
@@ -140,10 +142,10 @@ public class MultiplePayoff extends Payoff{
             }
         }
         if (n[index] > t2 && index == printIndex){
-            dof++;
+            Payoff.dof++;
             s = (n[index] - nDiff) + ";";
             s = s + (p[index] - diff) + ";";
-            s = s + dof + "\r";
+            s = s + Payoff.dof + "\r";
             nDiff = n[index];
             diff = p[index];
             printIndex = index; //TODO: delete afterwards
@@ -174,7 +176,7 @@ public class MultiplePayoff extends Payoff{
     public void nReset(){
         int len = n.length;
         for (int i = 0; i < len; i++){
-            n[i] = (short) Math.min(n[i], nReset); //TODO: check if comparing short and byte OK
+            n[i] = (short) Math.min(n[i], Payoff.nReset); //TODO: check if comparing short and byte OK
         }
     }
 

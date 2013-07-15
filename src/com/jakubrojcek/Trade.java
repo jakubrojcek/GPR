@@ -1,3 +1,5 @@
+package com.jakubrojcek;
+
 /**
  * Created by IntelliJ IDEA.
  * User: Jakub
@@ -15,12 +17,14 @@ public class Trade {
     private double timeSeller;
     private double timeBuyer;
     private double timeTrade;
+    private double FVbeforeBuyer;
+    private double FVbeforeSeller;
     private double price;
     private double FV;          // fundamental value
 
     public Trade(int buyerID, double bPV, boolean bHFT, int sellerID, double sPV, boolean sHFT,
-                 double timeBuyer, double timeSeller, double timeTrade, double price,
-                 double fv){
+                 double timeBuyer, double timeSeller, double FVb, double FVs,
+                 double timeTrade, double price, double fv){
         this.buyerID = buyerID;
         this.buyerPV = bPV;
         this.buyerIsHFT = bHFT;
@@ -30,6 +34,8 @@ public class Trade {
         this.timeBuyer = timeBuyer;
         this.timeSeller = timeSeller;
         this.timeTrade = timeTrade;
+        this.FVbeforeBuyer = FVb;
+        this.FVbeforeSeller = FVs;
         this.price = price;
         this.FV = fv;
     }
@@ -70,6 +76,14 @@ public class Trade {
 
     public boolean isBuyerIsHFT() {
         return buyerIsHFT;
+    }
+
+    public double getFVbeforeBuyer() {
+        return FVbeforeBuyer;
+    }
+
+    public double getFVbeforeSeller() {
+        return FVbeforeSeller;
     }
 }
 

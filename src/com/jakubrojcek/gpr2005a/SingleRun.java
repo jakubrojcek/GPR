@@ -1,6 +1,9 @@
+package com.jakubrojcek.gpr2005a;
+
 import java.util.*;
 
-import com.sun.xml.internal.bind.v2.TODO;
+import com.jakubrojcek.Order;
+import com.jakubrojcek.PriceOrder;
 import org.apache.commons.math3.distribution.NormalDistribution;
 
 /**
@@ -33,11 +36,11 @@ public class SingleRun {
     String outputNameBookData;          // output file name
     String outputNameStatsData;         // output file name
 
-    boolean write = false;              // writeDecisions output in this SingleRun?
+    boolean write = false;              // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
     boolean writeDiagnostics = false;   // write diagnostics
     boolean writeHistogram = false;     // write histogram
-    boolean purge = false;              // purge in this SingleRun?
-    boolean nReset = false;             // reset n in this SingleRun?
+    boolean purge = false;              // purge in this com.jakubrojcek.gpr2005a.SingleRun?
+    boolean nReset = false;             // reset n in this com.jakubrojcek.gpr2005a.SingleRun?
 
     double Lambda;
 
@@ -75,9 +78,13 @@ public class SingleRun {
         writeHistogram = wh;
         purge = p;
         nReset = n;
+        if (purge){
+            trader.purge();
+        }
         if (nReset){
             trader.nReset((byte)1, (short) 100);
         }
+
 
         if (model == "GPR2005"){
             float privateValue;
@@ -85,9 +92,10 @@ public class SingleRun {
             int ID;
             byte u2t;
             for (int i = 0; i < nEvents; i ++){
+                EventTime += 0.000000001;
                 // 1. new trader
                 double rnHFT = 0.0;//Math.random();
-                double rnU2T = Math.random();
+                double rnU2T = 0.0;//Math.random();
                 privateValue = 0.0f;
                 boolean HFT = true;
                 u2t = 1;
@@ -122,8 +130,8 @@ public class SingleRun {
                                                 : 7.2 * Math.max(FV - FVbefore, 0);
                         delta = Math.min(deltaLow + deltaHat, 0.99);
                     } else {
-                        double deltaHat = isBuy ? 0.2 * Math.max(FVbefore - FV, 0)    // 0.2 * in base case
-                                                : 0.2 * Math.max(FV - FVbefore, 0);
+                        double deltaHat = isBuy ? 1.6 * Math.max(FVbefore - FV, 0)    // 0.2 * in base case
+                                                : 1.6 * Math.max(FV - FVbefore, 0);
                         delta = Math.min(deltaLow + deltaHat, 0.64);
                     }
                     double rn = Math.random();             // to determine cancellation
@@ -135,7 +143,7 @@ public class SingleRun {
                 }
                 book.removeOrders(orders2remove);
                 // 5. innovation of fundamental value
-                double rn3 = Math.random();
+                double rn3 = 1.0;//Math.random();
                 if (rn3 < FVplus * 0.08){
                     FV = FV + sigma * tickSize;
                     book.FVup(FV, EventTime, (int) sigma);
@@ -147,6 +155,8 @@ public class SingleRun {
                     //book.FVdown(FV, EventTime); //TODO: use twice for 1/16 ts
                     //System.out.println("down" + FV);
                 }
+
+                // TODO: 6. Update rest of the traders from previous state = oldCode of current trader
 
                 if (i % 100000 == 0) {
                     System.out.println(i + " events");
@@ -261,7 +271,7 @@ public class SingleRun {
                 } else if (rn < x4){                   // Returning nonHFT
                     ID = book.randomNonHFTtraderID();
                     //System.out.println("Returning nonHFT ID: " + ID);
-                    /*PriceOrder PO = traders.get(ID).decision(book.getRank(ID), book.getBookSizes(), book.getBookInfo(),
+                    /*com.jakubrojcek.PriceOrder PO = traders.get(ID).decision(book.getRank(ID), book.getBookSizes(), book.getBookInfo(),
                             EventTime, FV);
                     if (PO != null){
                         book.transactionRule(PO.getPrice() , PO.getCurrentOrder());
@@ -349,8 +359,7 @@ public class SingleRun {
         h.printStatisticsData(header, outputNameStatsData);
         h.resetHistory();
 
-
-        /* if (i % 100000000 == 0) {
+         /*if (i % 5000000 == 0) {
             if (purge){
                 trader.purge();
             }

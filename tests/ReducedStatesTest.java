@@ -1,3 +1,9 @@
+
+import com.jakubrojcek.gpr2005a.History;
+import com.jakubrojcek.gpr2005a.LOB_LinkedHashMap;
+import com.jakubrojcek.gpr2005a.SingleRun;
+import com.jakubrojcek.gpr2005a.Trader;
+
 import java.util.HashMap;
 
 /**
@@ -31,7 +37,7 @@ public class ReducedStatesTest {
 
         int infoSize = 5;                       // 2-bid, ask, 4-last price, direction, 5- GPR 2005, 6-depth at bid,ask, 8-depth off bid,ask
         byte nP = 8;                           // number of prices tracked by the book, 8 in the base case, 6/11 in tick size experiment
-        int maxDepth = 7;                       // 0 to 7 which matter
+        int maxDepth = 15;                       // 0 to 7 which matter
         int FVpos = (int) nP/2;                 // position of the fundamental value
         double prTremble = 0.0;                 // probability of trembling
 
@@ -56,7 +62,7 @@ public class ReducedStatesTest {
         double sigma = 1.0;                     // volatility of FV   1/8th 1.0 and 1/16th 2.0
 
         int end = HL - LL + 1;                  // number of position on the grid for submitting LOs
-        int breakPoint = end / 2;               // breaking point for positive, negative, represents FV position on the LO grid
+        int breakPoint = FVpos - LL; //end / 2; // breaking point for positive, negative, represents FV position on the LO grid
         double FV;                              // Fundamental value-> not position
 
 
@@ -134,7 +140,7 @@ public class ReducedStatesTest {
         Trader trader = new Trader(infoSize, tauB, tauS, nP, FVpos, tickSize, ReturnFrequencyHFT,
                 ReturnFrequencyNonHFT, LL, HL, end, maxDepth, breakPoint, hti, prTremble, folder);
         if (model == "GPR2005"){trader.computeInitialBeliefs(deltaLow, privateValueMean, privateValueStdev);}
-        LOB_LinkedHashMap book = new LOB_LinkedHashMap(model, FV, FVpos, maxDepth, end, tickSize, nP ,h, traders);
+        LOB_LinkedHashMap book = new LOB_LinkedHashMap(model, FV, FVpos, maxDepth, end, tickSize, nP, h, traders);
         // create book
         book.makeBook(Prices);
 
@@ -145,11 +151,11 @@ public class ReducedStatesTest {
                 outputNameTransactions, outputNameBookData);
         // getting to equilibrium ballpark
         int nEvents = 10000000;         // number of events
-        boolean write = false;          // writeDecisions output in this SingleRun?
+        boolean write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
         boolean writeDiagnostics = true;// write diagnostics controls diagnostics
         boolean writeHistogram = false; // write histogram
-        boolean purge = false;          // purge in this SingleRun?
-        boolean nReset = false;         // reset n in this SingleRun?
+        boolean purge = false;          // purge in this com.jakubrojcek.gpr2005a.SingleRun?
+        boolean nReset = false;         // reset n in this com.jakubrojcek.gpr2005a.SingleRun?
         //trader.setPrTremble(0.1);
         //trader.setWriteDec(true);
         trader.setWriteDiag(writeDiagnostics);
@@ -164,13 +170,13 @@ public class ReducedStatesTest {
         //trader.printStatesDensity(EventTime); // occurrences of MPs now
         //trader.printHistogram();
 
-        nEvents = 10000000;         // number of events
-        write = false;              // writeDecisions output in this SingleRun?
+        nEvents = 20000000;         // number of events
+        write = false;              // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
         writeDiagnostics = true;    // write diagnostics controls diagnostics
         writeHistogram = false;     // write histogram
-        purge = false;              // purge in this SingleRun?
-        nReset = true;              // reset n in this SingleRun?
-        trader.setPrTremble(0.1);
+        purge = true;              // purge in this com.jakubrojcek.gpr2005a.SingleRun?
+        nReset = true;              // reset n in this com.jakubrojcek.gpr2005a.SingleRun?
+        trader.setPrTremble(0.15);
         //trader.setWriteDec(write);
         trader.setWriteDiag(writeDiagnostics);
         //trader.setWriteHist(writeHistogram);
@@ -183,11 +189,11 @@ public class ReducedStatesTest {
         FV = RunOutcome[1];
 
         nEvents = 10000000;         // number of events
-        write = false;              // writeDecisions output in this SingleRun?
+        write = false;              // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
         writeDiagnostics = true;    // write diagnostics controls diagnostics
         writeHistogram = false;     // write histogram
-        purge = false;              // purge in this SingleRun?
-        nReset = true;              // reset n in this SingleRun?
+        purge = true;              // purge in this com.jakubrojcek.gpr2005a.SingleRun?
+        nReset = true;              // reset n in this com.jakubrojcek.gpr2005a.SingleRun?
         trader.setPrTremble(0.05);
         //trader.setWriteDec(write);
         trader.setWriteDiag(writeDiagnostics);
@@ -200,12 +206,12 @@ public class ReducedStatesTest {
         FV = RunOutcome[1];
 
         nEvents = 10000000;         // number of events
-        write = false;              // writeDecisions output in this SingleRun?
+        write = false;              // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
         writeDiagnostics = true;    // write diagnostics controls diagnostics
         writeHistogram = false;     // write histogram
-        purge = false;              // purge in this SingleRun?
-        nReset = true;              // reset n in this SingleRun?
-        trader.setPrTremble(0.01);
+        purge = true;              // purge in this com.jakubrojcek.gpr2005a.SingleRun?
+        nReset = true;              // reset n in this com.jakubrojcek.gpr2005a.SingleRun?
+        trader.setPrTremble(0.025);
         //trader.setWriteDec(write);
         trader.setWriteDiag(writeDiagnostics);
         //trader.setWriteHist(writeHistogram);
@@ -217,11 +223,11 @@ public class ReducedStatesTest {
         FV = RunOutcome[1];
 
         nEvents = 10000000;         // number of events
-        write = false;              // writeDecisions output in this SingleRun?
+        write = false;              // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
         writeDiagnostics = true;    // write diagnostics controls diagnostics
         writeHistogram = false;     // write histogram
-        purge = false;              // purge in this SingleRun?
-        nReset = true;              // reset n in this SingleRun?
+        purge = false;              // purge in this com.jakubrojcek.gpr2005a.SingleRun?
+        nReset = false;              // reset n in this com.jakubrojcek.gpr2005a.SingleRun?
         trader.setPrTremble(0.0);
         //trader.setWriteDec(write);
         trader.setWriteDiag(writeDiagnostics);
@@ -233,12 +239,12 @@ public class ReducedStatesTest {
         EventTime = RunOutcome[0];
         FV = RunOutcome[1];
 
-        nEvents = 2000000;         // number of events
-        write = true;               // writeDecisions output in this SingleRun?
+        nEvents = 10000000;         // number of events
+        write = true;               // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
         writeDiagnostics = true;    // write diagnostics controls diagnostics
         writeHistogram = true;      // write histogram
-        purge = false;              // purge in this SingleRun?
-        nReset = false;             // reset n in this SingleRun?
+        purge = false;              // purge in this com.jakubrojcek.gpr2005a.SingleRun?
+        nReset = false;             // reset n in this com.jakubrojcek.gpr2005a.SingleRun?
         //trader.setPrTremble(0.0);
         trader.setWriteDec(write);
         trader.setWriteDiag(writeDiagnostics);
@@ -255,8 +261,8 @@ public class ReducedStatesTest {
         //trader.printStatesDensity(EventTime); // occurrences of MPs now
         book.printBook();
 
-        System.out.println("Traders count in Trader " + Trader.TraderCount
-                +  " trade count " + Trader.tradeCount + " states count " + Trader.statesCount);
+        /*System.out.println("Traders count in com.jakubrojcek.gpr2005a.Trader " + Trader.TraderCount
+                +  " trade count " + Trader.tradeCount + " states count " + Trader.statesCount);*/
         double timeStamp2 = System.nanoTime();
         System.out.println("running time = " + (timeStamp2 - timeStamp1));
 

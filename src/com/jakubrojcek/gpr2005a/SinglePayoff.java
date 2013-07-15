@@ -1,3 +1,5 @@
+package com.jakubrojcek.gpr2005a;
+
 /**
  * Created with IntelliJ IDEA.
  * User: Jakub
@@ -5,7 +7,7 @@
  * Time: 16:42
  * To change this template use File | Settings | File Templates.
  */
-public class SinglePayoff extends Payoff{
+public class SinglePayoff extends Payoff {
     private float max;
     private byte maxIndex;
     private double EventTime;

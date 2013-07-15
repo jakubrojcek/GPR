@@ -1,3 +1,5 @@
+package com.jakubrojcek;
+
 /**
  * Created with IntelliJ IDEA.
  * User: rojcek
@@ -16,7 +18,7 @@ public class Belief {
         this.deltaV = deltaV;
     }
 
-    public int getN() {
+    public short getN() {
         return n;
     }
 

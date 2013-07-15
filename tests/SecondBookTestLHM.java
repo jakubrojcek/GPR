@@ -1,5 +1,6 @@
+import com.jakubrojcek.Order;
+
 import java.util.LinkedHashMap;
-import java.util.Set;
 
 /**
  * Created by IntelliJ IDEA.
@@ -17,7 +18,7 @@ public class SecondBookTestLHM {
             System.out.println(i + ": " + book[i]);
         }
         for (int j = 0; j < 100; j ++){
-            //book[1].put(100 - j, new Order(j + 5, System.currentTimeMillis(), true));
+            //book[1].put(100 - j, new com.jakubrojcek.Order(j + 5, System.currentTimeMillis(), true));
         }
         Integer firstElement = book[1].keySet().iterator().next();
         System.out.println(firstElement);

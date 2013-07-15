@@ -1,3 +1,7 @@
+package com.jakubrojcek.gpr2005a;
+
+import com.jakubrojcek.Belief;
+
 import java.util.*;
 
 /**
@@ -29,13 +33,16 @@ public class GPR2005Payoff_test extends Payoff {
         ac[0] = (short) (maxIndex>>7);
         ac[1] = (short) (maxIndex - (ac[0]<<7));
         Belief[] beliefs = new Belief[units2trade];
-        if (ac[1] == 2 * end + 3){             // SMO at second best Bid
-            ac[1] = (short)(2 * end);
-        } else if (ac[1] == 2 * end + 4){      // BMO at second best Ask
-            ac[1] = (short)(2 * end + 1);
+        if (ac[1] == 2 * Payoff.end + 3){             // SMO at second best Bid
+            ac[1] = (short)(2 * Payoff.end);
+        } else if (ac[1] == 2 * Payoff.end + 4){      // BMO at second best Ask
+            ac[1] = (short)(2 * Payoff.end + 1);
         }
         for (int i = 0; i < units2trade; i++){
-            beliefs[i] = new Belief((short) 1, mu0[ac[i]], deltaV0[ac[i]]);
+            if (ac[i] == 127){
+                System.out.println("stop");
+            }
+           // beliefs[i] = new com.jakubrojcek.Belief((short) 1, mu0[ac[i]], deltaV0[ac[i]]);
         }
         x = new HashMap<Short, Belief[]>();
         x.put(maxIndex, beliefs);
@@ -54,11 +61,8 @@ public class GPR2005Payoff_test extends Payoff {
 
         if (tremble){
             List<Short> keys = new ArrayList<Short>(hm.keySet());
-            maxIndex = keys.get(random.nextInt(keys.size()));        // TODO: make sure
+            maxIndex = keys.get(Payoff.random.nextInt(keys.size()));        // TODO: make sure
             max = hm.get(maxIndex);
-            if (!hm.containsKey(maxIndex)){
-                System.out.println("Key not in the HashMap");
-            }
         }
 
         short[] ac =  new short[2];
@@ -67,26 +71,27 @@ public class GPR2005Payoff_test extends Payoff {
 
         if(!x.containsKey(maxIndex)){
             Belief[] beliefs = new Belief[units2trade];
-            if (ac[1] == 2 * end + 3){             // SMO at second best Bid
-                ac[1] = (short)(2 * end);
-            } else if (ac[1] == 2 * end + 4){      // BMO at second best Ask
-                ac[1] = (short)(2 * end + 1);
+            if (ac[1] == 2 * Payoff.end + 3){             // SMO at second best Bid
+                ac[1] = (short)(2 * Payoff.end);
+            } else if (ac[1] == 2 * Payoff.end + 4){      // BMO at second best Ask
+                ac[1] = (short)(2 * Payoff.end + 1);
             }
             for (int i = 0; i < units2trade; i++){
-                beliefs[i] = new Belief((short) 1, mu0[ac[i]], deltaV0[ac[i]]);
+               // beliefs[i] = new com.jakubrojcek.Belief((short) 1, mu0[ac[i]], deltaV0[ac[i]]);
             }
             x.put(maxIndex, beliefs);
-        } else if(x.get(maxIndex)[0].getN() < nResetMax) {
+        }/* else if(x.get(maxIndex)[0].getN() < nResetMax) {
             for (int i = 0; i < units2trade; i++){
                 x.get(maxIndex)[i].increaseN();
             }
-        }
+        }*/
     }
 
     public double update(short oldAction, float realDelta, boolean cancelled, byte unitTraded){   // TODO: this part works?
     // TODO: unitTraded 0- first action, 1- second action
-
-        Belief[] b = x.get(oldAction);
+        if(x.get(oldAction)[0].getN() < Payoff.nResetMax) {
+                x.get(oldAction)[unitTraded].increaseN();
+        }
         double alpha = (1.0/(1 + (x.get(oldAction))[unitTraded].getN()));  // updating factor
         double previousMu = x.get(oldAction)[unitTraded].getMu();
 
@@ -94,14 +99,12 @@ public class GPR2005Payoff_test extends Payoff {
             x.get(oldAction)[unitTraded].setMu((float) ((1.0 - alpha) * previousMu));
         } else {
             x.get(oldAction)[unitTraded].setMu((float) ((1.0 - alpha) * previousMu + alpha));
+            alpha = (1.0/(1 + previousMu * (x.get(oldAction))[unitTraded].getN())); // TODO: has this worked?
             x.get(oldAction)[unitTraded].setDeltaV((float) ((1.0 - alpha) * x.get(oldAction)[unitTraded].getDeltaV() +
                     alpha * realDelta));
         }
 
         diff = Math.abs(x.get(oldAction)[unitTraded].getMu() - previousMu);
-        if (unitTraded == 0){
-            diff = 0.0;
-        }
         return diff;
     }
 
@@ -116,7 +119,7 @@ public class GPR2005Payoff_test extends Payoff {
             ac[1] = (short) (key - (ac[0]<<7));
             if (ac[1] != 127){bound = 2;}
             for (int i = 0; i < bound; i++){
-                x.get(key)[i].setN(nReset);
+                x.get(key)[i].setN(Payoff.nReset);
             }
         }
     }

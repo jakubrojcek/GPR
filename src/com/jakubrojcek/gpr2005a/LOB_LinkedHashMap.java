@@ -1,3 +1,7 @@
+package com.jakubrojcek.gpr2005a;
+
+import com.jakubrojcek.Order;
+
 import java.util.*;
 import java.lang.Math;
 
@@ -11,7 +15,6 @@ import java.lang.Math;
  */
 public class LOB_LinkedHashMap {
     String model;
-
     double[] Prices;                           // prices for trading
     private int[] BookSizes;                   // signed sizes of the book
     private int[] BookInfo;                    // info used in decision making
@@ -71,7 +74,7 @@ public class LOB_LinkedHashMap {
             keys = book[i].keySet();
             if (!keys.isEmpty()){
                 if (! book[i].get(keys.iterator().next()).isBuyOrder()){
-                    while (! keys.isEmpty()){ // this part executes the SLOs against fringe
+                    while (!keys.isEmpty()){ // this part executes the SLOs against fringe
                         int oID = (Integer) keys.iterator().next();
                         Order o = book[i].remove(oID);
                         ActiveOrders.remove(o);
@@ -95,7 +98,7 @@ public class LOB_LinkedHashMap {
             }
         }
 
-        for (int i = tickChange - 1; i >= 0; i--){
+        for (int i = tickChange; i >= 0; i--){                        // TODO: >= 0
             keys = book[i].keySet();
             while (! keys.isEmpty()){ // removing BLOs from the zero position
                 int oID = (Integer) keys.iterator().next();
@@ -141,7 +144,7 @@ public class LOB_LinkedHashMap {
         for (int i = nPoints - 1 - tickChange; i < nPoints - 1; i++){
             keys = book[i].keySet();
             if (!keys.isEmpty()){
-                if ( book[i].get(keys.iterator().next()).isBuyOrder()){
+                if (book[i].get(keys.iterator().next()).isBuyOrder()){
                     while (! keys.isEmpty()){
                         int oID = (Integer) keys.iterator().next();
                         Order o = book[i].remove(oID);
@@ -166,9 +169,9 @@ public class LOB_LinkedHashMap {
             }
         }
 
-        for (int i = nPoints - tickChange; i <= nPoints - 1; i++){
+        for (int i = nPoints - 1 - tickChange; i < nPoints; i++){      // TODO: nPoints - tickChange, <=
             keys = book[i].keySet();
-            while (! keys.isEmpty()){                        // removing SLOs from the zero position
+            while (!keys.isEmpty()){                        // removing SLOs from the zero position
                 int oID = (Integer) keys.iterator().next();
                 Order o = book[i].remove(oID);
                 ActiveOrders.remove(o);
@@ -242,7 +245,7 @@ public class LOB_LinkedHashMap {
             j++;
         }
         At = j;
-        j = nPoints - 1;
+        //j = nPoints - 1;            // TODO: this part not needed
         while (BookSizes[j] <= 0 && j > 0){
             j--;
         }
@@ -302,9 +305,9 @@ public class LOB_LinkedHashMap {
          Integer pos = null;
 
          for (Order o : orders){
-             if (o.getAction() == 18 || o.getAction() == 17){
+             /*if (o.getAction() > 15){
                  System.out.println("stop & think");
-             }
+             }*/
              if (pos == null || pos != o.getPosition()){
                  // put here tempSize to tempHM if not empty and position not null
                  if (pos != null && tempSize != 0) {tempHM.put(pos + positionShift, tempSize);}

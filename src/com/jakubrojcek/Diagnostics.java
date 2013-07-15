@@ -1,3 +1,5 @@
+package com.jakubrojcek;
+
 import java.util.HashMap;
 import java.util.Vector;
 
@@ -32,7 +34,7 @@ public class Diagnostics {
         count++;
     }
 
-    public void addAction(short[] ac, byte u2t){
+    public void addAction(Short[] ac, byte u2t){
         for (int i = 0; i < u2t; i++){
             if (!actions.containsKey(ac[i])){
                 actions.put(ac[i], 1);

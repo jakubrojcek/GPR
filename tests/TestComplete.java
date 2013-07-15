@@ -1,4 +1,6 @@
-import org.apache.commons.math3.distribution.NormalDistribution;
+import com.jakubrojcek.Order;
+import com.jakubrojcek.gpr2005a.History;
+import com.jakubrojcek.gpr2005a.*;
 
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -17,7 +19,7 @@ public class TestComplete {
         HashMap<String, ArrayList<Boolean>> TestResults = new HashMap<String,ArrayList<Boolean>>();
 
          // market parameters
-       /* double timeStamp1 = System.nanoTime();
+       double timeStamp1 = System.nanoTime();
         int nHFT = 0;                           // # of HFT's fast traders, fixed
         int nPositiveNonHFT = 1;               // # of positive PV slow traders
         int nZeroNonHFT = 2;                   // # of zero PV slow traders
@@ -32,21 +34,21 @@ public class TestComplete {
 
 
         int infoSize = 5;                       // 2-bid, ask, 4-last price, direction, 6-depth at bid,ask, 8-depth off bid,ask
-        byte nP = 9;                           // number of prices tracked by the book
+        byte nP = 8;                           // number of prices tracked by the book
         int maxDepth = 7;                       // 0 to 7 which matter
         int FVpos = (int) nP/2;                 // position of the fundamental value
         double prTremble = 0.0;                 // probability of trembling
 
-        *//*int HL = FVpos + 6;                     // Lowest  allowed limit order price.  LL + HL = nP-1 for allowed orders centered around E(v)
+        /*int HL = FVpos + 6;                     // Lowest  allowed limit order price.  LL + HL = nP-1 for allowed orders centered around E(v)
         int LL = FVpos - 6;                    // Highest allowed limit order price
         float tickSize = 0.0625f;//0.125;       // size of one tick
         int PVsigma = 4;//4                     // # of ticks for negative and positive PVs
         String outputNameTransactions = "Transactions16.csv";  // output file name
         String outputNameBookData = "BookData16.csv";  // output file name
-        String outputNameStatsData = "stats16.csv";   // output file name*//*
+        String outputNameStatsData = "stats16.csv";   // output file name*/
 
-        double privateValueMean = 0.0;      // mean of normal distribution of private values GPR 2005
-        int HL = FVpos + 3; //                  // Lowest  allowed limit order price.  LL + HL = nP-1 for allowed orders centered around E(v)
+        double privateValueMean = -0.0625;      // mean of normal distribution of private values GPR 2005
+        int HL = FVpos + 2; //                  // Lowest  allowed limit order price.  LL + HL = nP-1 for allowed orders centered around E(v)
         int LL = FVpos - 3; //                  // Highest allowed limit order price
         float tickSize = 0.125f;                // size of one tick
         int PVsigma = 2;//4                     // # of ticks for negative and positive PVs
@@ -70,7 +72,7 @@ public class TestComplete {
         for (int i = 0 ; i < nP ; i++){
             Prices[i] = i * tickSize;
         }
-        FV = Prices[FVpos];
+        FV = Prices[FVpos] + privateValueMean;
 
         double[] tauB = new double[end]; //   expected time until the arrival of a new buyer for whom trading on the LO yields non-negative payoff
 
@@ -121,6 +123,8 @@ public class TestComplete {
 
         Trader trader = new Trader(infoSize, tauB, tauS, nP, FVpos, tickSize, ReturnFrequencyHFT,
                 ReturnFrequencyNonHFT, LL, HL, end, maxDepth, breakPoint, hti, prTremble, folder);
+
+
         LOB_LinkedHashMap book = new LOB_LinkedHashMap("GPR2005", FV, FVpos, maxDepth, end, tickSize, nP ,h, traders);
         // create book
         book.makeBook(Prices);
@@ -136,31 +140,38 @@ public class TestComplete {
         ArrayList<Boolean> FVmovesTest = new ArrayList<Boolean>();
         ArrayList<Boolean> NewPayoffTest = new ArrayList<Boolean>();
         // initial mu and deltaV tests
-        HashMap<String, Float[]> tempIB = trader.computeInitialBeliefs(deltaLow, privateValueMean, privateValueStdev);
-        Initials.add((tempIB.get("mu0")[4] < 0.8964 && 0.8963 < tempIB.get("mu0")[4]));
-        Initials.add((tempIB.get("mu0")[9] < 0.8964 && 0.8963 < tempIB.get("mu0")[9]));
+        /*HashMap<String, Float[]> tempIB = trader.computeInitialBeliefs(deltaLow, privateValueMean, privateValueStdev);
+        Initials.add((tempIB.get("mu0")[4] < 0.8767 && 0.8766 < tempIB.get("mu0")[4]));
+        Initials.add((tempIB.get("mu0")[9] < 0.932 && 0.931 < tempIB.get("mu0")[9]));
         Initials.add((tempIB.get("mu0")[2 * end] == 1.0 && 1.0 == tempIB.get("mu0")[2 * end + 1]));
         Initials.add((tempIB.get("deltaV0")[2 * end] == 0.0 && 0.0 == tempIB.get("deltaV0")[2 * end + 1]));
-        Initials.add((tempIB.get("deltaV0")[4] == -0.5 && 0.5 == tempIB.get("deltaV0")[9]));
+        Initials.add((tempIB.get("deltaV0")[4] == -0.625 && 0.375 == tempIB.get("deltaV0")[9]));*/
 
         TestResults.put("Initials", Initials);
 
-        // action creation and GPR2005Payoff constructor test
+        // action creation and com.jakubrojcek.gpr2005a.GPR2005Payoff constructor test
         byte units2trade = 2;
         HashMap<Short, Float> p = new HashMap<Short, Float>();
+        short action0 = 5;
         short action1 = 5;
-        short action2 = 8;
-        short sh = (short)((action2<<7) + action1);
-        p.put(sh, 0.6f);
-        action1 = 7; action2 = 6; sh = (short)((action1<<7) + action2);
-        p.put(sh, 0.5f);
+        short sh1 = (short)((action0<<7) + action1);
+        p.put(sh1, 0.6f);
+        action0 = 7; action1 = 6;
+        short sh2 = (short)((action0<<7) + action1);
+        p.put(sh2, 0.5f);
         GPR2005Payoff_test payoff_test = new GPR2005Payoff_test(p, (byte)2);
-
-        p.put(sh, 0.65f);
+        NewPayoffTest.add(payoff_test.getMaxIndex() == sh1);
+        p.put(sh2, 0.65f);
         payoff_test.updateMax(p, (byte)2, false);
-        //payoff_test.update((short)1029, 0.125f, false, 1);
+        NewPayoffTest.add(payoff_test.getMaxIndex() == sh2);
+        payoff_test.update(sh1, 0.125f, false, (byte)1);
+        NewPayoffTest.add(payoff_test.getX().get(sh1)[1].getMu() > 0.908 && payoff_test.getX().get(sh1)[1].getMu() < 0.909);
+        NewPayoffTest.add(payoff_test.getX().get(sh1)[1].getDeltaV() == -0.3125);
+        payoff_test.update(sh1, 0.125f, false, (byte)0);
+        NewPayoffTest.add(payoff_test.getX().get(sh1)[0].getMu() > 0.908 && payoff_test.getX().get(sh1)[0].getMu() < 0.909);
+        NewPayoffTest.add(payoff_test.getX().get(sh1)[0].getDeltaV() == -0.3125);
 
-
+        TestResults.put("com.jakubrojcek.gpr2005a.GPR2005Payoff test", NewPayoffTest);
 
 
         // initial payoffs
@@ -171,30 +182,25 @@ public class TestComplete {
         for (int i = 0; i < nP; i++){
             priorities.put((byte) i, (byte) 1);
         }
-        Trader tr1minus = new Trader(false, -1.0f, (byte)1); traders.put(tr1minus.getTraderID(), tr1minus);
-        Trader tr1 = new Trader(false, 1.0f, (byte)1);       traders.put(tr1.getTraderID(), tr1);
-        Trader tr0 = new Trader(false, 0.0f, (byte)1);       traders.put(tr0.getTraderID(), tr0);
-        Trader tr4 = new Trader(false, 1.0f, (byte)1);       traders.put(tr4.getTraderID(), tr4);
-        ArrayList orders = tr0.decision(book.getBookSizes(), book.getBookInfo(), EventTime, FV);
-        *//*InitialPayoffs.add(PO.getPrice() == 7 && !PO.getCurrentOrder().isBuyOrder());
-        if(PO.getPrice() != 7){
-            System.out.println(PO.getPrice() + " is the price position, not 7");
-        }
-        PO = tr1minus.decision(book.getBookSizes(), book.getBookInfo(), EventTime, FV);
-        InitialPayoffs.add(PO.getPrice() == 7 && !PO.getCurrentOrder().isBuyOrder());
-        if(PO.getPrice() != 7){
-            System.out.println(PO.getPrice() + " is the price position, not 7");
-        }
-        PO = tr1.decision(book.getBookSizes(), book.getBookInfo(), EventTime, FV);
-        InitialPayoffs.add(PO.getPrice() == 1 && PO.getCurrentOrder().isBuyOrder());
-        if(PO.getPrice() != 1){
-            System.out.println(PO.getPrice() + " is the price position, not 1");
-        }*//*
+        Trader tr1minus = new Trader(false, -1.0f, (byte)2); traders.put(tr1minus.getTraderID(), tr1minus);
+        Trader tr1 = new Trader(false, 1.0f, (byte)2);       traders.put(tr1.getTraderID(), tr1);
+        Trader tr0 = new Trader(false, 0.0f, (byte)2);       traders.put(tr0.getTraderID(), tr0);
+        Trader tr4 = new Trader(false, 1.0f, (byte)2);       traders.put(tr4.getTraderID(), tr4);
+        ArrayList<Order> orders = tr1minus.decision(book.getBookSizes(), book.getBookInfo(), EventTime, FV);
 
-        TestResults.put("InitialPayoffs", InitialPayoffs);
+        /*InitialPayoffs.add(orders.get(0).getAction() == 5 && orders.get(1).getAction() == 5
+        && orders.get(0).getPosition() == 6 && orders.get(1).getPosition() == 6);
+        tr1minus.cancel(orders.get(0));
+        tr1minus.execution(FV + 0.125f, orders.get(1));
+        orders = new ArrayList<com.jakubrojcek.Order>();
+        orders = tr0.decision(book.getBookSizes(), book.getBookInfo(), EventTime, FV);
+        InitialPayoffs.add(orders.get(0).getAction() == 6 && orders.get(1).getAction() == 6
+                && orders.get(0).getPosition() == 1 && orders.get(1).getPosition() == 1);
 
-        // new Trader features
-        float[] pay = {4.3f, 4.3f, 4.3f, 4.3f, 4.3f, 4.3f, 4.3f, 4.3f, 4.3f, 4.3f,
+        TestResults.put("InitialPayoffs", InitialPayoffs);*/
+
+        // new com.jakubrojcek.gpr2005a.Trader features
+        /*float[] pay = {4.3f, 4.3f, 4.3f, 4.3f, 4.3f, 4.3f, 4.3f, 4.3f, 4.3f, 4.3f,
                 4.3f, 4.3f, 4.3f, 4.3f, 4.3f, 4.3f, 4.3f};
         short b = (short) Math.max(BookInfo[0] - LL + 1, 0);             // + 1 in order to start from one above B
         b = (short) Math.min(end, b); // TODO: test this change
@@ -217,7 +223,7 @@ public class TestComplete {
         action[0] = (short)(maxIndex>>7);
         action[1] = (short) (maxIndex - (action[0]<<7));
         System.out.println(action[0] + " " + action[1]);
-        ArrayList<Order> orders2 = new ArrayList<Order>();
+        ArrayList<com.jakubrojcek.Order> orders2 = new ArrayList<com.jakubrojcek.Order>();
         for (int i = 0; i < units2trade; i++){
             if ((action[i] >= end) && (action[i] != 2 * end)){
                 buyOrder = true;
@@ -226,28 +232,59 @@ public class TestComplete {
                     : LL + action[i] - end;
             if (action[i] == 2 * end || (!buyOrder && pricePosition < BookInfo[0])){pricePosition = BookInfo[0];}       // position is Bid
             if (action[i] == 2 * end + 1 || (buyOrder && pricePosition > BookInfo[1])){pricePosition = BookInfo[1];}
-            Order CurrentOrder = new Order(1, EventTime, buyOrder, action[i], pricePosition);
+            com.jakubrojcek.Order CurrentOrder = new com.jakubrojcek.Order(1, EventTime, buyOrder, action[i], pricePosition);
             orders2.add(CurrentOrder);
-        }
+        }*/
 
 
         // update tests
-        BookInfo[0] = 2;
-        //tr1.cancel();
-        Updated.add(0.3865<((GPR2005Payoff) trader.getPayoffs().get((long) 16777216)).getX1().get((short) 7).getMu() &&
-        0.3866 > ((GPR2005Payoff) trader.getPayoffs().get((long) 16777216)).getX1().get((short) 7).getMu());
-        *//*PO = tr4.decision(book.getBookSizes(), BookInfo, EventTime, FV);
-        tr4.execution(FV + 2 * tickSize);
+        short acTr1minus = (short) ((5<<7) + 5);
+        Updated.add(0.408 < ((GPR2005Payoff_test) trader.getPayoffs().get((long) 469762048)).getX().get(acTr1minus)[1].getMu()
+        && 0.409 > ((GPR2005Payoff_test) trader.getPayoffs().get((long) 469762048)).getX().get(acTr1minus)[1].getMu());
+        Updated.add(-0.75 == ((GPR2005Payoff_test) trader.getPayoffs().get((long) 469762048)).getX().get(acTr1minus)[1].getDeltaV());
+        Updated.add(0.908 < ((GPR2005Payoff_test) trader.getPayoffs().get((long) 469762048)).getX().get(acTr1minus)[0].getMu()
+                && 0.909 > ((GPR2005Payoff_test) trader.getPayoffs().get((long) 469762048)).getX().get(acTr1minus)[0].getMu());
+        Updated.add(-0.3125 == ((GPR2005Payoff_test) trader.getPayoffs().get((long) 469762048)).getX().get(acTr1minus)[0].getDeltaV());
 
-        Updated.add(0.8865<((GPR2005Payoff) trader.getPayoffs().get((long) 151134730)).getX1().get((short) 7).getMu() &&
-                ((GPR2005Payoff) trader.getPayoffs().get((long) 151134730)).getX1().get((short) 7).getMu() < 0.8866);
-        Updated.add(((GPR2005Payoff) trader.getPayoffs().get((long) 151134730)).getX1().get((short) 7).getDeltaV() == 0.5);
-        PO = tr4.decision(book.getBookSizes(), BookInfo, EventTime, FV);
-        Updated.add(PO.getPrice() == 1 && PO.getCurrentOrder().isBuyOrder());
-        TestResults.put("Updated", Updated);*//*
+        tr0.execution(FV - 0.125f, orders.get(1));
+        short acTr0 = (short) ((6<<7) + 6);
+        Updated.add(0.908 < ((GPR2005Payoff_test) trader.getPayoffs().get((long) 469762048)).getX().get(acTr0)[0].getMu()
+                && 0.909 > ((GPR2005Payoff_test) trader.getPayoffs().get((long) 469762048)).getX().get(acTr0)[0].getMu());
+        Updated.add(0.3125 == ((GPR2005Payoff_test) trader.getPayoffs().get((long) 469762048)).getX().get(acTr0)[0].getDeltaV());
+
+        tr0.execution(FV + 0.125f, orders.get(0));
+        Updated.add(0.908 < ((GPR2005Payoff_test) trader.getPayoffs().get((long) 469762048)).getX().get(acTr0)[0].getMu()
+                && 0.909 > ((GPR2005Payoff_test) trader.getPayoffs().get((long) 469762048)).getX().get(acTr0)[0].getMu());
+        Updated.add(0.3125 == ((GPR2005Payoff_test) trader.getPayoffs().get((long) 469762048)).getX().get(acTr0)[0].getDeltaV());
+
+        Updated.add(0.908 < ((GPR2005Payoff_test) trader.getPayoffs().get((long) 469762048)).getX().get(acTr0)[1].getMu()
+                && 0.909 > ((GPR2005Payoff_test) trader.getPayoffs().get((long) 469762048)).getX().get(acTr0)[1].getMu());
+        Updated.add(0.4375 == ((GPR2005Payoff_test) trader.getPayoffs().get((long) 469762048)).getX().get(acTr0)[1].getDeltaV());
+
+
+        /*orders = new ArrayList<com.jakubrojcek.Order>();
+        orders = tr1.decision(book.getBookSizes(), BookInfo, EventTime, FV);
+        tr1.cancel(orders.get(1));
+        short acTr1 = (short) ((6<<7) + 6);
+        Updated.add(0.408 < ((com.jakubrojcek.gpr2005a.GPR2005Payoff_test) trader.getPayoffs().get((long) 4699785236)).getX().get(acTr1)[1].getMu()
+                && 0.409 > ((com.jakubrojcek.gpr2005a.GPR2005Payoff_test) trader.getPayoffs().get((long) 4699785236)).getX().get(acTr1)[1].getMu());
+        Updated.add(0.75 == ((com.jakubrojcek.gpr2005a.GPR2005Payoff_test) trader.getPayoffs().get((long) 4699785236)).getX().get(acTr1)[1].getDeltaV());
+
+        tr1.cancel(orders.get(0));
+        Updated.add(0.408 < ((com.jakubrojcek.gpr2005a.GPR2005Payoff_test) trader.getPayoffs().get((long) 4699785236)).getX().get(acTr1)[1].getMu()
+                && 0.409 > ((com.jakubrojcek.gpr2005a.GPR2005Payoff_test) trader.getPayoffs().get((long) 4699785236)).getX().get(acTr1)[1].getMu());
+        Updated.add(0.75 == ((com.jakubrojcek.gpr2005a.GPR2005Payoff_test) trader.getPayoffs().get((long) 4699785236)).getX().get(acTr1)[1].getDeltaV());
+
+        Updated.add(0.408 < ((com.jakubrojcek.gpr2005a.GPR2005Payoff_test) trader.getPayoffs().get((long) 4699785236)).getX().get(acTr1)[0].getMu()
+                && 0.409 > ((com.jakubrojcek.gpr2005a.GPR2005Payoff_test) trader.getPayoffs().get((long) 4699785236)).getX().get(acTr1)[0].getMu());
+        Updated.add(0.75 == ((com.jakubrojcek.gpr2005a.GPR2005Payoff_test) trader.getPayoffs().get((long) 4699785236)).getX().get(acTr1)[0].getDeltaV());*/
+
+        //PO = tr4.decision(book.getBookSizes(), BookInfo, EventTime, FV);
+        //Updated.add(PO.getPrice() == 1 && PO.getCurrentOrder().isBuyOrder());
+        TestResults.put("Updated", Updated);
 
         // HashCode tests
-        BookInfo[1] = 7; BookInfo[2] = 2; BookInfo[3] = 3; BookInfo[4] = 5; BookInfo[5] = 3; int l = 0;
+       /* BookInfo[1] = 7; BookInfo[2] = 2; BookInfo[3] = 3; BookInfo[4] = 5; BookInfo[5] = 3; int l = 0;
         Long code = trader.HashCode(0, 0, 0, BookInfo);
         Boolean testHashCode;
         long code2 = code;
@@ -267,31 +304,70 @@ public class TestComplete {
         code2 = code2 - l;
         if (code2 !=0){testHashCode = false;}     // tests
         HashCode.add(testHashCode);
-        TestResults.put("HashCode", HashCode);
+        TestResults.put("HashCode", HashCode);*/
 
         // Choosing MaxIndex testing
-        float[] payoffs = new float[17];
+       /* float[] payoffs = new float[17];
         payoffs[1] = 1.0f; payoffs[2] = 0.56f; payoffs[12] = 0.6f; payoffs[13] = 0.9f;
         payoffs[16] = 0.55f;
-        GPR2005Payoff payoff = new GPR2005Payoff(payoffs, -2, 7);
+        com.jakubrojcek.gpr2005a.GPR2005Payoff payoff = new com.jakubrojcek.gpr2005a.GPR2005Payoff(payoffs, -2, 7);
         ChooseMaxIndex.add(payoff.getMaxIndex() == (short)1);
-        payoff = new GPR2005Payoff(payoffs, 1, 7);
+        payoff = new com.jakubrojcek.gpr2005a.GPR2005Payoff(payoffs, 1, 7);
         ChooseMaxIndex.add(payoff.getMaxIndex() == (short)13);
-        payoff = new GPR2005Payoff(payoffs, 1, 6);
+        payoff = new com.jakubrojcek.gpr2005a.GPR2005Payoff(payoffs, 1, 6);
         ChooseMaxIndex.add(payoff.getMaxIndex() == (short)12);
-        payoff = new GPR2005Payoff(payoffs, 1, 5);
+        payoff = new com.jakubrojcek.gpr2005a.GPR2005Payoff(payoffs, 1, 5);
         ChooseMaxIndex.add(payoff.getMaxIndex() == (short)2);
-        payoff = new GPR2005Payoff(payoffs, 2, 5);
+        payoff = new com.jakubrojcek.gpr2005a.GPR2005Payoff(payoffs, 2, 5);
         ChooseMaxIndex.add(payoff.getMaxIndex() == (short)16);
-        payoff = new GPR2005Payoff(payoffs, 7, 6);
+        payoff = new com.jakubrojcek.gpr2005a.GPR2005Payoff(payoffs, 7, 6);
         ChooseMaxIndex.add(payoff.getMaxIndex() == (short)12);
-        payoff = new GPR2005Payoff(payoffs, 1, -1);
+        payoff = new com.jakubrojcek.gpr2005a.GPR2005Payoff(payoffs, 1, -1);
         ChooseMaxIndex.add(payoff.getMaxIndex() == (short)2);
 
-        TestResults.put("ChooseMaxIndex", ChooseMaxIndex);
+        TestResults.put("ChooseMaxIndex", ChooseMaxIndex);*/
+
+        // updating payoffs in com.jakubrojcek.gpr2005a.Trader
+        float tempPayoff = 0.0f;
+        float tempDiff = 0.0f;
+        boolean LO = false;
+        short action[] = new short[2];
+        sh1 = (short) ((8<<7) + 4);
+        p.put(sh1, 1.0f);
+        payoff_test.updateMax(p, (byte) 2, false);
+        action[0] = (short) (sh1>>7);
+        action[1] = (short) (sh1 - (action[0]<<7));
+        for (int i = 0; i < 2; i++){
+            if (action[i] < (short) end){
+                // SLO
+                LO = true;
+                tempDiff += (float)((payoff_test.getX().get(sh1)[i].getMu()) *
+                        ((action[i] - breakPoint) * tickSize - 0.1f -
+                                payoff_test.getX().get(sh1)[i].getDeltaV())) - 0.2f;
+            } else if (action[i] < (short) (2 * end)) {
+                // BLO
+                LO = true;
+                tempDiff += (float)((payoff_test.getX().get(sh1)[i].getMu()) *
+                        (-0.1f + payoff_test.getX().get(sh1)[i].getDeltaV() -
+                                (action[i] - breakPoint - end) * tickSize)) - 0.2f;
+            }
+        }
+        if (LO && p.containsKey(sh1)){
+            tempPayoff = p.get(sh1);
+            p.put(sh1, tempDiff + tempPayoff);
+        }
+
+        tr4.decision(BookSizes, BookInfo, 0.0, 0.125);
+        Iterator it2 = Trader.getPs().keySet().iterator();
+        while (it2.hasNext()){
+            sh1 = (Short)(it2.next());
+            action[0] = (short)((sh1>>7));
+            action[1] = (short) (sh1 - (action[0]<<7));
+            System.out.println("actionLeft: " + action[0] + " actionRight: " + action[1]);
+        }
 
         // IDs workflow test
-        *//*int NewNonHFT = nNegativeNonHFT + nPositiveNonHFT + nZeroNonHFT;
+        int NewNonHFT = nNegativeNonHFT + nPositiveNonHFT + nZeroNonHFT;
         double Lambda;
         int nEvents = 10000000;
         trader.setWriteDiag(true);
@@ -301,11 +377,11 @@ public class TestComplete {
                 outputNameTransactions, outputNameBookData);
 
         nEvents = 1;                    // number of events
-        boolean write = false;          // writeDecisions output in this SingleRun?
+        boolean write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
         boolean writeDiagnostics = true;// write diagnostics controls diagnostics
         boolean writeHistogram = false; // write histogram
-        boolean purge = false;          // purge in this SingleRun?
-        boolean nReset = false;         // reset n in this SingleRun?
+        boolean purge = false;          // purge in this com.jakubrojcek.gpr2005a.SingleRun?
+        boolean nReset = false;         // reset n in this com.jakubrojcek.gpr2005a.SingleRun?
         //trader.setPrTremble(0.1);
         //trader.setWriteDec(true);
         trader.setWriteDiag(writeDiagnostics);
@@ -320,81 +396,80 @@ public class TestComplete {
         IDsWorkflow.add(traders.size() == 1);
         sr.run(1000, nHFT, NewNonHFT, EventTime, FV, write,
                 purge, nReset, writeDiagnostics, writeHistogram);
-        IDsWorkflow.add(traders.size() == book.traderIDsNonHFT.size());*//*
+        /*IDsWorkflow.add(traders.size() == book.traderIDsNonHFT.size());
         TestResults.put("IDsWorkflow", IDsWorkflow);
 
-        // testing LOB_test
-        LOB_test book2 = new LOB_test("GPR2005", FV, FVpos, maxDepth, end, tickSize, nP ,h, traders);
+        // testing com.jakubrojcek.gpr2005a.LOB_test
+        LOB_LinkedHashMap book2 = new LOB_LinkedHashMap("GPR2005", FV, FVpos, maxDepth, end, tickSize, nP ,h, traders);
         // create book
         book2.makeBook(Prices);
-        Order_test o1 = new Order_test(tr1.getTraderID(), 0.0, false, (short) 2, 3);
-        Order_test o2 = new Order_test(tr1.getTraderID(), 0.0, false, (short) 2, 3);
-        Order_test o3 = new Order_test(tr1.getTraderID(), 0.0, false, (short) 1, 2);
-        orders = new ArrayList<Order_test>();
+        Order o1 = new Order(tr1.getTraderID(), 0.0, false, true, (short) 2,(short)0, 3);
+        Order o2 = new Order(tr1.getTraderID(), 0.0, false, true, (short) 2,(short)0, 3);
+        Order o3 = new Order(tr1.getTraderID(), 0.0, false, true, (short) 1,(short)0, 2);
+        orders = new ArrayList<Order>();
         orders.add(o1); orders.add(o2); orders.add(o3);
         book2.transactionRule(tr1.getTraderID(), orders);
         LOB_test.add(book2.CurrentPosition.get(tr1.getTraderID()).get(3) == -2);
         LOB_test.add(book2.book[3].get(book2.book[3].keySet().iterator().next()) == o1);
         LOB_test.add(book2.book[2].get(book2.book[2].keySet().iterator().next()) == o3);
 
-        Order_test o4 = new Order_test(tr0.getTraderID(), 0.0, true, (short) 8, 3);
-        Order_test o5 = new Order_test(tr0.getTraderID(), 0.0, true, (short) 8, 3);
-        orders = new ArrayList<Order_test>(); orders.add(o4); orders.add(o5);
+        Order o4 = new Order(tr0.getTraderID(), 0.0, true, true, (short) 8,(short)0, 3);
+        Order o5 = new Order(tr0.getTraderID(), 0.0, true, true, (short) 8,(short)0, 3);
+        orders = new ArrayList<Order>(); orders.add(o4); orders.add(o5);
         book2.transactionRule(tr0.getTraderID(), orders);
         LOB_test.add(!book2.CurrentPosition.get(tr1.getTraderID()).containsKey(3));
         LOB_test.add(book2.book[3].isEmpty());
         LOB_test.add(!book2.CurrentPosition.containsKey(tr0.getTraderID()));
 
-        Order_test o6 = new Order_test(tr1minus.getTraderID(), 0.0, true, (short) 7, 2);
-        Order_test o7 = new Order_test(tr1minus.getTraderID(), 0.0, true, (short) 10, 3);
-        Order_test o8 = new Order_test(tr1minus.getTraderID(), 0.0, true, (short) 8, 1);
-        Order_test o9 = new Order_test(tr1minus.getTraderID(), 0.0, true, (short) 7, 0);
-        Order_test o10 = new Order_test(tr1minus.getTraderID(), 0.0, true, (short) 7, 0);
-        orders = new ArrayList<Order_test>(); orders.add(o6); orders.add(o7); orders.add(o8);
+        Order o6 = new Order(tr1minus.getTraderID(), 0.0, true,true, (short) 7,(short)0, 2);
+        Order o7 = new Order(tr1minus.getTraderID(), 0.0, true,true, (short) 10,(short)0, 3);
+        Order o8 = new Order(tr1minus.getTraderID(), 0.0, true,true, (short) 8,(short)0, 1);
+        Order o9 = new Order(tr1minus.getTraderID(), 0.0, true,true, (short) 7,(short)0, 0);
+        Order o10 = new Order(tr1minus.getTraderID(), 0.0, true, true,(short) 7,(short)0, 0);
+        orders = new ArrayList<Order>(); orders.add(o6); orders.add(o7); orders.add(o8);
         orders.add(o9); orders.add(o10);
         book2.transactionRule(tr1minus.getTraderID(), orders);
         LOB_test.add(!book2.CurrentPosition.containsKey(tr1.getTraderID()));
         LOB_test.add(book2.CurrentPosition.get(tr1minus.getTraderID()).get(3) == 1);
         LOB_test.add(book2.book[3].get(book2.book[3].keySet().iterator().next()) == o7);
 
-        TestResults.put("LOB_test", LOB_test);
+        TestResults.put("com.jakubrojcek.gpr2005a.LOB_test", LOB_test);
 
-        // FVup, FVdown LOB_test testing
+        // FVup, FVdown com.jakubrojcek.gpr2005a.LOB_test testing
         FV = FV + 1 * tickSize;                 book2.FVup(FV, 0.0, 1);
         FVmovesTest.add(book2.book[0].get(book2.book[0].keySet().iterator().next()) == o8);
         FVmovesTest.add(book2.getBookSizes()[2] == 1);
 
-        Order_test o11 = new Order_test(tr0.getTraderID(), 0.0, false, (short) 0, 1);
-        orders = new ArrayList<Order_test>();           orders.add(o11);
+        Order o11 = new Order(tr0.getTraderID(), 0.0, false,true, (short) 0,(short)0, 1);
+        orders = new ArrayList<Order>();           orders.add(o11);
         traders.put(tr0.getTraderID(), tr0);
         book2.transactionRule(tr0.getTraderID(), orders);
         FV = FV + 1 * tickSize;                 book2.FVup(FV, 0.0, 1);
         FVmovesTest.add(!book2.CurrentPosition.containsKey(tr0.getTraderID()));
         FVmovesTest.add(!traders.containsKey(tr0.getTraderID()));
 
-        Order_test o12 = new Order_test(tr4.getTraderID(), 0.0, false, (short) 1, 2);
-        Order_test o13 = new Order_test(tr4.getTraderID(), 0.0, false, (short) 1, 2);
-        orders = new ArrayList<Order_test>();           orders.add(o12); orders.add(o13);
+        Order o12 = new Order(tr4.getTraderID(), 0.0, false, true,(short) 1,(short)0, 2);
+        Order o13 = new Order(tr4.getTraderID(), 0.0, false, true,(short) 1,(short)0, 2);
+        orders = new ArrayList<Order>();           orders.add(o12); orders.add(o13);
         book2.transactionRule(tr4.getTraderID(), orders);
         FV = FV + 2 * tickSize;                 book2.FVup(FV, 0.0, 2);
         FVmovesTest.add(!book2.CurrentPosition.containsKey(tr1minus.getTraderID()));
         FVmovesTest.add(!book2.CurrentPosition.containsKey(tr4.getTraderID()));
         FVmovesTest.add(!traders.containsKey(tr4.getTraderID()));
 
-        Order_test o14 = new Order_test(tr4.getTraderID(), 0.0, false, (short) 6, 8);
-        Order_test o15 = new Order_test(tr4.getTraderID(), 0.0, false, (short) 6, 8);
-        Order_test o16 = new Order_test(tr4.getTraderID(), 0.0, true, (short) 13, 7);
-        Order_test o17 = new Order_test(tr4.getTraderID(), 0.0, true, (short) 12, 6);
-        Order_test o18 = new Order_test(tr4.getTraderID(), 0.0, true, (short) 12, 6);
-        orders = new ArrayList<Order_test>();           orders.add(o14); orders.add(o15);
+        Order o14 = new Order(tr4.getTraderID(), 0.0, false,true, (short) 6,(short)0, 8);
+        Order o15 = new Order(tr4.getTraderID(), 0.0, false,true, (short) 6,(short)0, 8);
+        Order o16 = new Order(tr4.getTraderID(), 0.0, true,true, (short) 13,(short)0, 7);
+        Order o17 = new Order(tr4.getTraderID(), 0.0, true,true, (short) 12,(short)0, 6);
+        Order o18 = new Order(tr4.getTraderID(), 0.0, true,true, (short) 12, (short)0, 6);
+        orders = new ArrayList<Order>();           orders.add(o14); orders.add(o15);
         orders.add(o16); orders.add(o17);orders.add(o18);
         traders.put(tr4.getTraderID(), tr4);
         book2.transactionRule(tr4.getTraderID(), orders);
         FV = FV - 2 * tickSize;                 book2.FVdown(FV, 0.0, 2);
         FVmovesTest.add(!book2.CurrentPosition.containsKey(tr4.getTraderID()));
         FVmovesTest.add(!traders.containsKey(tr4.getTraderID()));
-        FVmovesTest.add(book2.getPositionShift() == 2);
-        FVmovesTest.add(book2.Prices[2] == 4 * tickSize);
+        FVmovesTest.add(book2.Prices[2] == 4 * tickSize);*/
 
         TestResults.put("FVmovesTests", FVmovesTest);
         // printing results of tests
@@ -406,14 +481,14 @@ public class TestComplete {
                 System.out.println(s + " " + TestResults.get(s).get(i).toString());
             }
         }
-        book2.printBook();
+        //book2.printBook();
 
-        //Trader.Payoffs.put(0, new GPR2005Payoff())
+        //com.jakubrojcek.gpr2005a.Trader.Payoffs.put(0, new com.jakubrojcek.gpr2005a.GPR2005Payoff())
 
         //tr1.cancel();
         tr1.decision(BookSizes, BookInfo, EventTime, FV);
 
-        *//*for (int i = 0; i < nEvents; i ++){
+        for (int i = 0; i < nEvents; i ++){
 
             // 1. new HFT
             // 2. new nonHFT
@@ -457,18 +532,18 @@ public class TestComplete {
                 System.out.println("Probabilities do not sum to 1.");
             }
 
-            double rn = Math.random();             // to determine event
+            /*double rn = Math.random();             // to determine event
             int ID;
             float FVrealization;
-            *//**//*if (rn < x1){                          // New arrival HFT
-                tr = new Trader(true, 0);
+            if (rn < x1){                          // New arrival HFT
+                tr = new com.jakubrojcek.gpr2005a.Trader(true, 0);
                 ID = tr.getTraderID();
-                *//**//**//**//* if(book.removedTraders.contains(ID)){
+                 if(book.removedTraders.contains(ID)){
                      System.out.println("new Zombie HFT");
-                 }*//**//**//**//*
+                 }
                 //System.out.println("New arrival HFT ID: " + ID);
                 traders.put(ID, tr);
-                PriceOrder PO = tr.decision(book.getRank(ID), book.getBookSizes(), book.getBookInfo(),
+                com.jakubrojcek.PriceOrder PO = tr.decision(book.getRank(ID), book.getBookSizes(), book.getBookInfo(),
                         EventTime, FV);
                 if (PO != null){
                     book.transactionRule(PO.getPrice() , PO.getCurrentOrder());
@@ -484,15 +559,15 @@ public class TestComplete {
                     FVrealization = FprivateValues[2];
                 }
                 //System.out.println("FV realization = " + FVrealization);
-                tr = new Trader(false, FVrealization);
+                tr = new com.jakubrojcek.gpr2005a.Trader(false, FVrealization);
                 ID = tr.getTraderID();
-                *//**//**//**//* if(book.removedTraders.contains(ID)){
+                 if(book.removedTraders.contains(ID)){
                      System.out.println("new zombie nonHFT");
-                 }*//**//**//**//*
+                 }
 
                 //System.out.println("New arrival nonHFT ID: " + ID);
                 traders.put(ID, tr);
-                PriceOrder PO = tr.decision(book.getRank(ID), book.getBookSizes(), book.getBookInfo(),
+                com.jakubrojcek.PriceOrder PO = tr.decision(book.getRank(ID), book.getBookSizes(), book.getBookInfo(),
                         EventTime, FV);
 
                 if (PO != null){
@@ -501,10 +576,10 @@ public class TestComplete {
             } else if (rn < x3){                   // Returning HFT
                 ID = book.randomHFTtraderID();
                 //System.out.println("Returning HFT ID: " + ID);
-                *//**//**//**//* if(book.removedTraders.contains(ID)){
+                 if(book.removedTraders.contains(ID)){
                      System.out.println("old Zombie HFT");
-                 }*//**//**//**//*
-                PriceOrder PO = traders.get(ID).decision(book.getRank(ID), book.getBookSizes(), book.getBookInfo(),
+                 }
+                com.jakubrojcek.PriceOrder PO = traders.get(ID).decision(book.getRank(ID), book.getBookSizes(), book.getBookInfo(),
                         EventTime, FV);
                 if (PO != null){
                     book.transactionRule(PO.getPrice() , PO.getCurrentOrder());
@@ -514,11 +589,11 @@ public class TestComplete {
 
             } else if (rn < x4){                   // Returning nonHFT
                 ID = book.randomNonHFTtraderID();
-                *//**//**//**//*if(book.removedTraders.contains(ID)){
+                if(book.removedTraders.contains(ID)){
                     System.out.println("old Zombie nonHFT");
-                }*//**//**//**//*
+                }
                 //System.out.println("Returning nonHFT ID: " + ID);
-                PriceOrder PO = traders.get(ID).decision(book.getRank(ID), book.getBookSizes(), book.getBookInfo(),
+                com.jakubrojcek.PriceOrder PO = traders.get(ID).decision(book.getRank(ID), book.getBookSizes(), book.getBookInfo(),
                         EventTime, FV);
                 if (PO != null){
                     book.transactionRule(PO.getPrice() , PO.getCurrentOrder());
@@ -526,11 +601,11 @@ public class TestComplete {
                     book.tryCancel(ID);
                 }
 
-                *//**//**//**//* if (traders.containsKey(ID)){
+                 if (traders.containsKey(ID)){
                     if(book.book[PO.getPrice()].containsKey(ID) && traders.get(ID).getIsTraded()){
                         System.out.println("problem");
                     }
-                }*//**//**//**//*
+                }
             } else{                                // Change in FV
                 double rn3 = Math.random();
                 if (rn3 < FVplus){
@@ -542,22 +617,23 @@ public class TestComplete {
                     book.FVdown(FV, EventTime);
                     //System.out.println("down" + FV);
                 }
-            }*//**//*
-            *//**//*if (i % 1000 == 0) {
+            }
+            if (i % 1000 == 0) {
                 h.addStatisticsData(i, trader.getStatesCount());   // multiple payoffs count
                 trader.printDiagnostics();
                 trader.resetDiagnostics();
                 h.printStatisticsData(header, outputNameStatsData);
                 h.resetHistory();
-             }*//**//*
-        } // random events*//*          // events workflow
+             }
+        }*/ // random events          // events workflow
 
 
 
 
         double timeStamp2 = System.nanoTime();
-        System.out.println("running time = " + (timeStamp2 - timeStamp1)); */
+        System.out.println("running time = " + (timeStamp2 - timeStamp1));
 
     }
 
+}
 }

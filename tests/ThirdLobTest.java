@@ -1,3 +1,8 @@
+import com.jakubrojcek.gpr2005a.History;
+import com.jakubrojcek.gpr2005a.LOB_LinkedHashMap;
+import com.jakubrojcek.gpr2005a.SingleRun;
+import com.jakubrojcek.gpr2005a.Trader;
+
 import java.util.*;
 
 /**
@@ -136,11 +141,11 @@ public class ThirdLobTest {
                 outputNameTransactions, outputNameBookData);
 
         int nEvents = 1750000000;                 // number of events
-        boolean write = false;          // writeDecisions output in this SingleRun?
+        boolean write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
         boolean writeDiagnostics = true;// write diagnostics controls diagnostics
         boolean writeHistogram = false;
-        boolean purge = true;           // purge in this SingleRun?
-        boolean nReset = true;          // reset n in this SingleRun?
+        boolean purge = true;           // purge in this com.jakubrojcek.gpr2005a.SingleRun?
+        boolean nReset = true;          // reset n in this com.jakubrojcek.gpr2005a.SingleRun?
 
         double[] RunOutcome =
                 sr.run(nEvents, nHFT, NewNonHFT, EventTime, FV, write,
@@ -195,14 +200,14 @@ public class ThirdLobTest {
 
              double rn = Math.random();             // to determine event
              if (rn < x1){                          // New arrival HFT
-                 tr = new Trader(true, 0);
+                 tr = new com.jakubrojcek.gpr2005a.Trader(true, 0);
                  ID = tr.getTraderID();
                 *//* if(book.removedTraders.contains(ID)){
                      System.out.println("new Zombie HFT");
                  }*//*
                  //System.out.println("New arrival HFT ID: " + ID);
                  traders.put(ID, tr);
-                 PriceOrder PO = tr.decision(book.getRank(ID), book.getBookSizes(), book.getBookInfo(),
+                 com.jakubrojcek.PriceOrder PO = tr.decision(book.getRank(ID), book.getBookSizes(), book.getBookInfo(),
                          EventTime, FV);
                  if (PO != null){
                      book.transactionRule(PO.getPrice() , PO.getCurrentOrder());
@@ -218,7 +223,7 @@ public class ThirdLobTest {
                      FVrealization = FprivateValues[2];
                  }
                  //System.out.println("FV realization = " + FVrealization);
-                 tr = new Trader(false, FVrealization);
+                 tr = new com.jakubrojcek.gpr2005a.Trader(false, FVrealization);
                  ID = tr.getTraderID();
                 *//* if(book.removedTraders.contains(ID)){
                      System.out.println("new zombie nonHFT");
@@ -226,7 +231,7 @@ public class ThirdLobTest {
 
                  //System.out.println("New arrival nonHFT ID: " + ID);
                  traders.put(ID, tr);
-                 PriceOrder PO = tr.decision(book.getRank(ID), book.getBookSizes(), book.getBookInfo(),
+                 com.jakubrojcek.PriceOrder PO = tr.decision(book.getRank(ID), book.getBookSizes(), book.getBookInfo(),
                          EventTime, FV);
 
                  if (PO != null){
@@ -240,7 +245,7 @@ public class ThirdLobTest {
                      System.out.println("old Zombie HFT");
                  }*//*
 
-                 PriceOrder PO = traders.get(ID).decision(book.getRank(ID), book.getBookSizes(), book.getBookInfo(),
+                 com.jakubrojcek.PriceOrder PO = traders.get(ID).decision(book.getRank(ID), book.getBookSizes(), book.getBookInfo(),
                          EventTime, FV);
                  if (PO != null){
                      book.transactionRule(PO.getPrice() , PO.getCurrentOrder());
@@ -254,7 +259,7 @@ public class ThirdLobTest {
                      System.out.println("old Zombie nonHFT");
                  }*//*
                  //System.out.println("Returning nonHFT ID: " + ID);
-                 PriceOrder PO = traders.get(ID).decision(book.getRank(ID), book.getBookSizes(), book.getBookInfo(),
+                 com.jakubrojcek.PriceOrder PO = traders.get(ID).decision(book.getRank(ID), book.getBookSizes(), book.getBookInfo(),
                          EventTime, FV);
 
                  if (PO != null){
@@ -287,8 +292,8 @@ public class ThirdLobTest {
         }*/
         trader.printStatesDensity(EventTime); // occurrences of MPs now
         book.printBook();
-        System.out.println("Traders count in Trader " + Trader.TraderCount
-         +  " trade count " + Trader.tradeCount + " states count " + Trader.statesCount);
+        /*System.out.println("Traders count in com.jakubrojcek.gpr2005a.Trader " + Trader.TraderCount
+         +  " trade count " + Trader.tradeCount + " states count " + Trader.statesCount);*/
         double timeStamp2 = System.nanoTime();
         System.out.println("running time = " + (timeStamp2 - timeStamp1));
 

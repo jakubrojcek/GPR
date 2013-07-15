@@ -1,15 +1,11 @@
-import javafx.application.Application;
-import javafx.scene.Scene;
-import javafx.scene.chart.*;
-import javafx.scene.chart.CategoryAxis;
-import javafx.scene.chart.NumberAxis;
-import javafx.scene.chart.XYChart;
-import javafx.stage.Stage;
-import org.apache.commons.math3.distribution.NormalDistribution;
+import com.jakubrojcek.Belief;
+import com.jakubrojcek.gpr2005a.Payoff;
+import com.jakubrojcek.gpr2005a.GPR2005Payoff_test3;
+import com.jakubrojcek.gpr2005a.Trader;
+import com.jakubrojcek.Choices;
 
 
-import java.io.*;
-import java.util.*;   import org.apache.commons.math3.distribution.NormalDistribution;
+import java.util.*;
 
 /**
  * Created by IntelliJ IDEA.
@@ -20,7 +16,152 @@ import java.util.*;   import org.apache.commons.math3.distribution.NormalDistrib
  */
 public class Test_various {
     public static void main(String[] args) {
+        HashMap<String, ArrayList<Boolean>> TestResults = new HashMap<String,ArrayList<Boolean>>();
+        ArrayList<Boolean> FirstShare = new ArrayList<Boolean>();
+        ArrayList<Boolean> SecondShare = new ArrayList<Boolean>();
+        ArrayList<Boolean> Max = new ArrayList<Boolean>();
 
+        int [] BookSizes = {0,1,1,0,0,0,-3,0};
+        int [] BookInfo = {2, 6, 1, 3, 0, 0, 0, 0};
+        float privateValue = -0.0625f;
+        float pvGPR = 2.5f;
+        boolean u2t = true;
+        int units2trade = u2t ? 2 : 1;
+        float [] mu = new float[15];
+        float [] mu2 = new float[15];
+        float [] dV = new float[15];
+        float [] dV2 = new float[15];
+
+        HashMap<Integer, Integer> Actions = new HashMap<Integer, Integer>();
+        HashMap<Integer, ArrayList<Integer>> ActionsMy;
+        HashMap<Integer, ArrayList<Integer>> ActionsGPR;
+        // actions translations
+        Actions.put(-6, 5);  Actions.put(-5, 4);  Actions.put(-4, 3);  Actions.put(-3, 2);
+        Actions.put(-2, 1);  Actions.put(-1, 0);  Actions.put(0, 14);  Actions.put(1, 6);
+        Actions.put(2, 7);  Actions.put(3, 8);  Actions.put(4, 9);  Actions.put(5, 10);
+        Actions.put(6, 11);
+        //Actions.put(-BookInfo[0], 12); Actions.put(BookInfo[1],13);
+
+        // loading execution probabilities and deltas
+        HashMap<Integer, Double> muGPR = new HashMap<Integer, Double>();
+        HashMap<Integer, Double> mu2GPR = new HashMap<Integer, Double>();
+        HashMap<Integer, Double> dVGPR = new HashMap<Integer, Double>();
+        HashMap<Integer, Double> dV2GPR = new HashMap<Integer, Double>();
+        for(int i = 0; i < 15; i++){
+            mu[i] = (float) Math.random();
+            dV[i] = (float) Math.random();
+            if (i < 6){
+                dV[i] *= -1;
+                //dV2[i] *= -1;
+            }
+            mu2[i] = mu[i];
+            dV2[i] = dV[i];
+        }
+        //mu[12] = 1.0f; mu[13] = 1.0f; mu[14] = 1.0f;
+        for (int i = -6; i < 7; i++){
+            muGPR.put(i, 0.0);
+            mu2GPR.put(i, 0.0);
+            dVGPR.put(i, 0.0);
+            dV2GPR.put(i, 0.0);
+        }
+        Iterator it = Actions.keySet().iterator();
+        Integer actionGPR;
+        while (it.hasNext()){
+            actionGPR = (Integer) it.next();
+            muGPR.put(actionGPR, (double) mu[Actions.get(actionGPR)]);
+            dVGPR.put(actionGPR, (double) (dV[Actions.get(actionGPR)] * 8));
+            mu2GPR.put(actionGPR, (double) mu[Actions.get(actionGPR)]);
+            dV2GPR.put(actionGPR, (double) (dV[Actions.get(actionGPR)] * 8));
+        }
+
+        // Running choices and storing the Maximizing Actions
+        Choices ch = new Choices();
+        short [] MaxAction, MaxActionGPR;
+        // Computing best action of our implementation
+        MaxAction = ch.decision(BookSizes, BookInfo, mu, mu2, dV, dV2, privateValue, units2trade);
+        System.out.println();
+        MaxActionGPR = ch.GPRdecision(pvGPR, u2t, BookSizes, BookInfo, muGPR, dVGPR, mu2GPR, dV2GPR);
+        System.out.println();
+
+        // running tests
+
+        ActionsMy = ch.getActionsMy();
+        ActionsGPR = ch.getActionsGPR();
+        Integer actionGPR2;
+        ArrayList<Integer> ActionsJ;
+        ArrayList<Integer> ActionsGPR2Delete = new ArrayList<Integer>();
+        // action set test
+        /*Iterator it2 = ActionsGPR.keySet().iterator();
+        while (it2.hasNext()){
+            actionGPR = (Integer) it2.next();
+            if (ActionsMy.containsKey(Actions.get(actionGPR))){
+                ActionsMy.remove(Actions.get(actionGPR));
+                ActionsGPR2Delete.add(actionGPR);
+            }
+        }
+        for (Integer ac : ActionsGPR2Delete){
+            ActionsGPR.remove(ac);
+        }*/
+        //FirstShare.add(ActionsMy.isEmpty() && ActionsGPR.isEmpty());        // TODO: 2 regimes according to u2t
+        // max test
+        Max.add((ch.getMaxMy() * 8 < ch.getMaxGPR() + 0.001) && (ch.getMaxMy() * 8 > ch.getMaxGPR() - 0.001));
+        // Max actions test
+        actionGPR = (int) MaxActionGPR[0];
+        FirstShare.add(MaxAction[0] ==  Actions.get(actionGPR));
+
+        // testing Max action for second share
+        actionGPR = (int) MaxActionGPR[1];
+        SecondShare.add(MaxAction[1] == Actions.get(actionGPR));
+        for (int i = 0; i < units2trade; i++){
+            System.out.println(i + "'s action is " + MaxAction[i] + " my max: " + ch.getMaxMy());
+            System.out.println(i + "'s GPR action is " + MaxActionGPR[i] + " GPR max: " + ch.getMaxGPR());
+        }
+
+        TestResults.put("Max", Max);
+        TestResults.put("FirstShare", FirstShare);
+        TestResults.put("SecondShare", SecondShare);
+
+        Iterator it3 = TestResults.keySet().iterator();
+        while (it3.hasNext()){
+            String s = (String) it3.next();
+            int sz = TestResults.get(s).size();
+            for (int i = 0; i < sz; i ++){
+                System.out.println(s + " " + TestResults.get(s).get(i).toString());
+            }
+        }
+
+
+        /*double timeStamp1 = System.nanoTime();
+        for (int i = 0; i < 1000000; i++ ){
+            ch.decision(BookSizes, BookInfo, mu, mu2, dV, dV2, privateValue, units2trade);
+        }
+        double timeStamp2 = System.nanoTime();
+        System.out.println("time to run with my decision =  " + (timeStamp2 - timeStamp1));
+
+        for (int i = 0; i < 1000000; i++ ){
+            ch.GPRdecision(pvGPR, u2t, BookSizes, BookInfo, muGPR, dVGPR, mu2GPR, dV2GPR);
+        }
+        double timeStamp3 = System.nanoTime();
+        System.out.println("time to run with GPR decision =  " + (timeStamp3 - timeStamp2));*/
+
+        ch.printActions();
+        // Computing best action of GPR2005 implementation
+
+        /*Hashtable<Long, Payoff> payoffs = new Hashtable<Long, Payoff>();
+        long rn;
+        for (int i = 0; i < 10000000; i++){
+            GPR2005Payoff_test3 pay = new GPR2005Payoff_test3();
+            rn = (long) Math.random() * 10000000;
+            payoffs.put((long) rn, pay);
+        }
+
+        for (int i = 1; i < 10000000; i++){
+            rn = (long) Math.random() * 10000000;
+            System.out.println(payoffs.containsKey(rn));
+        }
+
+
+        System.out.println((5<<7));
         HashMap<Short, Float[]> hm = new HashMap<Short, Float[]>();
         Random random = new Random();
         Float[] f = {0.0f, 1.0f};
@@ -32,17 +173,22 @@ public class Test_various {
         int maxIndex;
         for (int i = 0; i < 100; i ++){
             List<Short> keys = new ArrayList<Short>(hm.keySet());
-            maxIndex = keys.get(random.nextInt(keys.size()));        // TODO: make sure
+            maxIndex = keys.get(random.nextInt(keys.size()));
             System.out.println(maxIndex);
         }
 
 
 
-        short action1 = 15;
-        short action2 = 15;
+        short action1 = (0<<4) + 0;
+        short action2 = (8<<4) + 0;
+        short[] q = new short[2];
         short sh = (short)((action1<<7) + action2);
-        action1 = (short)(sh>>7);
+        action1 = (short)((sh>>7));
+        q[0] = (short) (action1>>4);
         action2 = (short)(sh - (action1<<7));
+        q[1] = (short) (action2>>4);
+        action1 = (short) (action1 - (q[0]<<4));
+        action2 = (short) (action2 - (q[1]<<4));
         System.out.println(action1 + " " + action2);
 
         IdentityHashMap<Short, Belief[]> x = new IdentityHashMap<Short, Belief[]>();
@@ -53,7 +199,8 @@ public class Test_various {
         short oldAction = (short) 1;
         System.out.println(beliefs[0].getMu());
         Belief[] b = x.get(oldAction);
-        System.out.println((x.get(oldAction))[1].getMu());
+        System.out.println((x.get(oldAction))[1].getMu());*/
+
         /*float[] f = {4.3f, 4.3f, 4.3f, 4.3f, 4.3f, 4.3f, 4.3f, 4.3f, 4.3f, 4.3f,
                 4.3f, 4.3f, 4.3f, 4.3f, 4.3f, 4.3f, 4.3f, 4.3f, 4.3f, 4.3f,
                 4.3f, 4.3f, 4.3f, 4.3f, 4.3f, 4.3f, 4.3f, 4.3f, 4.3f};*//*
@@ -63,14 +210,14 @@ public class Test_various {
         //float[] f = {4.3f};
         //float f = 4.3f;
         //Float[] f = {4.3f, 4.3f};
-        testPayoff[] x = new testPayoff[30000000];
+        com.jakubrojcek.gpr2005a.testPayoff[] x = new com.jakubrojcek.gpr2005a.testPayoff[30000000];
         for (int i = 0; i < 30000000; i++){
             //Float f[] = {i*0.000001f};
             //Float f = i*0.000001f;
              Float [] f = {i*0.000001f, i*0.000001f, i*0.000001f, i*0.000001f, i*0.000001f, i*0.000001f, i*0.000001f, i*0.000001f, i*0.000001f, i*0.000001f,
                      i*0.000001f, i*0.000001f, i*0.000001f, i*0.000001f, i*0.000001f, i*0.000001f, i*0.000001f, i*0.000001f, i*0.000001f, i*0.000001f,
                      i*0.000002f, i*0.000002f, i*0.000002f, i*0.000002f, i*0.000002f, i*0.000002f, i*0.000002f, i*0.000002f, i*0.000002f};
-            x[i] = new testPayoff(f);
+            x[i] = new com.jakubrojcek.gpr2005a.testPayoff(f);
         }*/
 
 //        double timeStamp1 = System.currentTimeMillis();
@@ -143,22 +290,22 @@ public class Test_various {
 //        for (int i = 0 ; i < nP ; i++){
 //            Prices[i] = i;
 //        }
-//        History h = new History(); // create history
+//        com.jakubrojcek.gpr2005a.History h = new com.jakubrojcek.gpr2005a.History(); // create history
 //        // create map of traders
-//        HashMap<Integer, Trader> traders = new HashMap<Integer, Trader>();
+//        HashMap<Integer, com.jakubrojcek.gpr2005a.Trader> traders = new HashMap<Integer, com.jakubrojcek.gpr2005a.Trader>();
 //
-//        new Trader(tauB, tauS, nP, tickSize, ReturnFrequencyHFT, ReturnFrequencyNonHFT, Prices);
-//        LOB_LinkedHashMap book = new LOB_LinkedHashMap(FV, tickSize, nP ,h, traders);
+//        new com.jakubrojcek.gpr2005a.Trader(tauB, tauS, nP, tickSize, ReturnFrequencyHFT, ReturnFrequencyNonHFT, Prices);
+//        com.jakubrojcek.gpr2005a.LOB_LinkedHashMap book = new com.jakubrojcek.gpr2005a.LOB_LinkedHashMap(FV, tickSize, nP ,h, traders);
 //        // create book
 //        book.makeBook(Prices);
 //
 //        double EventTime = 0.0;
 //
 //        System.out.println("New arrival HFT");
-//        Trader tr = new Trader(true, 0);
+//        com.jakubrojcek.gpr2005a.Trader tr = new com.jakubrojcek.gpr2005a.Trader(true, 0);
 //        int ID = tr.getTraderID();
 //        traders.put(ID, tr);
-//        PriceOrder PO = tr.decision(book.getRank(ID), book.getBookSizes(), book.getBookInfo(), EventTime);
+//        com.jakubrojcek.PriceOrder PO = tr.decision(book.getRank(ID), book.getBookSizes(), book.getBookInfo(), EventTime);
 //        if (PO != null){
 //            book.transactionRule(PO.getPrice() , PO.getCurrentOrder());
 //        } else {book.addTrader(ID);}
@@ -168,7 +315,7 @@ public class Test_various {
 //        System.out.println("Change in the fundamental value to " + FV);
 //
 //        System.out.println("New arrival nonHFT");
-//        tr = new Trader(false, 4);
+//        tr = new com.jakubrojcek.gpr2005a.Trader(false, 4);
 //        ID = tr.getTraderID();
 //        traders.put(ID, tr);
 //        PO = tr.decision(book.getRank(ID), book.getBookSizes(), book.getBookInfo(), EventTime);
@@ -186,11 +333,11 @@ public class Test_various {
 //            book.transactionRule(PO.getPrice() , PO.getCurrentOrder());
 //        }
 //
-//        System.out.println("Seller Market Order new NonHFT arrival");
-//        tr = new Trader(false, -4);
+//        System.out.println("Seller Market com.jakubrojcek.Order new NonHFT arrival");
+//        tr = new com.jakubrojcek.gpr2005a.Trader(false, -4);
 //        ID = tr.getTraderID();
 //        traders.put(ID, tr);
-//        PO = new PriceOrder(25 , new Order(3, 1.0, false));
+//        PO = new com.jakubrojcek.PriceOrder(25 , new com.jakubrojcek.Order(3, 1.0, false));
 //        book.transactionRule(PO.getPrice(), PO.getCurrentOrder());
 //
 //        book.FVup(34);
@@ -245,46 +392,46 @@ public class Test_various {
 
         /*
         // order 1
-        Order o = new Order(0, System.currentTimeMillis(), true);
+        com.jakubrojcek.Order o = new com.jakubrojcek.Order(0, System.currentTimeMillis(), true);
         book.transactionRule(1, o, tb);
         book.decreasenBuyNew();
         book.printBook(tb);
         // order 2
-        Order o2 = new Order(3, System.currentTimeMillis(), true);
+        com.jakubrojcek.Order o2 = new com.jakubrojcek.Order(3, System.currentTimeMillis(), true);
         book.transactionRule(1, o2, tb);
         book.decreasenBuyNew();
         book.printBook(tb);
         // order 3
-        Order o3 = new Order(12, System.currentTimeMillis(), false);
+        com.jakubrojcek.Order o3 = new com.jakubrojcek.Order(12, System.currentTimeMillis(), false);
         book.transactionRule(1, o3, tb);
         book.decreasenSellNew();
         book.printBook(tb);
         // order 4
-        Order o4 = new Order(13, System.currentTimeMillis(), false);
+        com.jakubrojcek.Order o4 = new com.jakubrojcek.Order(13, System.currentTimeMillis(), false);
         book.transactionRule(5, o4, tb);
         book.decreasenSellNew();
         // print the book
         book.printBook(tb);
         System.out.println(book.randomNonHFTtraderID()+ " random guy");
         */
-       /* HashMap<Integer, Trader> traders = new HashMap<Integer, Trader>(); //trader ID, trader object
-        LinkedHashMap<Integer, Order_test>[] book = new LinkedHashMap[8];
-        book[1] = new LinkedHashMap<Integer, Order_test>();
-        book[2] = new LinkedHashMap<Integer, Order_test>();
+       /* HashMap<Integer, com.jakubrojcek.gpr2005a.Trader> traders = new HashMap<Integer, com.jakubrojcek.gpr2005a.Trader>(); //trader ID, trader object
+        LinkedHashMap<Integer, com.jakubrojcek.Order_test>[] book = new LinkedHashMap[8];
+        book[1] = new LinkedHashMap<Integer, com.jakubrojcek.Order_test>();
+        book[2] = new LinkedHashMap<Integer, com.jakubrojcek.Order_test>();
 
-        Trader tr1 = new Trader(false, 0.0f);   // buyer
-        Trader tr2 = new Trader(false, 0.5f);   // buyer
-        Trader tr3 = new Trader(false, -0.5f);  // seller
+        com.jakubrojcek.gpr2005a.Trader tr1 = new com.jakubrojcek.gpr2005a.Trader(false, 0.0f);   // buyer
+        com.jakubrojcek.gpr2005a.Trader tr2 = new com.jakubrojcek.gpr2005a.Trader(false, 0.5f);   // buyer
+        com.jakubrojcek.gpr2005a.Trader tr3 = new com.jakubrojcek.gpr2005a.Trader(false, -0.5f);  // seller
 
         traders.put(tr1.getTraderID(), tr1);
         traders.put(tr2.getTraderID(), tr2);
 
         // ID, time, buy, action, position
-        Order_test o1 = new Order_test(tr1.getTraderID(), 0.0, true, (short) 7, 1);
-        Order_test o2 = new Order_test(tr2.getTraderID(), 0.0, true, (short) 7, 1);
-        Order_test o3 = new Order_test(tr1.getTraderID(), 0.0, true, (short) 8, 2);
-        Order_test o4 = new Order_test(tr3.getTraderID(), 0.0, false, (short) 2, 1);
-        Order_test o5 = new Order_test(tr3.getTraderID(), 0.0, false, (short) 2, 1); // Big SMO
+        com.jakubrojcek.Order_test o1 = new com.jakubrojcek.Order_test(tr1.getTraderID(), 0.0, true, (short) 7, 1);
+        com.jakubrojcek.Order_test o2 = new com.jakubrojcek.Order_test(tr2.getTraderID(), 0.0, true, (short) 7, 1);
+        com.jakubrojcek.Order_test o3 = new com.jakubrojcek.Order_test(tr1.getTraderID(), 0.0, true, (short) 8, 2);
+        com.jakubrojcek.Order_test o4 = new com.jakubrojcek.Order_test(tr3.getTraderID(), 0.0, false, (short) 2, 1);
+        com.jakubrojcek.Order_test o5 = new com.jakubrojcek.Order_test(tr3.getTraderID(), 0.0, false, (short) 2, 1); // Big SMO
 
 
         // book and currentPosition insertion
@@ -303,12 +450,12 @@ public class Test_various {
         tempHM1 = new HashMap<Integer, Integer>(); tempSize2 = 0;
         tempSize2 = o2.isBuyOrder() ? ++tempSize2 : --tempSize2; tempHM1.put(1, tempSize2);
         CurrentPosition1.put(2, tempHM1);
-        System.out.println("Order identification: " + (o1 == book[1].get(book[1].keySet().iterator().next())));
+        System.out.println("com.jakubrojcek.Order identification: " + (o1 == book[1].get(book[1].keySet().iterator().next())));
 
         // execution and remove from book and currentPosition
         Integer pos = 1;
         if (book[pos].size() > 0 && book[pos].get(book[pos].keySet().iterator().next()).isBuyOrder()){
-            Order_test cp = book[pos].remove(book[1].keySet().iterator().next());
+            com.jakubrojcek.Order_test cp = book[pos].remove(book[1].keySet().iterator().next());
             Integer id = cp.getTraderID();
             System.out.println("Correct size at pos 1 for trader 1: " + (1 == CurrentPosition1.get(id).get(pos)));
             Integer tempInt = CurrentPosition1.get(id).get(pos);
@@ -321,7 +468,7 @@ public class Test_various {
 
         // comparing orders of returning traders
 
-        // random order for execution //TODO: will I need a list of Active orders here? No, over traders.keySet
+        // random order for execution
 
         // Transaction Rule complete with 1 order
 
@@ -331,19 +478,19 @@ public class Test_various {
         // Transaction Rule in general
 
         // Transaction Rule, new trader
-        book[1] = new LinkedHashMap<Integer, Order_test>();
-        book[2] = new LinkedHashMap<Integer, Order_test>();
+        book[1] = new LinkedHashMap<Integer, com.jakubrojcek.Order_test>();
+        book[2] = new LinkedHashMap<Integer, com.jakubrojcek.Order_test>();
         Hashtable<Integer, HashMap<Integer, Integer>> CurrentPosition =
                 new Hashtable<Integer, HashMap<Integer, Integer>>();
 
-        Order_test[] orders = {o1, o3};
+        com.jakubrojcek.Order_test[] orders = {o1, o3};
 
-        Integer id = 1;                   // TODO: add trader ID to the transaction rule
+        Integer id = 1;
         HashMap<Integer, Integer> tempHM = new HashMap<Integer, Integer>();
         Integer tempSize = 0;
         pos = null;
 
-        for (Order_test o:orders){
+        for (com.jakubrojcek.Order_test o:orders){
             if (pos == null || pos != o.getPosition()){
                 // put here tempSize to tempHM if not empty and position not null
                 if (pos != null && tempSize != 0) {tempHM.put(pos, tempSize);}
@@ -351,10 +498,10 @@ public class Test_various {
                 pos = o.getPosition();
             }
             if (book[pos].size() > 0 && !book[pos].get(book[pos].keySet().iterator().next()).isBuyOrder()){
-                Order_test cp = book[pos].remove(book[1].keySet().iterator().next());
+                com.jakubrojcek.Order_test cp = book[pos].remove(book[1].keySet().iterator().next());
                 id = cp.getTraderID();
                 Integer tempSizeCP = CurrentPosition.get(id).get(pos);
-                if (++tempSizeCP == 7){                               // TODO: check if this works
+                if (++tempSizeCP == 7){
                     CurrentPosition.get(id).remove(pos);
                 } else {
                     CurrentPosition.get(id).put(pos, tempSizeCP);
@@ -370,20 +517,20 @@ public class Test_various {
         if (tempSize != 0){tempHM.put(pos, tempSize);}
         if (!tempHM.isEmpty()){CurrentPosition.put(id, tempHM);}
         CurrentPosition.get(id).get(1);
-        //System.out.println("Order 1 removed : " + !CurrentPosition.get(id).get(1).contains(o1));
-        //System.out.println("Order 3 inside: " + CurrentPosition.get(id).get(pos).contains(o3));
+        //System.out.println("com.jakubrojcek.Order 1 removed : " + !CurrentPosition.get(id).get(1).contains(o1));
+        //System.out.println("com.jakubrojcek.Order 3 inside: " + CurrentPosition.get(id).get(pos).contains(o3));
         // expected outcome o1, o3 at pos = 1, CurrentPosition.put(trader), Traders.put(trader)
 
         // Transaction rule, execution and remove from book and currentPosition, as well as traders
-        orders = new Order_test[1];
+        orders = new com.jakubrojcek.Order_test[1];
         orders[0] = o2;
 
-        id = 2;                   // TODO: add trader ID to the transaction rule
+        id = 2;
         tempHM = new HashMap<Integer, Integer>();
         tempSize = 0;
         pos = null;
 
-        for (Order_test o:orders){
+        for (com.jakubrojcek.Order_test o:orders){
             if (pos == null || pos != o.getPosition()){
                 // put here tempSize to tempHM if not empty and position not null
                 if (pos != null && tempSize != 0) {tempHM.put(pos, tempSize);}
@@ -391,10 +538,10 @@ public class Test_various {
                 pos = o.getPosition();
             }
             if (book[pos].size() > 0 && !book[pos].get(book[pos].keySet().iterator().next()).isBuyOrder()){
-                Order_test cp = book[pos].remove(book[1].keySet().iterator().next());
+                com.jakubrojcek.Order_test cp = book[pos].remove(book[1].keySet().iterator().next());
                 id = cp.getTraderID();
                 Integer tempSizeCP = CurrentPosition.get(id).get(pos);
-                if (++tempSizeCP == 0){                               // TODO: check if this works
+                if (++tempSizeCP == 0){
                     CurrentPosition.get(id).remove(pos);
                 } else {
                     CurrentPosition.get(id).put(pos, tempSizeCP);
@@ -409,17 +556,17 @@ public class Test_various {
         }
         if (tempSize != 0){tempHM.put(pos, tempSize);}
         if (!tempHM.isEmpty()){CurrentPosition.put(id, tempHM);}
-        System.out.println("Order 2 inside: " + (CurrentPosition.get(id).get(pos) == 1));
+        System.out.println("com.jakubrojcek.Order 2 inside: " + (CurrentPosition.get(id).get(pos) == 1));
 
         // the execution of a large market order
-        orders = new Order_test[2];
+        orders = new com.jakubrojcek.Order_test[2];
         orders[0] = o4; orders[1] = o5;
         id = 3;
         tempHM = new HashMap<Integer, Integer>();
         tempSize = 0;
         pos = null;
 
-        for (Order_test o:orders){
+        for (com.jakubrojcek.Order_test o:orders){
             if (pos == null || pos != o.getPosition()){
                 // put here tempSize to tempHM if not empty and position not null
                 if (pos != null && tempSize != 0) {tempHM.put(pos, tempSize);}
@@ -427,16 +574,15 @@ public class Test_various {
                 pos = o.getPosition();
             }
             if (book[pos].size() > 0 && book[pos].get(book[pos].keySet().iterator().next()).isBuyOrder()){
-                Order_test cp = book[pos].remove(book[pos].keySet().iterator().next());
+                com.jakubrojcek.Order_test cp = book[pos].remove(book[pos].keySet().iterator().next());
                 Integer CPid = cp.getTraderID();
                 Integer tempSizeCP = CurrentPosition.get(CPid).get(pos);
-                if (--tempSizeCP == 0){                               // TODO: check if this works
+                if (--tempSizeCP == 0){
                     CurrentPosition.get(CPid).remove(pos);
                     if (CurrentPosition.get(CPid).isEmpty()){CurrentPosition.remove(CPid);}
                 } else {
                     CurrentPosition.get(CPid).put(pos, tempSizeCP);
                 }
-                // TODO: history, trader.execution, Pt and b store
             } else if (pos == 0){      // if SMO executed against fringe, just continue
 
             }
@@ -450,31 +596,29 @@ public class Test_various {
 
 
 
-        // TODO: remove LO counterparty trader if execution returns true (true if traded_shares == shares2trade)
-        // TODO  remove LO MO current trader if traders.get(id).isTraded == true at the end of transactionRule, also delete his CurrentPosition entry (test: check if CP.get(trader).isEmpty)
 
         // Returning trader, has one buy order, wants to at the same pos
-        Order_test o6 = new Order_test(tr1.getTraderID(), 0.0, true, (short) 8, 2);
-        Order_test o7 = new Order_test(tr1.getTraderID(), 0.0, true, (short) 8, 2);
-        ArrayList<Order_test> Orders = new ArrayList<Order_test>();
+        com.jakubrojcek.Order_test o6 = new com.jakubrojcek.Order_test(tr1.getTraderID(), 0.0, true, (short) 8, 2);
+        com.jakubrojcek.Order_test o7 = new com.jakubrojcek.Order_test(tr1.getTraderID(), 0.0, true, (short) 8, 2);
+        ArrayList<com.jakubrojcek.Order_test> Orders = new ArrayList<com.jakubrojcek.Order_test>();
         Orders.add(o6); Orders.add(o7);
 
         Integer OrderID = 1;
-        id = o6.getTraderID();                   // TODO: add trader ID to the transaction rule
+        id = o6.getTraderID();
         pos = null;
-        ArrayList<Order_test> Orders2Remove = new ArrayList<Order_test>();
+        ArrayList<com.jakubrojcek.Order_test> Orders2Remove = new ArrayList<com.jakubrojcek.Order_test>();
         if (CurrentPosition.containsKey(id)){                   // returning trader
             Integer sizeLeft = null;
-            for (Order_test o : Orders){
+            for (com.jakubrojcek.Order_test o : Orders){
                 if (pos == null || pos != o.getPosition()){     // position changes here
                     pos = o.getPosition();
                     sizeLeft = null;
                 }
-                if (CurrentPosition.get(id).containsKey(pos)){  // TODO: pos - positionShift
+                if (CurrentPosition.get(id).containsKey(pos)){
                     boolean buy = false;
                     if (sizeLeft == null){                      // changed position
                         sizeLeft = CurrentPosition.get(id).get(pos);
-                        buy = (sizeLeft > 0);                   // TODO: what if he wants b/s at the same position????
+                        buy = (sizeLeft > 0);
                     }
                     if (buy == o.isBuyOrder() || sizeLeft == 0){// sizeLeft == 0 bcz buy is false then
                         if (sizeLeft != 0){
@@ -482,7 +626,7 @@ public class Test_various {
                             Orders2Remove.add(o);
                         }
                     } else {
-                        CurrentPosition.get(id).remove(pos);    // TODO: you also need to remove orders at the position from the book
+                        CurrentPosition.get(id).remove(pos);
                         if (CurrentPosition.get(id).isEmpty()){
                             CurrentPosition.remove(id);
                         }
@@ -490,11 +634,10 @@ public class Test_various {
                 }
                 // not in CurrentPosition, don't touch orders
             }
-            for (Order_test o : Orders2Remove){
+            for (com.jakubrojcek.Order_test o : Orders2Remove){
                 Orders.remove(o);
             }
         }
-        // TODO: in "GPR2009" have active traders (in traders), in "GPR2005" have active orders (values at all book positions)
 
         if (CurrentPosition.containsKey(id)){
             tempHM = CurrentPosition.get(id);
@@ -504,25 +647,25 @@ public class Test_various {
         tempSize = 0;
         pos = null;
 
-        for (Order_test o:Orders){
+        for (com.jakubrojcek.Order_test o:Orders){
             if (pos == null || pos != o.getPosition()){
                 // put here tempSize to tempHM if not empty and position not null
                 if (pos != null && tempSize != 0) {tempHM.put(pos, tempSize);}
                 pos = o.getPosition();
-                tempSize = tempHM.containsKey(pos) ? tempHM.get(pos)        // TODO: pos - positionShift
+                tempSize = tempHM.containsKey(pos) ? tempHM.get(pos)
                                                    : 0;
             }
             if (book[pos].size() > 0 && !book[pos].get(book[pos].keySet().iterator().next()).isBuyOrder()){
-                Order_test cp = book[pos].remove(book[pos].keySet().iterator().next());
+                com.jakubrojcek.Order_test cp = book[pos].remove(book[pos].keySet().iterator().next());
                 Integer CPid = cp.getTraderID();
                 Integer tempSizeCP = CurrentPosition.get(CPid).get(pos);
-                if (++tempSizeCP == 0){                               // TODO: check if this works
+                if (++tempSizeCP == 0){
                     CurrentPosition.get(CPid).remove(pos);
                     if (CurrentPosition.get(CPid).isEmpty()){CurrentPosition.remove(CPid);}
                 } else {
                     CurrentPosition.get(CPid).put(pos, tempSizeCP);
                 }
-                // TODO: history, trader.execution, Pt and b store
+
             } else if (pos == 7){      // if SMO executed against fringe, just continue
 
             }
@@ -532,23 +675,23 @@ public class Test_various {
                 book[pos].put(OrderID,o);   // put some key number here
             }
         }
-        if (tempSize != 0){tempHM.put(pos, tempSize);}                 // TODO: + positionShift
+        if (tempSize != 0){tempHM.put(pos, tempSize);}
         if (!tempHM.isEmpty()){CurrentPosition.put(id, tempHM);}
         // Returning trader, has 2 buy orders, wants one
-        Order_test o8 = new Order_test(tr1.getTraderID(), 0.0, true, (short) 8, 2);
-        Orders = new ArrayList<Order_test>();
+        com.jakubrojcek.Order_test o8 = new com.jakubrojcek.Order_test(tr1.getTraderID(), 0.0, true, (short) 8, 2);
+        Orders = new ArrayList<com.jakubrojcek.Order_test>();
         Orders.add(o8);
 
-        id = o8.getTraderID(); // TODO: add trader ID to the transaction rule
+        id = o8.getTraderID();
         pos = null;
-        Orders2Remove = new ArrayList<Order_test>();    // these orders are not necessary in transaction rule
+        Orders2Remove = new ArrayList<com.jakubrojcek.Order_test>();    // these orders are not necessary in transaction rule
         if (CurrentPosition.containsKey(id)){           // returning trader
             Integer sizeLeft = null;
             boolean buy = false;
-            for (Order_test o : Orders){
+            for (com.jakubrojcek.Order_test o : Orders){
                 if (pos == null || pos != o.getPosition()){ // position changes here
                     if (sizeLeft != null && Math.abs(sizeLeft) > 0){ // deleting unnecessary current orders
-                        CurrentPosition.get(id).put(pos, CurrentPosition.get(id).get(pos) - sizeLeft); // TODO: take this outside with number of orders to delete at each position, for opposite direction- the same = outside
+                        CurrentPosition.get(id).put(pos, CurrentPosition.get(id).get(pos) - sizeLeft);
                         int sz = Math.abs(sizeLeft);
                         for (int i = 0; i < sz; i++){
                             ListIterator<Integer> iter =
@@ -562,11 +705,11 @@ public class Test_various {
                     pos = o.getPosition();
                     sizeLeft = null;
                 }
-                if (CurrentPosition.get(id).containsKey(pos)){ // TODO: pos - positionShift
+                if (CurrentPosition.get(id).containsKey(pos)){ /
                     buy = false;
                     if (sizeLeft == null){ // changed position
                         sizeLeft = CurrentPosition.get(id).get(pos);
-                        buy = (sizeLeft > 0); // TODO: what if he wants b/s at the same position????
+                        buy = (sizeLeft > 0);
                     }
                     if (buy == o.isBuyOrder() || sizeLeft == 0){// sizeLeft == 0 bcz buy is false then
                         if (sizeLeft != 0){
@@ -574,7 +717,7 @@ public class Test_various {
                             Orders2Remove.add(o);
                         }
                     } else {
-                        CurrentPosition.get(id).remove(pos); // TODO: you also need to remove orders at the position from the book
+                        CurrentPosition.get(id).remove(pos);
                         if (CurrentPosition.get(id).isEmpty()){
                             CurrentPosition.remove(id);
                         }
@@ -582,11 +725,10 @@ public class Test_various {
                 }
                 // not in CurrentPosition, don't touch orders
             }
-            for (Order_test o : Orders2Remove){
+            for (com.jakubrojcek.Order_test o : Orders2Remove){
                 Orders.remove(o);
             }
         }
-        // TODO: in "GPR2009" have active traders (in traders), in "GPR2005" have active orders (values at all book positions)
 
         if (CurrentPosition.containsKey(id)){
             tempHM = CurrentPosition.get(id);
@@ -596,25 +738,25 @@ public class Test_various {
         tempSize = 0;
         pos = null;
 
-        for (Order_test o:Orders){
+        for (com.jakubrojcek.Order_test o:Orders){
             if (pos == null || pos != o.getPosition()){
                 // put here tempSize to tempHM if not empty and position not null
                 if (pos != null && tempSize != 0) {tempHM.put(pos, tempSize);}
                 pos = o.getPosition();
-                tempSize = tempHM.containsKey(pos) ? tempHM.get(pos)        // TODO: pos - positionShift
+                tempSize = tempHM.containsKey(pos) ? tempHM.get(pos)
                         : 0;
             }
             if (book[pos].size() > 0 && !book[pos].get(book[pos].keySet().iterator().next()).isBuyOrder()){
-                Order_test cp = book[pos].remove(book[pos].keySet().iterator().next());
+                com.jakubrojcek.Order_test cp = book[pos].remove(book[pos].keySet().iterator().next());
                 Integer CPid = cp.getTraderID();
                 Integer tempSizeCP = CurrentPosition.get(CPid).get(pos);
-                if (++tempSizeCP == 0){                               // TODO: check if this works
+                if (++tempSizeCP == 0){
                     CurrentPosition.get(CPid).remove(pos);
                     if (CurrentPosition.get(CPid).isEmpty()){CurrentPosition.remove(CPid);}
                 } else {
                     CurrentPosition.get(CPid).put(pos, tempSizeCP);
                 }
-                // TODO: history, trader.execution, Pt and b store
+
             } else if (pos == 7){      // if SMO executed against fringe, just continue
 
             }
@@ -624,7 +766,7 @@ public class Test_various {
                 book[pos].put(OrderID,o);   // put some key number here
             }
         }
-        if (tempSize != 0){tempHM.put(pos, tempSize);}                 // TODO: + positionShift
+        if (tempSize != 0){tempHM.put(pos, tempSize);}
         if (!tempHM.isEmpty()){CurrentPosition.put(id, tempHM);}
 
 
