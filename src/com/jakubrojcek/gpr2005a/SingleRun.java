@@ -95,7 +95,7 @@ public class SingleRun {
                 EventTime += 0.000000001;
                 // 1. new trader
                 double rnHFT = 0.0;//Math.random();
-                double rnU2T = 0.0;//Math.random();
+                double rnU2T = Math.random();
                 privateValue = 0.0f;
                 boolean HFT = true;
                 u2t = 1;
@@ -143,7 +143,7 @@ public class SingleRun {
                 }
                 book.removeOrders(orders2remove);
                 // 5. innovation of fundamental value
-                double rn3 = 1.0;//Math.random();
+                double rn3 = Math.random();
                 if (rn3 < FVplus * 0.08){
                     FV = FV + sigma * tickSize;
                     book.FVup(FV, EventTime, (int) sigma);

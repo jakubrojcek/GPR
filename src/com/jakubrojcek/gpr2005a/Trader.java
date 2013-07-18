@@ -466,7 +466,7 @@ public class Trader {
                         mu2 = MuDv2.get("mu");
                         dV2 = MuDv2.get("dv");
                     }
-                    for (j = c; j < a; j++){
+                    for (j = c; j < a; j++){                         // TODO: going until < end trying out GPR error
                         p2 = -1.0f;     // TODO: fine here?
                         q2 = 0;
                         if (j < end){
@@ -529,7 +529,7 @@ public class Trader {
                     }
                     p2 = -1.0f;
                     q2 = 0;
-                    for (j = b; j < c; j++){
+                    for (j = b; j < c; j++){    // TODO: trying match GPR here j = b to j = end
                         if (j < end){
                             if ((j + LL) != BookInfo[1]){
                                 q2 = (short) Math.min(- BsNew[j + LL], maxDepth);
@@ -639,6 +639,7 @@ public class Trader {
                     }
                     j = (short) (2 * end + 2);                  // NO and NO
                     p2 = 0.0f;
+                    q2 = 0;
                     //System.out.println(i+ "" + j);
                     if ((p1 + p2) > max){
                         max = p1 + p2;
@@ -917,6 +918,7 @@ public class Trader {
         orders = new ArrayList<Order>();
         byte outstanding = units2trade;
         boolean firstShare;
+        boolean notFringeMO = true;
         for (int i = 0; i < units2trade; i++){
             buyOrder = false;
             firstShare = false;
@@ -929,16 +931,20 @@ public class Trader {
                 pricePosition = BookInfo[0];
                 buyOrder = false;
                 outstanding--;
+                if (BookInfo[0] == 0){notFringeMO = false;}
             } else if (MaxAction[i] == 2 * end + 1){                                  // position is Ask
                 pricePosition = BookInfo[1];
                 outstanding--;
+                if (BookInfo[1] == (nP - 1)){notFringeMO = false;}
             } else if (MaxAction[i] == 2 * end + 3){                                  // position is second Bid
                 pricePosition = B2t;
                 buyOrder = false;
                 outstanding--;
+                if (B2t == 0){notFringeMO = false;}
             } else if (MaxAction[i] == 2 * end + 4){                                  // position is second Ask
                 pricePosition = A2t;
                 outstanding--;
+                if (A2t == (nP - 1)){notFringeMO = false;}
             }
             if (i == 0){
                 firstShare = true;
@@ -954,7 +960,7 @@ public class Trader {
         //MaxAction[0] = 17;
         if (writeDiagnostics){writeDiagnostics(diff, MaxAction);}
         units2trade = outstanding;
-        if (writeDecisions){writeDecision(BookInfo, BookSizes, MaxAction);}
+        if (writeDecisions && notFringeMO){writeDecision(BookInfo, BookSizes, MaxAction);}
         if (writeHistogram){writeHistogram(BookSizes);}
         //System.out.println("action = " + action);
                 /*System.out.println("action = " + action + " pricePosition = " + pricePosition
