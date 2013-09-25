@@ -16,10 +16,10 @@ public class Payoff {
     static float rho;                      // discount rate
     static int nPayoffs;                   // size of payoff vectors
     static byte nReset;                    // nReset-> resets n to specific value for "forced learning"
-    static short nResetMax = 32767;        // nReset-> resets n to specific value for "forced learning" 32767 is max short
-    static int dof = 0;                    // degrees of freedom for chi^2 TODO: delete afterwards
-    static Float[][] mu0;
-    static Float[][] deltaV0;
+    static int nResetMax = 2147000000;        // nReset-> resets n to specific value for "forced learning" 32767 is max short
+    static int dof = 0;                    // degrees of freedom for chi^2
+    static Double[][] mu0;
+    static Double[][] deltaV0;
     static int end;
     static int LL;
     static int maxDepth;
@@ -59,7 +59,7 @@ public class Payoff {
         dof = i;
     }
 
-    public void setInitialBeliefs(Float[][] mu, Float[][] deltaV){
+    public void setInitialBeliefs(Double[][] mu, Double[][] deltaV){
         mu0 = mu;
         deltaV0 = deltaV;
     }

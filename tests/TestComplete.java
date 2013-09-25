@@ -203,7 +203,7 @@ public class TestComplete {
         /*float[] pay = {4.3f, 4.3f, 4.3f, 4.3f, 4.3f, 4.3f, 4.3f, 4.3f, 4.3f, 4.3f,
                 4.3f, 4.3f, 4.3f, 4.3f, 4.3f, 4.3f, 4.3f};
         short b = (short) Math.max(BookInfo[0] - LL + 1, 0);             // + 1 in order to start from one above B
-        b = (short) Math.min(end, b); // TODO: test this change
+        b = (short) Math.min(end, b);
         short a = (short) Math.min(BookInfo[1] - LL + end, 2 * end);
         a = (short) Math.max(end, a);
         for(short i = b; i < a; i++){            // searching for best payoff and not marketable LO

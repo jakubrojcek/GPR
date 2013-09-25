@@ -8,25 +8,27 @@ package com.jakubrojcek;
  * To change this template use File | Settings | File Templates.
  */
 public class Belief {
-    private short n;
-    private float mu;
-    private float deltaV;
+    private int n = 0;                // number of times updated
+    private int ne;               // number of times executed
+    private double mu;               // execution probability
+    private double deltaV;           // expected change in FV upon execution
+    private double diff;             // difference of new vs old execution probability
 
-    public Belief(short n, float mu, float deltaV) {
+    public Belief(short n, double mu, double deltaV) {
         this.n = n;
         this.mu = mu;
         this.deltaV = deltaV;
     }
 
-    public short getN() {
+    public int getN() {
         return n;
     }
 
-    public float getMu() {
+    public double getMu() {
         return mu;
     }
 
-    public float getDeltaV() {
+    public double getDeltaV() {
         return deltaV;
     }
 
@@ -42,7 +44,28 @@ public class Belief {
         this.deltaV = deltaV;
     }
 
+    public void setDiff(float diff) {
+        this.diff = diff;
+    }
+
+    public double getDiff() {
+
+        return diff;
+    }
+
+    public void setNe(short ne) {
+        this.ne = ne;
+    }
+
+    public int getNe() {
+        return ne;
+    }
+
     public void increaseN(){
         n++;
+    }
+
+    public void increaseNe(){
+        ne++;
     }
 }

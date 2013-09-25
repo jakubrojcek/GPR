@@ -22,7 +22,7 @@ public class GPR2005Payoff extends Payoff {
 
     public GPR2005Payoff(float[] payoffs, int Bid, int Ask) {
         short b = (short) Math.max(Bid + 1, 0);             // + 1 in order to start from one above B
-        b = (short) Math.min(Payoff.end, b); // TODO: test this change
+        b = (short) Math.min(Payoff.end, b);
         short a = (short) Math.min(Ask + Payoff.end, 2 * Payoff.end);
         a = (short) Math.max(Payoff.end, a);
         max = payoffs[b];
@@ -82,14 +82,14 @@ public class GPR2005Payoff extends Payoff {
             max = payoffs[maxIndex];
         }
         if(!x1.containsKey(maxIndex)){
-           // x1.put(maxIndex, new com.jakubrojcek.Belief((short) 1, mu0[maxIndex], deltaV0[maxIndex]));   // TODO: this part works?
+           // x1.put(maxIndex, new com.jakubrojcek.Belief((short) 1, mu0[maxIndex], deltaV0[maxIndex]));
         } else if(x1.get(maxIndex).getN() < Payoff.nResetMax) {
             x1.get(maxIndex).increaseN();
         }
         //System.out.println("updating here");
     }
 
-    public void update(short oldAction, float realDelta, boolean cancelled){   // TODO: this part works?
+    public void update(short oldAction, float realDelta, boolean cancelled){
         double alpha = (1.0/(1 + x1.get(oldAction).getN()));  // updating factor
         double previousMu = x1.get(oldAction).getMu();
         //double previousDeltaV = x1.get(oldAction).getDeltaV();

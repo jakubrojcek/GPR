@@ -16,7 +16,26 @@ import java.util.*;
  */
 public class Test_various {
     public static void main(String[] args) {
-        HashMap<String, ArrayList<Boolean>> TestResults = new HashMap<String,ArrayList<Boolean>>();
+        int [] BS = {0,1,1,0,0,0,-3,0};
+        int [] BsNew = new int[8];
+        System.arraycopy(BS, 0, BsNew, 0, 8);
+        for (int i = 1; i < (8 - 1); i++){
+            BsNew[i] = -BS[8 - 1 - i];
+        }
+
+
+        /*HashMap<Long, Payoff> Payoffs = new HashMap<Long, Payoff>();
+        GPR2005Payoff_test3 pay1 = new GPR2005Payoff_test3();
+        Payoffs.put((long) 1, pay1);
+        pay1.updateMax((short) 1, (short) 2, 0.5f, -1.0f);
+        GPR2005Payoff_test3 pay2temp;
+        pay2temp = (GPR2005Payoff_test3)Payoffs.get((long)1);
+        System.out.println(pay2temp.getX().size() + ": should be 1");
+        pay2temp = new GPR2005Payoff_test3();
+        System.out.println("should be 1 as well: " +
+                ((GPR2005Payoff_test3) Payoffs.get((long)1)).getX().size()
+                + " and this one should be 0: " + pay2temp.getX().size());*/
+        /*HashMap<String, ArrayList<Boolean>> TestResults = new HashMap<String,ArrayList<Boolean>>();
         ArrayList<Boolean> FirstShare = new ArrayList<Boolean>();
         ArrayList<Boolean> SecondShare = new ArrayList<Boolean>();
         ArrayList<Boolean> Max = new ArrayList<Boolean>();
@@ -91,7 +110,7 @@ public class Test_various {
         ArrayList<Integer> ActionsJ;
         ArrayList<Integer> ActionsGPR2Delete = new ArrayList<Integer>();
         // action set test
-        /*Iterator it2 = ActionsGPR.keySet().iterator();
+        *//*Iterator it2 = ActionsGPR.keySet().iterator();
         while (it2.hasNext()){
             actionGPR = (Integer) it2.next();
             if (ActionsMy.containsKey(Actions.get(actionGPR))){
@@ -101,8 +120,8 @@ public class Test_various {
         }
         for (Integer ac : ActionsGPR2Delete){
             ActionsGPR.remove(ac);
-        }*/
-        //FirstShare.add(ActionsMy.isEmpty() && ActionsGPR.isEmpty());        // TODO: 2 regimes according to u2t
+        }*//*
+        //FirstShare.add(ActionsMy.isEmpty() && ActionsGPR.isEmpty());
         // max test
         Max.add((ch.getMaxMy() * 8 < ch.getMaxGPR() + 0.001) && (ch.getMaxMy() * 8 > ch.getMaxGPR() - 0.001));
         // Max actions test
@@ -131,7 +150,7 @@ public class Test_various {
         }
 
 
-        /*double timeStamp1 = System.nanoTime();
+        *//*double timeStamp1 = System.nanoTime();
         for (int i = 0; i < 1000000; i++ ){
             ch.decision(BookSizes, BookInfo, mu, mu2, dV, dV2, privateValue, units2trade);
         }
@@ -142,9 +161,9 @@ public class Test_various {
             ch.GPRdecision(pvGPR, u2t, BookSizes, BookInfo, muGPR, dVGPR, mu2GPR, dV2GPR);
         }
         double timeStamp3 = System.nanoTime();
-        System.out.println("time to run with GPR decision =  " + (timeStamp3 - timeStamp2));*/
+        System.out.println("time to run with GPR decision =  " + (timeStamp3 - timeStamp2));*//*
 
-        ch.printActions();
+        ch.printActions();*/
         // Computing best action of GPR2005 implementation
 
         /*Hashtable<Long, Payoff> payoffs = new Hashtable<Long, Payoff>();

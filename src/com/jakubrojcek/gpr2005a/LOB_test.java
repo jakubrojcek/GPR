@@ -167,7 +167,7 @@ public class LOB_test {
             book[i] = book[i + tickChange];
         }
 
-        for (int i = tickChange; i > 0; i--){ // TODO: put positionShift change at the end
+        for (int i = tickChange; i > 0; i--){
             book[nPoints - i] = new LinkedHashMap();
             System.arraycopy(Prices, 1, Prices, 0, nPoints - 1);
             Prices[nPoints - 1] = Prices[nPoints - 2] + tickSize;
@@ -193,7 +193,7 @@ public class LOB_test {
                             //traders.get(traderID).execution(fv, o);
                         } else {traders.get(traderID).execution(fv, et);}
                         int tempSizeCP = CurrentPosition.get(traderID).get(i + positionShift);
-                        if (--tempSizeCP == 0){                               // TODO: check if this works
+                        if (--tempSizeCP == 0){
                             CurrentPosition.get(traderID).remove(i + positionShift);
                             if (CurrentPosition.get(traderID).isEmpty()){
                                 CurrentPosition.remove(traderID);
@@ -219,7 +219,7 @@ public class LOB_test {
                     //traders.get(traderID).cancel();
                 }
                 int tempSizeCP = CurrentPosition.get(traderID).get(i + positionShift);
-                if (++tempSizeCP == 0){                               // TODO: check if this works
+                if (++tempSizeCP == 0){
                     CurrentPosition.get(traderID).remove(i + positionShift);
                     if (CurrentPosition.get(traderID).isEmpty()){
                         CurrentPosition.remove(traderID);
@@ -420,7 +420,7 @@ public class LOB_test {
     }
 
     public void tryCancel(int id){   // if order is null after returning, see if there's sth to cancel
-        /*if(CurrentPosition.containsKey(id)){        // TODO: has to go over all positions from CP
+        /*if(CurrentPosition.containsKey(id)){
             Integer oldPos = CurrentPosition.get(id) - positionShift;
             book[oldPos].remove(id);
         }*/
@@ -429,7 +429,7 @@ public class LOB_test {
 
     public boolean isBuyOrder(int id){
         boolean isBuy = false;
-        /*if(CurrentPosition.containsKey(id)){                         // TODO: implement on per order basis
+        /*if(CurrentPosition.containsKey(id)){
             Integer oldPos = CurrentPosition.get(id) - positionShift;
             isBuy = book[oldPos].get(id).isBuyOrder();
         }*/

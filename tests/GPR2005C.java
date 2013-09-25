@@ -1,8 +1,8 @@
 
-import com.jakubrojcek.gpr2005a.History;
-import com.jakubrojcek.gpr2005a.LOB_LinkedHashMap;
-import com.jakubrojcek.gpr2005a.SingleRun;
-import com.jakubrojcek.gpr2005a.Trader;
+import com.jakubrojcek.gpr2005C.History;
+import com.jakubrojcek.gpr2005C.LOB_LinkedHashMap;
+import com.jakubrojcek.gpr2005C.SingleRun;
+import com.jakubrojcek.gpr2005C.Trader;
 
 import java.util.HashMap;
 
@@ -13,7 +13,7 @@ import java.util.HashMap;
  * Time: 10:48
  * To change this template use File | Settings | File Templates.
  */
-public class ReducedStatesTest {
+public class GPR2005C {
     public static void main(String[] args) {
         /* categories of traders: fast, slow, private value: negative, zero, positive
   that means 4 categories of traders. Fast have zero PV */
@@ -30,10 +30,11 @@ public class ReducedStatesTest {
 
         double privateValueStdev = 0.35;        // standard deviation of normal distribution of private valus GPR 2005, 0.35 in base case
         float deltaLow = 0.04f;                 // minimum cancellation probability GPR 2005
+        //String folder = "D:\\_paper1 HFT, MM, rebates and market quality\\Matlab Analysis\\GPR2005C\\";
         String folder = "D:\\_paper1 HFT, MM, rebates and market quality\\Matlab Analysis\\";
-        String model = "GPR2005";
-
-
+        String model = "GPR2005C";
+        double pvSTDgpr = 2.8;                  // standard deviation of pv in GPR case in ticks
+        double pvMUgpr = 2.5;                   // mean value of pv in GPR case in ticks
 
         int infoSize = 5;                       // 2-bid, ask, 5- GPR 2005, 6-depth at bid,ask, 8-depth off bid,ask
         byte nP = 8;                           // number of prices tracked by the book, 8 in the base case, 6/11 in tick size experiment
@@ -77,7 +78,8 @@ public class ReducedStatesTest {
         for (int i = 0 ; i < nP ; i++){
             Prices[i] = i * tickSize;
         }
-        FV = Prices[FVpos];
+        //FV = Prices[FVpos];
+        FV = pvMUgpr;                 // TODO: use this in the GPR case
 
         double[] tauB = new double[end];
         /* expected time until the arrival of a new buyer for whom trading on
@@ -139,7 +141,9 @@ public class ReducedStatesTest {
 
         Trader trader = new Trader(infoSize, tauB, tauS, nP, FVpos, tickSize, ReturnFrequencyHFT,
                 ReturnFrequencyNonHFT, LL, HL, end, maxDepth, breakPoint, hti, prTremble, folder);
-        trader.computeInitialBeliefs(deltaLow, privateValueMean, privateValueStdev);
+        if (model == "GPR2005" || model == "GPR2005C"){
+            trader.computeInitialBeliefs(deltaLow, privateValueMean, privateValueStdev);
+        }
         LOB_LinkedHashMap book = new LOB_LinkedHashMap(model, FV, FVpos, maxDepth, end, tickSize, nP, h, traders);
         // create book
         book.makeBook(Prices);
@@ -147,12 +151,12 @@ public class ReducedStatesTest {
         int NewNonHFT = nNegativeNonHFT + nPositiveNonHFT + nZeroNonHFT;
 
         SingleRun sr = new SingleRun(model, lambdaArrival, ReturnFrequencyHFT, ReturnFrequencyNonHFT,
-                FprivateValues, privateValueMean, privateValueStdev, deltaLow, sigma, tickSize, FVplus, header, book, traders, h, trader, outputNameStatsData,
+                FprivateValues, pvMUgpr, pvSTDgpr, deltaLow, sigma, tickSize, FVplus, header, book, traders, h, trader, outputNameStatsData,
                 outputNameTransactions, outputNameBookData);
-        trader.setSimilar(true);
-        trader.setSymm(true);
+        trader.setSimilar(false);
+        trader.setSymm(false);
         // getting to equilibrium ballpark
-        int nEvents = 300000000;         // number of events
+        int nEvents = 50000000;         // number of events
         boolean write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
         boolean writeDiagnostics = true;// write diagnostics controls diagnostics
         boolean writeHistogram = false; // write histogram
@@ -172,92 +176,87 @@ public class ReducedStatesTest {
         //trader.printStatesDensity(EventTime); // occurrences of MPs now
         //trader.printHistogram();
 
-        for (int k = 0; k < 3; k++){
-            trader.setFixedBeliefs(false);
-            nEvents = 20000000;         // number of events
-            write = false;              // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
-            writeDiagnostics = true;    // write diagnostics controls diagnostics
-            writeHistogram = false;     // write histogram
-            purge = true;              // purge in this com.jakubrojcek.gpr2005a.SingleRun?
-            nReset = true;              // reset n in this com.jakubrojcek.gpr2005a.SingleRun?
-            trader.setPrTremble(0.15);
-            //trader.setWriteDec(write);
-            trader.setWriteDiag(writeDiagnostics);
-            //trader.setWriteHist(writeHistogram);
+        nEvents = 50000000;         // number of events
+        write = false;              // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
+        writeDiagnostics = true;    // write diagnostics controls diagnostics
+        writeHistogram = false;     // write histogram
+        purge = true;              // purge in this com.jakubrojcek.gpr2005a.SingleRun?
+        nReset = true;              // reset n in this com.jakubrojcek.gpr2005a.SingleRun?
+        trader.setPrTremble(0.15);
+        //trader.setWriteDec(write);
+        trader.setWriteDiag(writeDiagnostics);
+        //trader.setWriteHist(writeHistogram);
 
 
-            RunOutcome =
-                    sr.run(nEvents, nHFT, NewNonHFT, EventTime, FV, write,
-                            purge, nReset, writeDiagnostics, writeHistogram);
-            EventTime = RunOutcome[0];
-            FV = RunOutcome[1];
+        RunOutcome =
+                sr.run(nEvents, nHFT, NewNonHFT, EventTime, FV, write,
+                        purge, nReset, writeDiagnostics, writeHistogram);
+        EventTime = RunOutcome[0];
+        FV = RunOutcome[1];
 
-            nEvents = 20000000;         // number of events
-            write = false;              // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
-            writeDiagnostics = true;    // write diagnostics controls diagnostics
-            writeHistogram = false;     // write histogram
-            purge = false;              // purge in this com.jakubrojcek.gpr2005a.SingleRun?
-            nReset = true;              // reset n in this com.jakubrojcek.gpr2005a.SingleRun?
-            trader.setPrTremble(0.05);
-            //trader.setWriteDec(write);
-            trader.setWriteDiag(writeDiagnostics);
-            //trader.setWriteHist(writeHistogram);
+        nEvents = 50000000;         // number of events
+        write = false;              // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
+        writeDiagnostics = true;    // write diagnostics controls diagnostics
+        writeHistogram = false;     // write histogram
+        purge = true;              // purge in this com.jakubrojcek.gpr2005a.SingleRun?
+        nReset = true;              // reset n in this com.jakubrojcek.gpr2005a.SingleRun?
+        trader.setPrTremble(0.05);
+        //trader.setWriteDec(write);
+        trader.setWriteDiag(writeDiagnostics);
+        //trader.setWriteHist(writeHistogram);
 
-            RunOutcome =
-                    sr.run(nEvents, nHFT, NewNonHFT, EventTime, FV, write,
-                            purge, nReset, writeDiagnostics, writeHistogram);
-            EventTime = RunOutcome[0];
-            FV = RunOutcome[1];
+        RunOutcome =
+                sr.run(nEvents, nHFT, NewNonHFT, EventTime, FV, write,
+                        purge, nReset, writeDiagnostics, writeHistogram);
+        EventTime = RunOutcome[0];
+        FV = RunOutcome[1];
 
-            nEvents = 20000000;         // number of events
-            write = false;              // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
-            writeDiagnostics = true;    // write diagnostics controls diagnostics
-            writeHistogram = false;     // write histogram
-            purge = false;              // purge in this com.jakubrojcek.gpr2005a.SingleRun?
-            nReset = true;              // reset n in this com.jakubrojcek.gpr2005a.SingleRun?
-            trader.setPrTremble(0.025);
-            //trader.setWriteDec(write);
-            trader.setWriteDiag(writeDiagnostics);
-            //trader.setWriteHist(writeHistogram);
+        nEvents = 50000000;         // number of events
+        write = false;              // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
+        writeDiagnostics = true;    // write diagnostics controls diagnostics
+        writeHistogram = false;     // write histogram
+        purge = true;              // purge in this com.jakubrojcek.gpr2005a.SingleRun?
+        nReset = true;              // reset n in this com.jakubrojcek.gpr2005a.SingleRun?
+        trader.setPrTremble(0.025);
+        //trader.setWriteDec(write);
+        trader.setWriteDiag(writeDiagnostics);
+        //trader.setWriteHist(writeHistogram);
 
-            RunOutcome =
-                    sr.run(nEvents, nHFT, NewNonHFT, EventTime, FV, write,
-                            purge, nReset, writeDiagnostics, writeHistogram);
-            EventTime = RunOutcome[0];
-            FV = RunOutcome[1];
+        RunOutcome =
+                sr.run(nEvents, nHFT, NewNonHFT, EventTime, FV, write,
+                        purge, nReset, writeDiagnostics, writeHistogram);
+        EventTime = RunOutcome[0];
+        FV = RunOutcome[1];
 
-            //trader.setFixedBeliefs(true);
-            nEvents = 20000000;         // number of events
-            write = false;              // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
-            writeDiagnostics = true;    // write diagnostics controls diagnostics
-            writeHistogram = false;     // write histogram
-            purge = false;              // purge in this com.jakubrojcek.gpr2005a.SingleRun?
-            nReset = true;              // reset n in this com.jakubrojcek.gpr2005a.SingleRun?
-            trader.setPrTremble(0.0);
-            trader.setWriteDec(write);
-            trader.setWriteDiag(writeDiagnostics);
-            //trader.setWriteHist(writeHistogram);
+        nEvents = 50000000;         // number of events
+        write = false;              // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
+        writeDiagnostics = true;    // write diagnostics controls diagnostics
+        writeHistogram = false;     // write histogram
+        purge = false;              // purge in this com.jakubrojcek.gpr2005a.SingleRun?
+        nReset = false;              // reset n in this com.jakubrojcek.gpr2005a.SingleRun?
+        trader.setPrTremble(0.0);
+        //trader.setWriteDec(write);
+        trader.setWriteDiag(writeDiagnostics);
+        //trader.setWriteHist(writeHistogram);
 
-            RunOutcome =
-                    sr.run(nEvents, nHFT, NewNonHFT, EventTime, FV, write,
-                            purge, nReset, writeDiagnostics, writeHistogram);
-            EventTime = RunOutcome[0];
-            FV = RunOutcome[1];
-        }
-
+        RunOutcome =
+                sr.run(nEvents, nHFT, NewNonHFT, EventTime, FV, write,
+                        purge, nReset, writeDiagnostics, writeHistogram);
+        EventTime = RunOutcome[0];
+        FV = RunOutcome[1];
         trader.setFixedBeliefs(true);
-        nEvents = 100000000;        // number of events
+
+        nEvents = 30000000;         // number of events
         write = true;               // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
         writeDiagnostics = true;    // write diagnostics controls diagnostics
         writeHistogram = true;      // write histogram
         purge = false;              // purge in this com.jakubrojcek.gpr2005a.SingleRun?
-        nReset = true;             // reset n in this com.jakubrojcek.gpr2005a.SingleRun?
+        nReset = false;             // reset n in this com.jakubrojcek.gpr2005a.SingleRun?
         //trader.setPrTremble(0.0);
         trader.setWriteDec(write);
         trader.setWriteDiag(writeDiagnostics);
         trader.setWriteHist(writeHistogram);
         trader.setTradeCount(0);
-        trader.setStatesCount(0);
         trader.setTraderCount(book.getnReturningHFT() + book.getnReturningNonHFT());
 
         RunOutcome =

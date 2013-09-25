@@ -77,11 +77,11 @@ public class LOB_LinkedHashMap {
                     while (!keys.isEmpty()){ // this part executes the SLOs against fringe
                         int oID = (Integer) keys.iterator().next();
                         Order o = book[i].remove(oID);
-                        ActiveOrders.remove(o);
                         int traderID = o.getTraderID();
                         if (model == "GPR2005") {
                             traders.get(traderID).execution(fv, o);
                         } else {traders.get(traderID).execution(fv, et);}
+                        ActiveOrders.remove(o);
                         int tempSizeCP = CurrentPosition.get(traderID).get(i + positionShift);
                         if (++tempSizeCP == 0){
                             CurrentPosition.get(traderID).remove(i + positionShift);
@@ -105,10 +105,10 @@ public class LOB_LinkedHashMap {
                 Order o = book[i].remove(oID);
                 int traderID = o.getTraderID();
                 book[i].remove(oID);
-                ActiveOrders.remove(o);
                 if (model == "GPR2005"){
                     traders.get(traderID).cancel(o);
                 }
+                ActiveOrders.remove(o);
                 int tempSizeCP = CurrentPosition.get(traderID).get(i + positionShift);
                 if (--tempSizeCP == 0){
                     CurrentPosition.get(traderID).remove(i + positionShift);
@@ -148,13 +148,13 @@ public class LOB_LinkedHashMap {
                     while (! keys.isEmpty()){
                         int oID = (Integer) keys.iterator().next();
                         Order o = book[i].remove(oID);
-                        ActiveOrders.remove(o);
                         int traderID = o.getTraderID();
                         if (model == "GPR2005") {
                             traders.get(traderID).execution(fv, o);
                         } else {traders.get(traderID).execution(fv, et);}
+                        ActiveOrders.remove(o);
                         int tempSizeCP = CurrentPosition.get(traderID).get(i + positionShift);
-                        if (--tempSizeCP == 0){                               // TODO: check if this works
+                        if (--tempSizeCP == 0){
                             CurrentPosition.get(traderID).remove(i + positionShift);
                             if (CurrentPosition.get(traderID).isEmpty()){
                                 CurrentPosition.remove(traderID);
@@ -174,14 +174,14 @@ public class LOB_LinkedHashMap {
             while (!keys.isEmpty()){                        // removing SLOs from the zero position
                 int oID = (Integer) keys.iterator().next();
                 Order o = book[i].remove(oID);
-                ActiveOrders.remove(o);
                 int traderID = o.getTraderID();
                 book[i].remove(oID);
                 if (model == "GPR2005"){
                     traders.get(traderID).cancel(o);
                 }
+                ActiveOrders.remove(o);
                 int tempSizeCP = CurrentPosition.get(traderID).get(i + positionShift);
-                if (++tempSizeCP == 0){                               // TODO: check if this works
+                if (++tempSizeCP == 0){
                     CurrentPosition.get(traderID).remove(i + positionShift);
                     if (CurrentPosition.get(traderID).isEmpty()){
                         CurrentPosition.remove(traderID);
@@ -216,7 +216,7 @@ public class LOB_LinkedHashMap {
             priorities.put((byte) i, (byte) Math.min(book[i].size(), maxDepth));
         }
         if (CurrentPosition.containsKey(traderID)){
-            int pos = 0; //CurrentPosition.get(traderID) - positionShift; TODO: fix this
+            int pos = 0; //CurrentPosition.get(traderID) - positionShift;
             //System.out.println("getRank position is " + pos + " shift is " + positionShift);
             priorities.put(nPoints, (byte) pos); // trader's position from previous action
             int rank = 0;
@@ -245,7 +245,7 @@ public class LOB_LinkedHashMap {
             j++;
         }
         At = j;
-        //j = nPoints - 1;            // TODO: this part not needed
+        //j = nPoints - 1;
         while (BookSizes[j] <= 0 && j > 0){
             j--;
         }
@@ -278,7 +278,7 @@ public class LOB_LinkedHashMap {
     }
        
      public void transactionRule(int oID, ArrayList<Order> orders){
-         hist.addOrderData(BookInfo[1] - BookInfo[0]);          // quoted spread
+         hist.addOrderData(BookInfo[1] - BookInfo[0]); // quoted spread
          Integer oldPos = null;
          // cancel previous LO unless not retained
          /*if(currentPosition.containsKey(oID)){
@@ -319,16 +319,17 @@ public class LOB_LinkedHashMap {
                  if (book[pos].size() > 0 && !book[pos].get(book[pos].keySet().iterator().next()).isBuyOrder()){
                      Order cp = book[pos].remove(book[pos].keySet().iterator().next());
                      Integer CPid = cp.getTraderID();
-                     ActiveOrders.remove(cp);
+
                      if (model == "GPR2005") {
                          traders.get(CPid).execution(FV, cp);
                      } else {traders.get(CPid).execution(FV, o.getTimeStamp());}
+                     ActiveOrders.remove(cp);
                      Pt = pos;                                       // sets last transaction position
                      b = 1;                                          // sets last transaction direction, buy = 1
                      hist.addTrade(o, cp, o.getTimeStamp(), Prices[pos], FV);
                      hist.addOrderData(pos - (double)(BookInfo[1] + BookInfo[0]) / 2); // effective spread
                      Integer tempSizeCP = CurrentPosition.get(CPid).get(pos + positionShift);
-                     if (++tempSizeCP == 0){                               // TODO: check if this works
+                     if (++tempSizeCP == 0){
                          CurrentPosition.get(CPid).remove(pos + positionShift);
                          if (CurrentPosition.get(CPid).isEmpty()){
                              CurrentPosition.remove(CPid);
@@ -350,20 +351,20 @@ public class LOB_LinkedHashMap {
                  if (book[pos].size() > 0 && book[pos].get(book[pos].keySet().iterator().next()).isBuyOrder()){
                      Order cp = book[pos].remove(book[pos].keySet().iterator().next());
                      Integer CPid = cp.getTraderID();
-                     ActiveOrders.remove(cp);
                      if (model == "GPR2005") {
                          traders.get(CPid).execution(FV, cp);
                      } else {traders.get(CPid).execution(FV, o.getTimeStamp());}
+                     ActiveOrders.remove(cp);
                      Pt = pos;           // set last transaction price
                      b = 0;              // set last transaction direction, 0=sell
                      hist.addTrade(cp, o, o.getTimeStamp(), Prices[pos], FV);
                      hist.addOrderData((double)(BookInfo[1] + BookInfo[0]) / 2 - pos);
                      Integer tempSizeCP = CurrentPosition.get(CPid).get(pos + positionShift);
-                     if (--tempSizeCP == 0){                               // TODO: check if this works
+                     if (--tempSizeCP == 0){
                          CurrentPosition.get(CPid).remove(pos + positionShift);
                          if (CurrentPosition.get(CPid).isEmpty()){
                              CurrentPosition.remove(CPid);
-                             traders.remove(CPid);                          // TODO: remove when isTraded?
+                             traders.remove(CPid);
                          }
                      } else {
                          CurrentPosition.get(CPid).put(pos + positionShift, tempSizeCP);
@@ -387,12 +388,12 @@ public class LOB_LinkedHashMap {
          BookSizes();
     }
 
-    public void BookSizes(){                        // TODO: delete after testing
+    public void BookSizes(){
         int orderNum = 0;
         int CPnum = 0;
         for (int i = 0; i < nPoints; i++){
             int size = book[i].size();
-            orderNum += size;                       // TODO: delete after testing
+            orderNum += size;
             if (size != 0){
                 boolean buy = book[i].get(book[i].keySet().iterator().next()).isBuyOrder();  // buy orders at book[i]?
                 BookSizes[i] = buy ? Math.min(size, maxDepth) : - Math.min(size, maxDepth);   // max size at each tick is maxDepth- 7 or 15
@@ -408,7 +409,7 @@ public class LOB_LinkedHashMap {
     }
 
     public Order tryCancel(Order o){   // if order is null after returning, see if there's sth to cancel
-        int id = o.getTraderID();         // TODO: try to remove the worst order of this trader at this position
+        int id = o.getTraderID();
         int tempSize = CurrentPosition.get(id).get(o.getPosition());
         boolean buy = o.isBuyOrder();
         tempSize = buy ? --tempSize : ++ tempSize;
@@ -416,7 +417,7 @@ public class LOB_LinkedHashMap {
             CurrentPosition.get(id).remove(o.getPosition());
             if (CurrentPosition.get(id).isEmpty()){
                 CurrentPosition.remove(id);
-                traders.remove(id);       // TODO: remove from traders if isTraded
+                traders.remove(id);
             }
         } else {
             CurrentPosition.get(id).put(o.getPosition(), tempSize);

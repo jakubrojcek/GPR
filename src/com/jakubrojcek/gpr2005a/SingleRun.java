@@ -12,6 +12,13 @@ import org.apache.commons.math3.distribution.NormalDistribution;
  * Date: 15.10.12
  * Time: 11:45
  * To change this template use File | Settings | File Templates.
+ * Class SingleRun is operating (1) new trader (2) & (3) decision and transaction rule (4) cancellations
+ * (5) innovation of fundamental value for the "normal", "GPR2005" and "GPR2005C" model based on current
+ * specification of run parameters for specific number of iterations (events).
+ * I, main class loads parameters at initialization of SingleRun
+ * II, run specific parameters are load together with number of events
+ * III, iterations are computed
+ * IV, EventTime and FundamentalValue are returned
  */
 public class SingleRun {
 
@@ -82,7 +89,7 @@ public class SingleRun {
             trader.purge();
         }
         if (nReset){
-            trader.nReset((byte)1, (short) 100);
+            trader.nReset((byte)1, (short) 1);
         }
 
 
@@ -116,12 +123,13 @@ public class SingleRun {
                 if (!orders.isEmpty()){
                     book.transactionRule(ID, orders);
                 } else traders.remove(ID);
+                trader.writeHistogram(book.getBookSizes());
                 // 4. Cancellations
                 ArrayList<Order> ActiveOrders = book.getActiveOrders();
                 ArrayList<Order> orders2remove = new ArrayList<Order>();
                 for (Order ao : ActiveOrders){
                     int aoID = ao.getTraderID();
-                    double FVbefore = traders.get(aoID).getPriceFV();         // TODO: separate for each order
+                    double FVbefore = traders.get(aoID).getPriceFV();
                     boolean isBuy = ao.isBuyOrder();
                     boolean isHFT = traders.get(aoID).getIsHFT();
                     double delta = 0.0;
@@ -155,8 +163,6 @@ public class SingleRun {
                     //book.FVdown(FV, EventTime); //TODO: use twice for 1/16 ts
                     //System.out.println("down" + FV);
                 }
-
-                // TODO: 6. Update rest of the traders from previous state = oldCode of current trader
 
                 if (i % 100000 == 0) {
                     System.out.println(i + " events");
@@ -193,7 +199,7 @@ public class SingleRun {
 
                 // number of all agents to trade
 
-                double prob1 = (double) nHFT / nAll * 0.92;    //TODO: times 0.92
+                double prob1 = (double) nHFT / nAll * 0.92;
                 double prob2 = (double) NewNonHFT / nAll * 0.92;
                 double prob3 = (double) ReturningHFT / nAll * 0.92;
                 double prob4 = (double) ReturningNonHFT / nAll * 0.92;
@@ -336,6 +342,9 @@ public class SingleRun {
                 }*/
             }
         }
+        if (write){
+            trader.printConvergence(100);  // TODO: print out loud here :) not before, because it's with fixed beliefs
+        }
         return new double[]{EventTime, FV};
     }
 
@@ -344,7 +353,6 @@ public class SingleRun {
         if (writeDiagnostics){
             trader.printDiagnostics();
             trader.resetDiagnostics();
-            //trader.printConvergence(100);
         }
         if (writeHistogram){
             trader.printHistogram();

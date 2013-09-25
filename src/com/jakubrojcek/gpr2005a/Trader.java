@@ -3,10 +3,7 @@ package com.jakubrojcek.gpr2005a;
 import java.io.FileWriter;
 import java.util.*;
 
-import com.jakubrojcek.Decision;
-import com.jakubrojcek.Diagnostics;
-import com.jakubrojcek.Order;
-import com.jakubrojcek.PriceOrder;
+import com.jakubrojcek.*;
 import org.apache.commons.math3.distribution.NormalDistribution;
 
 /**
@@ -29,7 +26,7 @@ public class Trader {
     private long[] oldCode = new long[2];// oldCode holds old hash code for the last state in which he took action
     private Short[] oldAction;             // which action he took in the old state
     private float rho = 0.05f;          // trading "impatience" parameter
-    private double PriceFV;             // current fundamental value-> price at middle position //TODO: should this be in the payoff?
+    private double PriceFV;             // current fundamental value-> price at middle position
 
     static int TraderCount = 0;         // counting number of traders, gives traderID as well
     static int tradeCount = 0;          // counting number of trader
@@ -62,10 +59,13 @@ public class Trader {
     static int[] previousTraderAction;
     static Payoff InitialPayoff;
     static GPR2005Payoff_test3 InitalGPR2005;  // GPR2005_test3 com.jakubrojcek.gpr2005a.Payoff, auxiliary for computing mu and deltaV for second share in case no com.jakubrojcek.gpr2005a.Payoff already exists
-    static Float[][] mu0;
-    static Float[][] deltaV0;
+    static Double[][] mu0;
+    static Double[][] deltaV0;
     static ArrayList<Order> orders;     // result of decision, passed to LOB.transactionRule
     static HashMap<Short, Float> ps;
+    static boolean fixedBeliefs = false;// when true, doesn't update, holds beliefs fixed
+    static boolean similar = false;     // looks for similar state|action if action not in current state
+    static boolean symm = false;        // uses/updates/stores seller's beliefs for buyer
     //private double CFEE;              // cancellation fee
 
 
@@ -197,7 +197,7 @@ public class Trader {
             int p25 = P - LL;
             if (x == 1){ // last LO was sell
                 sum -= p[p25];
-                p[p25] = (float)(discountFactorB.get(p25)[q] * ((p25 - breakPoint) * tickSize - privateValue));  //TODO: breakPoint is correct here?    //SLO
+                p[p25] = (float)(discountFactorB.get(p25)[q] * ((p25 - breakPoint) * tickSize - privateValue));
                 sum += p[p25];
             } else {     // last LO was buy
                 sum -= p[p25 + end + 1];
@@ -236,7 +236,7 @@ public class Trader {
                 }
                 continuationValue = ((MultiplePayoff) pay).getMax();
                 action = ((MultiplePayoff) pay).getMaxIndex();
-                diff = ((MultiplePayoff) pay).getDiff();      // TODO: delete afterwards
+                diff = ((MultiplePayoff) pay).getDiff();
             }
         }
         //if (writeDiagnostics){writeDiagnostics(diff, (short)action);}
@@ -273,7 +273,7 @@ public class Trader {
         oldCode[0] = code;                                          // save for later updating
         oldAction[0] = action;                                      // save for later updating
 
-        if (action == end){action = (short)(2 * end + 2);}           // TODO: delete this part
+        if (action == end){action = (short)(2 * end + 2);}
         if (action == 2 * end + 1){action = (short)(2 * end + 2);}
 
         Short[] action2 = {action, 127};
@@ -319,27 +319,50 @@ public class Trader {
         }
 
         // computing payoffs from different actions based on overly optimistic beliefs
-        GPR2005Payoff_test3 pay;            // temporary com.jakubrojcek.gpr2005a.Payoff of the current state
-        GPR2005Payoff_test3 pay2;           // temporary com.jakubrojcek.gpr2005a.Payoff of hypothetical state
+        GPR2005Payoff_test3 pay;            // temporary Payoff of the current state
+        GPR2005Payoff_test3 pay2;           // temporary Payoff of hypothetical state
+        GPR2005Payoff_test3 payBuy = new GPR2005Payoff_test3();         // TODO: delete this SYMM parts if doesn't work
         int[] BsNew = new int[nP];          // temporary BookSizes
         int[] BiNew = new int[8];           // temporary BookInfo
-        float[] mu = new float[nPayoffs];                         // exec probabilities for fist share
-        float[] dV = new float[nPayoffs];                         // expected jumps for fist share
-        float[] mu2 = new float[nPayoffs];  // exec probabilities for second share
-        float[] dV2 = new float[nPayoffs];  // expected jumps for second share
-        float mu2max = 0.0f;// exec probabilities for best second action
-        float dV2max = 0.0f;// expected jumps for best second action
-        float p1, p2;                 // temporary storages for payoff value
+        //float[] mu = new float[nPayoffs];                         // exec probabilities for fist share
+        //float[] dV = new float[nPayoffs];                         // expected jumps for fist share
+        //float[] mu2 = new float[nPayoffs];  // exec probabilities for second share
+        //float[] dV2 = new float[nPayoffs];  // expected jumps for second share
+        double[] MuDvs = new double[2];
+        double[] MuDv2s = new double[2];      // single mu and dV // TODO: now for second action
+        double[] MuDvsSIM = new double[2];
+        double[] MuDv2sSIM = new double[2];      // single mu and dV // TODO: now for second action
+        double muMax = 0.0f;// exec probabilities for best second action
+        double dVMax = 0.0f;// expected jumps for best second action
+        double mu2max = 0.0f;// exec probabilities for best second action
+        double dV2max = 0.0f;// expected jumps for best second action
+        double p1, p2;                 // temporary storages for payoff value
         //float [] p1 = new float[nPayoffs];
         //float [] p2 = new float[nPayoffs];
-        float max = - 1.0f;                 // maximum payoff available
+        double max = - 1.0f;                 // maximum payoff available
         Short[] MaxAction = {127, 127};     // action maximizing payoff in the state
         Short[] MaxQ = {127, 127};          // q at which MaxAction takes place (priority)
         long code2max = 0;                  //
 
 
         Long code = HashCode(0, 0, 0, BookInfo, BookSizes);
+        long codeBuy = 0;
         long code2 = 0;
+
+        int [] BsNewBuy = new int[nP];
+        int [] BsNewBuy2 = new int[nP];
+        if (symm){                                               // TODO: delete this SYMM parts if doesn't work
+            System.arraycopy(BookSizes, 0, BsNewBuy, 0, nP);
+            for (int i = 1; i < (nP - 1); i++){
+                BsNewBuy[i] = -BookSizes[nP - 1 - i];
+            }
+            codeBuy = HashCode(0, 0, 0, BookInfo, BsNewBuy);
+            if (Payoffs.containsKey(codeBuy)){ // new state, new com.jakubrojcek.gpr2005a.SinglePayoff created
+                payBuy = ((GPR2005Payoff_test3) Payoffs.get(codeBuy));
+            }
+        }
+
+
 
         short b = (short) Math.max(BookInfo[0] - LL + 1, 0);             // + 1 in order to start from one above B
         b = (short) Math.min(end, b);
@@ -351,18 +374,19 @@ public class Trader {
         if (Payoffs.containsKey(code)){ // new state, new com.jakubrojcek.gpr2005a.SinglePayoff created
             pay = ((GPR2005Payoff_test3) Payoffs.get(code));
         } else {
-            statesCount++;
-            System.out.println(statesCount);
-            pay = new GPR2005Payoff_test3();
-            Payoffs.put(code, pay); // insert a com.jakubrojcek.gpr2005a.Payoff object made of com.jakubrojcek.gpr2005a.GPR2005Payoff to the Payoffs table
+            pay = new GPR2005Payoff_test3();    // TODO: if SYMM doesn't work, restore put to Payoffs
+            if (!symm) {
+                statesCount++;
+                System.out.println(statesCount);
+                Payoffs.put(code, pay);
+            } // insert a Payoff object made of GPR2005Payoff to the Payoffs table
         }
-        HashMap<String, float[]> MuDv = pay.getMuDv(BookSizes, b, a);  // TODO: can I use BookSizes here?
+        /*HashMap<String, float[]> MuDv = pay.getMuDv(BookSizes, b, a);  // TODO: can I use BookSizes here?
         mu = MuDv.get("mu");
-        dV = MuDv.get("dv");
+        dV = MuDv.get("dv");*/
 
         for(short i = b; i < nPayoffs; i++){ // searching for best payoff
-            p1 = -1.0f;
-            p2 = -1.0f;
+            p1 = -1.0f; p2 = -1.0f;
             System.arraycopy(BookSizes, 0, BsNew, 0, nP);
             System.arraycopy(BookInfo, 0, BiNew, 0, 8);
             b2 = b;
@@ -370,26 +394,47 @@ public class Trader {
             short j;
             if (i < end){                                       // sell limit order first
                 q1 = (short) Math.min(- BsNew[i + LL], maxDepth);
-                p1 = (float)(mu[i] * ((i - breakPoint) * tickSize - privateValue - dV[i]));
-                //p2[i] = p1;//(float) Math.random();
+                MuDvs = pay.getSingleMuDv(BsNew, i, q1);
+                if (!pay.getX().containsKey((short)((i<<7) + q1)) && similar){
+                    MuDvsSIM = SimilarMuDv(i, q1, BsNew, false);
+                    if (MuDvsSIM[0] < MuDvs[0]){
+                        MuDvs = MuDvsSIM;
+                    }
+                }
+                p1 = (float)(MuDvs[0] * ((i - breakPoint) * tickSize - privateValue - MuDvs[1]));
+                //p1 = (float)(mu[i] * ((i - breakPoint) * tickSize - privateValue - dV[i]));
                 if (units2trade == 2){
                     if ((i + LL) < BookInfo[1]) {BiNew[1] = i + LL;}
                     BsNew[i + LL]--;
                     a2 = (short) Math.min(i + 1, a);
                     code2 = HashCode(0, 0, 0, BiNew, BsNew);
-                    if (Payoffs.containsKey(code2)){ // new state, new com.jakubrojcek.gpr2005a.SinglePayoff created
+                    /*if (Payoffs.containsKey(code2)){ // new state, new com.jakubrojcek.gpr2005a.SinglePayoff created
                         pay2 = ((GPR2005Payoff_test3) Payoffs.get(code2));
                         HashMap<String, float[]> MuDv2 = pay2.getMuDv(BsNew, b2, a2);
                         mu2 = MuDv2.get("mu");
                         dV2 = MuDv2.get("dv");
                     } else {
+                        pay2 = InitalGPR2005;
                         HashMap<String, float[]> MuDv2 = InitalGPR2005.getMuDv(BsNew, b2, a2);  // TODO: can I use BookSizes here?
                         mu2 = MuDv2.get("mu");
                         dV2 = MuDv2.get("dv");
+                    }*/
+                    if (Payoffs.containsKey(code2)){
+                        pay2 = ((GPR2005Payoff_test3) Payoffs.get(code2));
+                    } else {
+                        pay2 = new GPR2005Payoff_test3();
                     }
                     for (j = b; j < a2; j++){                  // i + 1, bcz j can equal i
                         q2 = (short) Math.min((- BsNew[j + LL]), maxDepth);
-                        p2 = (float)(mu2[j] * ((j - breakPoint) * tickSize - privateValue - dV2[j]));
+                        MuDv2s = pay2.getSingleMuDv(BsNew, j, q2);
+                        if (!pay2.getX().containsKey((short)((j<<7) + q2)) && similar){
+                            MuDv2sSIM = SimilarMuDv(j, q2, BsNew, false);
+                            if (MuDv2sSIM[0] < MuDv2s[0]){
+                                MuDv2s = MuDv2sSIM;
+                            }
+                        }
+                        p2 = (float)(MuDv2s[0] * ((j - breakPoint) * tickSize - privateValue - MuDv2s[1]));
+                        //p2 = (float)(mu2[j] * ((j - breakPoint) * tickSize - privateValue - dV2[j]));
                         //System.out.println(i+ "" + j);
                         if ((p1 + p2) > max){
                             max = p1 + p2;
@@ -398,39 +443,110 @@ public class Trader {
                             MaxQ[0] = q1;
                             MaxQ[1] = q2;
                             code2max = code2;
-                            mu2max = mu2[j];
-                            dV2max = dV2[j];
+                            muMax = MuDvs[0];
+                            dVMax = MuDvs[1];
+                            //mu2max = mu2[j];
+                            //dV2max = dV2[j];
+                            mu2max = MuDv2s[0];
+                            dV2max = MuDv2s[1];
                         }
                     }
                 }
             } else if (i < a) {                                 // buy limit order first
                 q1 = (short) Math.min(BsNew[i - end + LL], maxDepth);
-                p1 = (float)((mu[i]) * (privateValue + dV[i] - (i - end - breakPoint) * tickSize));
-                //p2[i] = p1;//(float) Math.random();
+                if (symm){                                        // TODO: delete if doesn't work
+                    short actionSymm = (short)(2 * end - 1 - i);
+                    MuDvs = payBuy.getSingleMuDv(BsNewBuy, actionSymm, q1);
+                    MuDvs[1] = -MuDvs[1];
+                    if (!payBuy.getX().containsKey((short)((actionSymm<<7) + q1)) && similar){
+                        MuDvsSIM = SimilarMuDv(actionSymm, q1, BsNewBuy, false);
+                        if (MuDvsSIM[0] < MuDvs[0]){
+                            MuDvs = MuDvsSIM;
+                            MuDvs[1] = -MuDvs[1];
+                        }
+                    }
+                } else {
+                    MuDvs = pay.getSingleMuDv(BsNew, i, q1);
+                    if (!pay.getX().containsKey((short)((i<<7) + q1)) && similar){
+                        MuDvsSIM = SimilarMuDv(i, q1, BsNew, true);
+                        if (MuDvsSIM[0] < MuDvs[0]){
+                            MuDvs = MuDvsSIM;
+                        }
+                    }
+                }
+                p1 = (float)((MuDvs[0]) * (privateValue + MuDvs[1] - (i - end - breakPoint) * tickSize));
+                //p1 = (float)((mu[i]) * (privateValue + dV[i] - (i - end - breakPoint) * tickSize));
                 if (units2trade == 2){
                     if ((i - end + LL) > BookInfo[0]) {BiNew[0] = (i - end + LL);}
                     BsNew[i - end + LL]++;
                     b2 = (short) Math.max(i - end + 1, b);
                     a2 = (short) Math.min(i + 1, a);
                     code2 = HashCode(0, 0, 0, BiNew, BsNew);
-                    if (Payoffs.containsKey(code2)){ // new state, new com.jakubrojcek.gpr2005a.SinglePayoff created
+                    if (symm){
+                        System.arraycopy(BsNew, 0, BsNewBuy2, 0, nP);
+                        for (int k = 1; k < (nP - 1); k++){
+                            BsNewBuy2[k] = -BsNew[nP - 1 - k];
+                        }
+                    }
+                    /*if (Payoffs.containsKey(code2)){ // new state, new Payoff created
                         pay2 = ((GPR2005Payoff_test3) Payoffs.get(code2));
                         HashMap<String, float[]> MuDv2 = pay2.getMuDv(BsNew, b2, a2);
                         mu2 = MuDv2.get("mu");
                         dV2 = MuDv2.get("dv");
                     } else {
+                        pay2 = InitalGPR2005;
                         HashMap<String, float[]> MuDv2 = InitalGPR2005.getMuDv(BsNew, b2, a2);
                         mu2 = MuDv2.get("mu");
                         dV2 = MuDv2.get("dv");
+                    }*/
+                    if (Payoffs.containsKey(code2)){
+                        pay2 = ((GPR2005Payoff_test3) Payoffs.get(code2));
+                    } else {
+                        pay2 = new GPR2005Payoff_test3();
                     }
                     for (j = b2; j < a2; j++){                  // i + 1, bcz j can equal i
                         if (j > (i - end)){
-                            if (j < end){
+                            if (j < end){                       // SLO
                                 q2 = (short) Math.min(- BsNew[j + LL], maxDepth);
-                                p2 = (float)(mu2[j] * ((j - breakPoint) * tickSize - privateValue - dV2[j]));
-                            } else {
+                                MuDv2s = pay2.getSingleMuDv(BsNew, j, q2);
+                                if (!pay2.getX().containsKey((short)((j<<7) + q2)) && similar){
+                                    MuDv2sSIM = SimilarMuDv(j, q2, BsNew, false);
+                                    if (MuDv2sSIM[0] < MuDv2s[0]){
+                                        MuDv2s = MuDv2sSIM;
+                                    }
+                                }
+                                p2 = (float)(MuDv2s[0] * ((j - breakPoint) * tickSize - privateValue - MuDv2s[1]));
+                                //p2 = (float)(mu2[j] * ((j - breakPoint) * tickSize - privateValue - dV2[j]));
+                            } else {                            // BLO
                                 q2 = (short) Math.min(BsNew[j - end + LL], maxDepth);
-                                p2 = (float)((mu2[j]) * (privateValue + dV2[j] - (j - end - breakPoint) * tickSize));
+                                if (symm){                                        // TODO: delete if doesn't work
+                                    code2 = HashCode(0, 0, 0, BiNew, BsNewBuy2);       // TODO: keeping SYMM?
+                                    if (Payoffs.containsKey(code2)){
+                                        pay2 = ((GPR2005Payoff_test3) Payoffs.get(code2));
+                                    } else {
+                                        pay2 = new GPR2005Payoff_test3();
+                                    }
+                                    short actionSymm = (short)(2 * end - 1 - j);
+                                    MuDv2s = pay2.getSingleMuDv(BsNewBuy2, actionSymm, q2);
+                                    MuDv2s[1] = -MuDv2s[1];
+                                    if (!pay2.getX().containsKey((short)((actionSymm<<7) + q2)) && similar){
+                                        MuDv2sSIM = SimilarMuDv(actionSymm, q2, BsNewBuy2, false);
+                                        if (MuDv2sSIM[0] < MuDv2s[0]){
+                                            MuDv2s = MuDv2sSIM;
+                                            MuDv2s[1] = -MuDv2s[1];
+                                        }
+                                    }
+                                } else {
+                                    MuDv2s = pay2.getSingleMuDv(BsNew, j, q2);
+                                    if (!pay2.getX().containsKey((short)((j<<7) + q2)) && similar){
+                                        MuDv2sSIM = SimilarMuDv(j, q2, BsNew, true);
+                                        if (MuDv2sSIM[0] < MuDv2s[0]){
+                                            MuDv2s = MuDv2sSIM;
+                                        }
+                                    }
+                                }
+                                p2 = (float)((MuDv2s[0]) * (privateValue + MuDv2s[1] - (j - end - breakPoint) * tickSize));
+                                //p2 = (float)((mu2[j]) * (privateValue + dV2[j] - (j - end - breakPoint) * tickSize));
                             }
                             //System.out.println(i+ "" + j);
                             if ((p1 + p2) > max){
@@ -440,41 +556,91 @@ public class Trader {
                                 MaxQ[0] = q1;
                                 MaxQ[1] = q2;
                                 code2max = code2;
-                                mu2max = mu2[j];
-                                dV2max = dV2[j];
+                                muMax = MuDvs[0];
+                                dVMax = MuDvs[1];
+                                //mu2max = mu2[j];
+                                //dV2max = dV2[j];
+                                mu2max = MuDv2s[0];
+                                dV2max = MuDv2s[1];
                             }
                         }
                     }
                 }
             } else if (i == (2 * end)){                             // sell market order
+                MuDvs[0] = 1.0f; MuDvs[1] = 0.0f;
                 q1 = 0;
                 p1 = (float)((BookInfo[0] - fvPos) * tickSize - privateValue );
-                //p2[i] = (float) Math.random();
                 if (units2trade == 2){
                     short c2 = (short) Math.max(B2t - LL + 1, 0);
                     short c = (short) Math.min(end, c2);
                     BiNew[0] = B2t;
                     BsNew[BookInfo[0]]--;
                     code2 = HashCode(0, 0, 0, BiNew, BsNew);
-                    if (Payoffs.containsKey(code2)){ // new state, new com.jakubrojcek.gpr2005a.SinglePayoff created
+                    if (symm){
+                        System.arraycopy(BsNew, 0, BsNewBuy2, 0, nP);
+                        for (int k = 1; k < (nP - 1); k++){
+                            BsNewBuy2[k] = -BsNew[nP - 1 - k];
+                        }
+                    }
+                    /*if (Payoffs.containsKey(code2)){ // new state, new com.jakubrojcek.gpr2005a.SinglePayoff created
                         pay2 = ((GPR2005Payoff_test3) Payoffs.get(code2));
-                        HashMap<String, float[]> MuDv2 = pay2.getMuDv(BsNew, c, a);  // TODO: can I use BookSizes here?
+                        HashMap<String, float[]> MuDv2 = pay2.getMuDv(BsNew, c, a);
                         mu2 = MuDv2.get("mu");
                         dV2 = MuDv2.get("dv");
                     } else {
-                        HashMap<String, float[]> MuDv2 = InitalGPR2005.getMuDv(BsNew, c, a);  // TODO: can I use BookSizes here?
+                        pay2 = InitalGPR2005;
+                        HashMap<String, float[]> MuDv2 = InitalGPR2005.getMuDv(BsNew, c, a);
                         mu2 = MuDv2.get("mu");
                         dV2 = MuDv2.get("dv");
+                    }*/
+                    if (Payoffs.containsKey(code2)){
+                        pay2 = ((GPR2005Payoff_test3) Payoffs.get(code2));
+                    } else {
+                        pay2 = new GPR2005Payoff_test3();
                     }
                     for (j = c; j < a; j++){                         // TODO: going until < end trying out GPR error
-                        p2 = -1.0f;     // TODO: fine here?
                         q2 = 0;
                         if (j < end){
                             q2 = (short) Math.min(- BsNew[j + LL], maxDepth);
-                            p2 = (float)(mu2[j] * ((j - breakPoint) * tickSize - privateValue - dV2[j]));
+                            MuDv2s = pay2.getSingleMuDv(BsNew, j, q2);
+                            if (!pay2.getX().containsKey((short)((j<<7) + q2)) && similar){
+                                MuDv2sSIM = SimilarMuDv(j, q2, BsNew, false);
+                                if (MuDv2sSIM[0] < MuDv2s[0]){
+                                    MuDv2s = MuDv2sSIM;
+                                }
+                            }
+                            p2 = (float)(MuDv2s[0] * ((j - breakPoint) * tickSize - privateValue - MuDv2s[1]));
+                            //p2 = (float)(mu2[j] * ((j - breakPoint) * tickSize - privateValue - dV2[j]));
                         } else if ((j - end + LL) != BookInfo[0]){
                             q2 = (short) Math.min(BsNew[j - end + LL], maxDepth);
-                            p2 = (float)((mu2[j]) * (privateValue + dV2[j] - (j - end - breakPoint) * tickSize));
+                            if (symm){                                        // TODO: delete if doesn't work
+                                short actionSymm = (short)(2 * end - 1 - j);
+                                code2 = HashCode(0, 0, 0, BiNew, BsNewBuy2);       // TODO: keeping SYMM?
+                                if (Payoffs.containsKey(code2)){
+                                    pay2 = ((GPR2005Payoff_test3) Payoffs.get(code2));
+                                } else {
+                                    pay2 = new GPR2005Payoff_test3();
+                                }
+                                MuDv2s = pay2.getSingleMuDv(BsNewBuy2, actionSymm, q2);
+                                MuDv2s[1] = -MuDv2s[1];
+                                if (!pay2.getX().containsKey((short)((actionSymm<<7) + q2)) && similar){
+                                    MuDv2sSIM = SimilarMuDv(actionSymm, q2, BsNewBuy2, false);
+                                    if (MuDv2sSIM[0] < MuDv2s[0]){
+                                        MuDv2s = MuDv2sSIM;
+                                        MuDv2s[1] = -MuDv2s[1];
+                                    }
+                                }
+                            } else {
+                                MuDv2s = pay2.getSingleMuDv(BsNew, j, q2);
+                                if (!pay2.getX().containsKey((short)((j<<7) + q2)) && similar){
+                                    MuDv2sSIM = SimilarMuDv(j, q2, BsNew, true);
+                                    if (MuDv2sSIM[0] < MuDv2s[0]){
+                                        MuDv2s = MuDv2sSIM;
+                                    }
+                                }
+                            }
+                            p2 = (float)((MuDv2s[0]) * (privateValue + MuDv2s[1] - (j - end - breakPoint) * tickSize));
+                            //p2 = (float)((mu2[j]) * (privateValue + dV2[j] - (j - end - breakPoint) * tickSize));
                         }
                         //System.out.println(i+ "" + j);
                         if ((p1 + p2) > max){
@@ -484,8 +650,12 @@ public class Trader {
                             MaxQ[0] = q1;
                             MaxQ[1] = q2;
                             code2max = code2;
-                            mu2max = mu2[j];
-                            dV2max = dV2[j];
+                            muMax = MuDvs[0];
+                            dVMax = MuDvs[1];
+                            //mu2max = mu2[j];
+                            //dV2max = dV2[j];
+                            mu2max = MuDv2s[0];
+                            dV2max = MuDv2s[1];
                         }
                     }
                     // SMO
@@ -495,8 +665,10 @@ public class Trader {
                     //System.out.println(i+ "" + j);
                     if ((p1 + p2) > max){
                         max = p1 + p2;
-                        mu2max = mu2[j];
-                        dV2max = dV2[j];
+                        muMax = MuDvs[0];
+                        dVMax = MuDvs[1];
+                        mu2max = 1.0f;
+                        dV2max = 0.0f;
                         if (B2t != Bt){
                             j = (short) (2 * end + 3);
                         }
@@ -508,36 +680,83 @@ public class Trader {
                     }
                 }
             } else if (i == (2 * end + 1)){                       // BMO
+                MuDvs[0] = 1.0f; MuDvs[1] = 0.0f;
                 q1 = 0;
                 p1 = (float)((fvPos - BookInfo[1]) * tickSize + privateValue);
-                //p2 = (float) Math.random();
                 if (units2trade == 2){
                     short c2 = (short) Math.min(A2t - LL + end, 2 * end);
                     short c = (short) (Math.max(end, c2));
                     BiNew[1] = A2t;
                     BsNew[BookInfo[1]]++;
                     code2 = HashCode(0, 0, 0, BiNew, BsNew);
-                    if (Payoffs.containsKey(code2)){ // new state, new com.jakubrojcek.gpr2005a.SinglePayoff created
+                    if (symm){
+                        System.arraycopy(BsNew, 0, BsNewBuy2, 0, nP);
+                        for (int k = 1; k < (nP - 1); k++){
+                            BsNewBuy2[k] = -BsNew[nP - 1 - k];
+                        }
+                    }
+                    /*if (Payoffs.containsKey(code2)){ // new state, new com.jakubrojcek.gpr2005a.SinglePayoff created
                         pay2 = ((GPR2005Payoff_test3) Payoffs.get(code2));
                         HashMap<String, float[]> MuDv2 = pay2.getMuDv(BsNew, b, c);  // TODO: can I use BookSizes here?
                         mu2 = MuDv2.get("mu");
                         dV2 = MuDv2.get("dv");
                     } else {
+                        pay2 = InitalGPR2005;
                         HashMap<String, float[]> MuDv2 = InitalGPR2005.getMuDv(BsNew, b, c);  // TODO: can I use BookSizes here?
                         mu2 = MuDv2.get("mu");
                         dV2 = MuDv2.get("dv");
+                    }*/
+                    if (Payoffs.containsKey(code2)){
+                        pay2 = ((GPR2005Payoff_test3) Payoffs.get(code2));
+                    } else {
+                        pay2 = new GPR2005Payoff_test3();
                     }
-                    p2 = -1.0f;
+                    //p2 = -1.0f;
                     q2 = 0;
                     for (j = b; j < c; j++){    // TODO: trying match GPR here j = b to j = end
                         if (j < end){
                             if ((j + LL) != BookInfo[1]){
                                 q2 = (short) Math.min(- BsNew[j + LL], maxDepth);
-                                p2 = (float)(mu2[j] * ((j - breakPoint) * tickSize - privateValue - dV2[j]));
+                                MuDv2s = pay2.getSingleMuDv(BsNew, j, q2);
+                                if (!pay2.getX().containsKey((short)((j<<7) + q2)) && similar){
+                                    MuDv2sSIM = SimilarMuDv(j, q2, BsNew, false);
+                                    if (MuDv2sSIM[0] < MuDv2s[0]){
+                                        MuDv2s = MuDv2sSIM;
+                                    }
+                                }
+                                p2 = (float)(MuDv2s[0] * ((j - breakPoint) * tickSize - privateValue - MuDv2s[1]));
+                                //p2 = (float)(mu2[j] * ((j - breakPoint) * tickSize - privateValue - dV2[j]));
                             }
                         } else {
                             q2 = (short) Math.min(BsNew[j - end + LL], maxDepth);
-                            p2 = (float)((mu2[j]) * (privateValue + dV2[j] - (j - end - breakPoint) * tickSize));
+                            if (symm){                                        // TODO: delete if doesn't work
+                                short actionSymm = (short)(2 * end - 1 - j);
+                                code2 = HashCode(0, 0, 0, BiNew, BsNewBuy2);       // TODO: keeping SYMM?
+                                if (Payoffs.containsKey(code2)){
+                                    pay2 = ((GPR2005Payoff_test3) Payoffs.get(code2));
+                                } else {
+                                    pay2 = new GPR2005Payoff_test3();
+                                }
+                                MuDv2s = pay2.getSingleMuDv(BsNewBuy2, actionSymm, q2);
+                                MuDv2s[1] = -MuDv2s[1];
+                                if (!pay2.getX().containsKey((short)((actionSymm<<7) + q2)) && similar){
+                                    MuDv2sSIM = SimilarMuDv(actionSymm, q2, BsNewBuy2, false);
+                                    if (MuDv2sSIM[0] < MuDv2s[0]){
+                                        MuDv2s = MuDv2sSIM;
+                                        MuDv2s[1] = -MuDv2s[1];
+                                    }
+                                }
+                            } else {
+                                MuDv2s = pay2.getSingleMuDv(BsNew, j, q2);
+                                if (!pay2.getX().containsKey((short)((j<<7) + q2)) && similar){
+                                    MuDv2sSIM = SimilarMuDv(j, q2, BsNew, true);
+                                    if (MuDv2sSIM[0] < MuDv2s[0]){
+                                        MuDv2s = MuDv2sSIM;
+                                    }
+                                }
+                            }
+                            p2 = (float)((MuDv2s[0]) * (privateValue + MuDv2s[1] - (j - end - breakPoint) * tickSize));
+                            //p2 = (float)((mu2[j]) * (privateValue + dV2[j] - (j - end - breakPoint) * tickSize));
                         }
                         //System.out.println(i+ "" + j);
                         if ((p1 + p2) > max){
@@ -547,8 +766,12 @@ public class Trader {
                             MaxQ[0] = q1;
                             MaxQ[1] = q2;
                             code2max = code2;
-                            mu2max = mu2[j];
-                            dV2max = dV2[j];
+                            muMax = MuDvs[0];
+                            dVMax = MuDvs[1];
+                            //mu2max = mu2[j];
+                            //dV2max = dV2[j];
+                            mu2max = MuDv2s[0];
+                            dV2max = MuDv2s[1];
                         }
                     }
 
@@ -563,8 +786,10 @@ public class Trader {
                         MaxQ[0] = q1;
                         MaxQ[1] = q2;
                         code2max = code2;
-                        mu2max = mu2[j];
-                        dV2max = dV2[j];
+                        muMax = MuDvs[0];
+                        dVMax = MuDvs[1];
+                        mu2max = 1.0f;
+                        dV2max = 0.0f;
                     }
 
                     j = (short) (2 * end + 1);
@@ -572,8 +797,10 @@ public class Trader {
                     //System.out.println(i+ "" + j);
                     if ((p1 + p2) > max){
                         max = p1 + p2;
-                        mu2max = mu2[j];
-                        dV2max = dV2[j];
+                        muMax = MuDvs[0];
+                        dVMax = MuDvs[1];
+                        mu2max = 1.0f;
+                        dV2max = 0.0f;
                         if (A2t != At){                             // SMO
                             j = (short) (2 * end + 4);
                         }
@@ -585,17 +812,46 @@ public class Trader {
                     }
                 }
             } else if (i == 2 * end + 2) {                                            // no order
+                MuDvs[0] = 0.0f; MuDvs[1] = 0.0f;
                 q1 = 0;
                 p1 = 0.0f;
-                //p2[i] = (float) Math.random();
                 if (units2trade == 2) {
                     for(j = b; j < a; j++){
                         if (j < end){
                             q2 = (short) Math.min(- BsNew[j + LL], maxDepth);
-                            p2 = (float)(mu[j] * ((j - breakPoint) * tickSize - privateValue - dV[j]));
+                            MuDv2s = pay.getSingleMuDv(BsNew, j, q2);
+                            if (!pay.getX().containsKey((short)((j<<7) + q2)) && similar){
+                                MuDv2sSIM = SimilarMuDv(j, q2, BsNew, false);
+                                if (MuDv2sSIM[0] < MuDv2s[0]){
+                                    MuDv2s = MuDv2sSIM;
+                                }
+                            }
+                            p2 = (float)(MuDv2s[0] * ((j - breakPoint) * tickSize - privateValue - MuDv2s[1]));
+                            //p2 = (float)(mu[j] * ((j - breakPoint) * tickSize - privateValue - dV[j]));
                         } else {
                             q2 = (short) Math.min(BsNew[j - end + LL], maxDepth);
-                            p2 = (float)((mu[j]) * (privateValue + dV[j] - (j - end - breakPoint) * tickSize));
+                            if (symm){                                        // TODO: delete if doesn't work
+                                short actionSymm = (short)(2 * end - 1 - j);
+                                MuDv2s = payBuy.getSingleMuDv(BsNewBuy, actionSymm, q2);
+                                MuDv2s[1] = -MuDv2s[1];
+                                if (!payBuy.getX().containsKey((short)((actionSymm<<7) + q2)) && similar){
+                                    MuDv2sSIM = SimilarMuDv(actionSymm, q2, BsNewBuy, false);
+                                    if (MuDv2sSIM[0] < MuDv2s[0]){
+                                        MuDv2s = MuDv2sSIM;
+                                        MuDv2s[1] = -MuDv2s[1];
+                                    }
+                                }
+                            } else {
+                                MuDv2s = pay.getSingleMuDv(BsNew, j, q2);
+                                if (!pay.getX().containsKey((short)((j<<7) + q2)) && similar){
+                                    MuDv2sSIM = SimilarMuDv(j, q2, BsNew, true);
+                                    if (MuDv2sSIM[0] < MuDv2s[0]){
+                                        MuDv2s = MuDv2sSIM;
+                                    }
+                                }
+                            }
+                            p2 = (float)((MuDv2s[0]) * (privateValue + MuDv2s[1] - (j - end - breakPoint) * tickSize));
+                            //p2 = (float)((mu[j]) * (privateValue + dV[j] - (j - end - breakPoint) * tickSize));
                         }
                         //System.out.println(i+ "" + j);
                         if ((p1 + p2) > max){
@@ -605,8 +861,10 @@ public class Trader {
                             MaxQ[0] = q1;
                             MaxQ[1] = q2;
                             code2max = code;
-                            mu2max = mu2[j];
-                            dV2max = dV2[j];
+                            muMax = MuDvs[0];
+                            dVMax = MuDvs[1];
+                            mu2max = MuDv2s[0];
+                            dV2max = MuDv2s[1];
                         }
 
                     }
@@ -621,8 +879,10 @@ public class Trader {
                         MaxQ[0] = q1;
                         MaxQ[1] = q2;
                         code2max = code;
-                        mu2max = mu2[j];
-                        dV2max = dV2[j];
+                        muMax = MuDvs[0];
+                        dVMax = MuDvs[1];
+                        mu2max = 1.0f;
+                        dV2max = 0.0f;
                     }
                     j = (short) (2 * end + 1);                  // NO and BMO
                     p2 = (float)((fvPos - BookInfo[1]) * tickSize + privateValue);
@@ -634,8 +894,10 @@ public class Trader {
                         MaxQ[0] = q1;
                         MaxQ[1] = q2;
                         code2max = code;
-                        mu2max = mu2[j];
-                        dV2max = dV2[j];
+                        muMax = MuDvs[0];
+                        dVMax = MuDvs[1];
+                        mu2max = 1.0f;
+                        dV2max = 0.0f;
                     }
                     j = (short) (2 * end + 2);                  // NO and NO
                     p2 = 0.0f;
@@ -648,37 +910,84 @@ public class Trader {
                         MaxQ[0] = q1;
                         MaxQ[1] = q2;
                         code2max = code;
-                        mu2max = mu2[j];
-                        dV2max = dV2[j];
+                        muMax = MuDvs[0];
+                        dVMax = MuDvs[1];
+                        mu2max = 0.0f;
+                        dV2max = 0.0f;
                     }
                 }
             }
-            if (units2trade == 1 && p1 >= max){                 // equal because of exec probability at maxDepth is 0.0
+            if (units2trade == 1 && p1 > max){                 // equal because of exec probability at maxDepth is 0.0
                 max = p1;
                 MaxAction[0] = i;
                 MaxAction[1] = 127;
                 MaxQ[0] = q1;
                 MaxQ[1] = 127;
+                muMax = MuDvs[0];
+                dVMax = MuDvs[1];
                 //System.out.println(q[0]);
             }
         }
         if (MaxQ[0] >= maxDepth){
             System.out.println("too low priority");
         }
-        //System.out.println(q[0]);
+        //System.out.println(MaxAction[0]);
         //MaxQ[0] = 0;
-        pay.updateMax(MaxAction[0], MaxQ[0], mu, dV);
+        //pay.updateMax(MaxAction[0], MaxQ[0], mu, dV);
+        if (symm){
+            short actionSymm = MaxAction[0];
+            oldCode[0] = code;
+            if (MaxAction[0] >= end && MaxAction[0] < (2 *end)){
+                actionSymm = (short)(2 * end - 1 - MaxAction[0]);
+                oldCode[0] = codeBuy;
+                payBuy.updateMax(actionSymm, MaxQ[0], muMax, -dVMax);
+                if (!Payoffs.containsKey(codeBuy)){
+                    statesCount++;
+                    System.out.println(statesCount);
+                    Payoffs.put(codeBuy, payBuy);
+                }
+            }   else if (MaxAction[0] == (2 * end + 1)){
+                actionSymm = (short)(2 * end);
+                oldCode[0] = codeBuy;
+                payBuy.updateMax(actionSymm, MaxQ[0], muMax, -dVMax);
+                if (!Payoffs.containsKey(codeBuy)){
+                    statesCount++;
+                    System.out.println(statesCount);
+                    Payoffs.put(codeBuy, payBuy);
+                }
+            } else {
+                pay.updateMax(actionSymm, MaxQ[0], muMax, dVMax);
+                if (!Payoffs.containsKey(code)){
+                    statesCount++;
+                    System.out.println(statesCount);
+                    Payoffs.put(code, pay);
+                }
+            }
+        } else {
+            pay.updateMax(MaxAction[0], MaxQ[0], muMax, dVMax);
+            oldCode[0] = code;
+        }
         if (units2trade == 2){
+            short actionSymm = MaxAction[1];
+            if (symm){
+                if (MaxAction[1] >= end && MaxAction[1] < (2 *end)){
+                    actionSymm = (short)(2 * end - 1 - MaxAction[1]);
+                    dV2max = -dV2max;
+                } else if (MaxAction[1] == (2 * end + 1)){
+                    actionSymm = (short)(2 * end);
+                    dV2max = -dV2max;
+                }
+            }
             if (Payoffs.containsKey(code2max)){
                 pay2 = ((GPR2005Payoff_test3) Payoffs.get(code2max));
-                pay2.updateMax(MaxAction[1], MaxQ[1], mu2max, dV2max);
+                pay2.updateMax(actionSymm, MaxQ[1], mu2max, dV2max);
                 diff += pay2.getDiff();
             } else {
                 statesCount++;
                 System.out.println(statesCount);
                 pay2 = new GPR2005Payoff_test3();
                 Payoffs.put(code2max, pay2);
-                pay2.updateMax(MaxAction[1], MaxQ[1], mu2max, dV2max);
+                pay2.updateMax(actionSymm, MaxQ[1], mu2max, dV2max);
                 diff += pay2.getDiff();
             }
         }
@@ -949,16 +1258,14 @@ public class Trader {
             if (i == 0){
                 firstShare = true;
             }
-            //com.jakubrojcek.Order CurrentOrder = new com.jakubrojcek.Order(traderID, EventTime, buyOrder, action[i], pricePosition);
             Order CurrentOrder = new Order(traderID, EventTime, buyOrder, firstShare, MaxAction[i], MaxQ[i], pricePosition);
             if (MaxAction[i] != (2 * end + 2)){orders.add(CurrentOrder);}
         }
         if (outstanding == 0){isTraded = true;}
 
-        oldCode[0] = code;
         oldCode[1] = code2max;
         //MaxAction[0] = 17;
-        if (writeDiagnostics){writeDiagnostics(diff, MaxAction);}
+        if (writeDiagnostics){writeDiagnostics(diff, MaxAction, max);}
         units2trade = outstanding;
         if (writeDecisions && notFringeMO){writeDecision(BookInfo, BookSizes, MaxAction);}
         if (writeHistogram){writeHistogram(BookSizes);}
@@ -968,6 +1275,7 @@ public class Trader {
 
         return orders;
     }
+
 
     // used to update payoff of action taken in a state upon execution
     public void execution(double fundamentalValue, double EventTime){
@@ -1000,12 +1308,39 @@ public class Trader {
         /*if (!o.isFirstShare()){
             System.out.println("Second share exec");
         }*/
-        if (Payoffs.containsKey(code)){
+        /*if (Payoffs.containsKey(code)){
             GPR2005Payoff_test3 pay = (GPR2005Payoff_test3) Payoffs.get(code);
             if(pay.getX().containsKey((short) ((o.getAction() << 7) + o.getQ()))){
                 pay.update(o.getAction(), o.getQ(), (float) (fundamentalValue - PriceFV), false);
             }
+        }*/
+        if (Payoffs.containsKey(code)){              // TODO: if SYMM doesn't work, delete this, uncomment above
+            GPR2005Payoff_test3 pay = (GPR2005Payoff_test3) Payoffs.get(code);
+            if (symm){
+                short actionSymm = o.getAction();
+                float dv = (float) (fundamentalValue - PriceFV);
+                if (actionSymm >= end && actionSymm < (2 *end)){
+                    actionSymm = (short)(2* end - 1 - o.getAction());
+                    dv = - dv;
+                }
+                if(pay.getX().containsKey((short) ((actionSymm << 7) + o.getQ()))){
+                    if (fixedBeliefs){
+                        pay.updateNe(actionSymm, o.getQ(), dv, false);
+                    } else {
+                        pay.update(actionSymm, o.getQ(), dv, false);
+                    }
+                }
+            } else {
+                if(pay.getX().containsKey((short) ((o.getAction() << 7) + o.getQ()))){
+                    if (fixedBeliefs){
+                        pay.updateNe(o.getAction(), o.getQ(), (float) (fundamentalValue - PriceFV), false);
+                    } else {
+                        pay.update(o.getAction(), o.getQ(), (float) (fundamentalValue - PriceFV), false);
+                    }
+                }
+            }
         }
+
        /* short[] action = new short[2];
         action[0] = (short) (oldAction>>7);
         action[1] = (short) (oldAction - (action[0]<<7));
@@ -1078,13 +1413,35 @@ public class Trader {
         }*/
         long code;
         code = (o.isFirstShare()) ? oldCode[0] : oldCode[1];   // is it the first share or not
-        if (Payoffs.containsKey(code)){
+        /*if (Payoffs.containsKey(code)){
             GPR2005Payoff_test3 pay = (GPR2005Payoff_test3) Payoffs.get(code);
             if(pay.getX().containsKey((short) ((o.getAction() << 7) + o.getQ()))){
                 pay.update(o.getAction(), o.getQ(), 0.0f, true);
             }
-        } else {
-            System.out.println("stop & think");
+        }*/
+        if (Payoffs.containsKey(code)){          // TODO: if SYMM doesn't work, delete this, uncomment above
+            GPR2005Payoff_test3 pay = (GPR2005Payoff_test3) Payoffs.get(code);
+            if (symm){
+                short actionSymm = o.getAction();
+                if (actionSymm >= end && actionSymm < (2 *end)){
+                    actionSymm = (short)(2* end - 1 - o.getAction());
+                }
+                if(pay.getX().containsKey((short) ((actionSymm << 7) + o.getQ()))){
+                    if (fixedBeliefs){
+                        pay.updateNe(actionSymm, o.getQ(), 0.0f, true);
+                    } else {
+                        pay.update(actionSymm, o.getQ(), 0.0f, true);
+                    }
+                }
+            } else {
+                if(pay.getX().containsKey((short) ((o.getAction() << 7) + o.getQ()))){
+                    if (fixedBeliefs){
+                        pay.updateNe(o.getAction(), o.getQ(), 0.0f, true);
+                    } else {
+                        pay.update(o.getAction(), o.getQ(), 0.0f, true);
+                    }
+                }
+            }
         }
 
         if (--units2trade == 0){isTraded = true;}
@@ -1104,7 +1461,7 @@ public class Trader {
         previousTraderAction[2] = BookInfo[1];
     }
 
-    private void writeHistogram(int[] BookSizes){
+    public void writeHistogram(int[] BookSizes){
         // histogram
         bookSizesHistory[0]++;
         int sz = BookSizes.length;
@@ -1118,9 +1475,9 @@ public class Trader {
     }
 
     // writing diagnostics
-    private void writeDiagnostics(double diff, Short[] ac){
+    private void writeDiagnostics(double diff, Short[] ac, double max){
         diag.addDiff(diff);
-        diag.addAction(ac, units2trade);
+        diag.addAction(ac, units2trade, max);
     }
 
 
@@ -1133,7 +1490,7 @@ public class Trader {
         return( f * Math.pow(delta, (double) x ) * Math.pow( 1.0 - delta, (double)(n - x)));
     }
     // computes initial beliefs for GPR2005 Payoffs
-    public HashMap<String, Float[][]> computeInitialBeliefs(float deltaLow, double muND, double stdevND){
+    public HashMap<String, Double[][]> computeInitialBeliefs(float deltaLow, double muND, double stdevND){
         // compute execution probabilities
         NormalDistribution nd = new NormalDistribution(muND, stdevND);   // mean 0, stddev $0.35 - GPR 2005
         int t1;
@@ -1143,23 +1500,23 @@ public class Trader {
         double v1;
         double FB;
         double u = 1.0 - deltaLow;
-        mu0 = new Float[nPayoffs][maxDepth + 1];
-        deltaV0 = new Float[nPayoffs][maxDepth + 1];
+        mu0 = new Double[nPayoffs][maxDepth + 1];
+        deltaV0 = new Double[nPayoffs][maxDepth + 1];
         for (int i = 0; i < end; i++){      // Limit order payoffs for ticks LL through HL
             FB = nd.cumulativeProbability((i - breakPoint) * tickSize);  // probability of interested seller coming
-            mu0[i][0] = (float) ((u * (1.0 - FB)) / (1.0 - u * FB));
-            mu0[i][1] = (float) (u / (1.0 - u * u * FB) * ((1.0 + deltaLow) / 2.0 * (1.0 - FB) +
+            mu0[i][0] = ((u * (1.0 - FB)) / (1.0 - u * FB));
+            mu0[i][1] = (u / (1.0 - u * u * FB) * ((1.0 + deltaLow) / 2.0 * (1.0 - FB) +
                     deltaLow * mu0[i][0] + (1.0 - 3.0  * deltaLow) / 2.0 *
                     (1.0 - FB) * mu0[i][0]));
-            deltaV0[i][0] = (float)( - (i + 1) * tickSize);
-            deltaV0[i][1] = (float)( - (i + 1) * tickSize);
+            deltaV0[i][0] = ( - (i + 1) * tickSize);
+            deltaV0[i][1] = ( - (i + 1) * tickSize);
             // SLOs
-            mu0[i + end][0] = (float) ((u * FB) / (1.0 - u * (1.0 - FB)));
-            mu0[i + end][1] = (float) (u / (1.0 - u  * u * (1.0 - FB)) * ((1.0 + deltaLow) / 2.0 * FB +
+            mu0[i + end][0] = ((u * FB) / (1.0 - u * (1.0 - FB)));
+            mu0[i + end][1] = (u / (1.0 - u  * u * (1.0 - FB)) * ((1.0 + deltaLow) / 2.0 * FB +
                     deltaLow * mu0[i + end][0] + (1.0 - 3.0  * deltaLow) / 2.0 *
                     FB * mu0[i + end][0]));
-            deltaV0[i + end][0] = (float)((end - i) * tickSize);
-            deltaV0[i + end][1] = (float)((end - i) * tickSize);
+            deltaV0[i + end][0] = ((end - i) * tickSize);
+            deltaV0[i + end][1] = ((end - i) * tickSize);
             // BLOs
             /*for (int k = 2; k < maxDepth; k++){
                 t1 = k + 1;     *//* in Uday exposition: m1 is m, t1 is k.  NOTE: I distribute the (1-delta) in Uday to retain Binomial() *//*
@@ -1196,35 +1553,79 @@ public class Trader {
                             mu0[i + end][t1 - m1 - 1 - 1]) / 2.0 + (1.0 - FB) * mu0[i + end][t1 - m1 - 1]);  /* extra -1 for C index */
                 }
                 v1 = Math.pow(u,(double)t1);
-                mu0[i][k]=  (float)((v1 * (1 - FB) * (mu0[i][k-2] + mu0[i][k-1]) / 2.0 + u * w ) /
+                mu0[i][k]=  ((v1 * (1 - FB) * (mu0[i][k-2] + mu0[i][k-1]) / 2.0 + u * w ) /
                         (1.0 - v1*(FB)));
-                mu0[i + end][k]=  (float) ((v1 * FB * (mu0[i + end][k - 2] + mu0[i + end][k-1]) / 2.0 + u * v ) /
+                mu0[i + end][k]=  ((v1 * FB * (mu0[i + end][k - 2] + mu0[i + end][k-1]) / 2.0 + u * v ) /
                         (1.0 - v1 * (1.0 - FB)));
-                deltaV0[i][k] = (float)( -(i + 1) * tickSize);
-                deltaV0[i + end][k] = (float)((end - i) * tickSize);
+                deltaV0[i][k] = ( -(i + 1) * tickSize);
+                deltaV0[i + end][k] = ((end - i) * tickSize);
             }
-            mu0[i][maxDepth] = 0.0f;
-            deltaV0[i][maxDepth] = 99f;
-            mu0[i + end][maxDepth] = 0.0f;
-            deltaV0[i + end][maxDepth] = -99f;
+            mu0[i][maxDepth] = 0.0;
+            deltaV0[i][maxDepth] = 99.0;
+            mu0[i + end][maxDepth] = 0.0;
+            deltaV0[i + end][maxDepth] = -99.0;
         }
-        mu0[2 * end][0] = 1.0f;                             // market sell order
-        mu0[2 * end + 1][0] = 1.0f;                         // market buy order
-        mu0[2 * end + 2][0] = 0.0f;                         // no order
+        mu0[2 * end][0] = 1.0;                             // market sell order
+        mu0[2 * end + 1][0] = 1.0;                         // market buy order
+        mu0[2 * end + 2][0] = 0.0;                         // no order
 
         // compute FV change upon execution
-        deltaV0[2 * end][0] = 0.0f;                           // market sell order
-        deltaV0[2 * end + 1][0] = 0.0f;                       // market buy order
-        deltaV0[2 * end + 2][0] = 0.0f;                       // no order
+        deltaV0[2 * end][0] = 0.0;                           // market sell order
+        deltaV0[2 * end + 1][0] = 0.0;                       // market buy order
+        deltaV0[2 * end + 2][0] = 0.0;                       // no order
         InitialPayoff.setInitialBeliefs(mu0, deltaV0);
-        HashMap<String, Float[][]> tempInitialBeliefs = new HashMap<String, Float[][]>();
+        HashMap<String, Double[][]> tempInitialBeliefs = new HashMap<String, Double[][]>();
         tempInitialBeliefs.put("mu0", mu0);
         tempInitialBeliefs.put("deltaV0", deltaV0);
         return tempInitialBeliefs;
     }
 
     // Hash code computed dependent on various Information Size (2, 4, 6, 7, 8)
+    public double[] SimilarMuDv (short action, short tq, int [] BS, boolean buy){
+        GPR2005Payoff_test3 pay = new GPR2005Payoff_test3();
+        double [] MuDv;
+        int[] BsNew = new int[nP];
+        System.arraycopy(BS, 0, BsNew, 0, nP);
+        Long code;
+        int pos = (buy) ? (action - end + LL) : (action + LL);
+        short q = tq;
+        if (buy){
+            while (q > 0){
+                BsNew[pos]--;
+                q--;
+                code = HashCode(0, 0, 0, BS, BsNew);
+                if (Payoffs.containsKey(code)){
+                    pay = (GPR2005Payoff_test3)Payoffs.get(code);
+                    if (pay.getX().containsKey((short)((action<<7) + q))){
+                        break;
+                    }
+                }
+            }
+        } else {
+            while (q > 0){
+                BsNew[pos]++;
+                q--;
+                code = HashCode(0, 0, 0, BS, BsNew);
+                if (Payoffs.containsKey(code)){
+                    pay = (GPR2005Payoff_test3)Payoffs.get(code);
+                    if (pay.getX().containsKey((short)((action<<7) + q))){
+                        break;
+                    }
+                }
+            }
+        }
+        if (pay.getX().containsKey((short)((action<<7) + q))){
+            MuDv = pay.getSingleMuDv(BsNew, action, q);
+        } else {
+            System.arraycopy(BS, 0, BsNew, 0, nP);
+            MuDv = InitalGPR2005.getSingleMuDv(BsNew, action, tq);
+        }
+
+        return MuDv;
+    }
+
     public Long HashCode(int P, int q, int x, int[] BookInfo, int [] BS){
+
         long code = (long) 0;
         if (infoSize == 2){
             long Bt = BookInfo[0];                  // Best Bid position
@@ -1483,7 +1884,7 @@ public class Trader {
         while (keys.hasNext()){
             code = (Long) keys.next();
             pay =  Payoffs.get(code);
-            pay.nReset();
+            ((GPR2005Payoff_test3)pay).nReset(n, m);
                 if (pay instanceof SinglePayoff){
                     ((SinglePayoff) pay).setFromPreviousRound(true);
                 } else if (pay instanceof MultiplePayoff) {
@@ -1495,9 +1896,19 @@ public class Trader {
     // prints diagnostics collected from data in decisions
     public void printDiagnostics(){
         try{
-            String outputFileName = folder + "diagnostics.csv";
+            String outputFileName = folder + "diagnostics1.csv";
             FileWriter writer = new FileWriter(outputFileName, true);
             writer.write(diag.printDiagnostics("diffs"));
+            writer.close();
+        }
+        catch (Exception e){
+            e.printStackTrace();
+            System.exit(1);
+        }
+        try{
+            String outputFileName = folder + "diagnostics2.csv";
+            FileWriter writer = new FileWriter(outputFileName, true);
+            writer.write(diag.printDiagnostics("payoffs"));
             writer.close();
         }
         catch (Exception e){
@@ -1508,12 +1919,54 @@ public class Trader {
 
     public void printConvergence(int t2){
         Long code;
-        Payoff pay;
+        //Payoff pay;
+        GPR2005Payoff_test3 pay;
         Iterator keys = Payoffs.keySet().iterator();
+        Iterator keys2;
+        Short acKey;
+        int DOF = 0;            // degrees of freedom
+        int NN = 0;             // number of times visited
+        int Ee = 0;             // number of times executed
+        double e = 0.0;         // estimated execution probability
+        double mu = 0.0;        // empirical execution probability
+        double chiSq = 0.0;     // chiSq statistic
+        double sumDiff = 0.0;   // average difference
+        Belief beliefConv;
+
         try{
             String outputFileName = folder + "convergence.csv";
             FileWriter writer = new FileWriter(outputFileName, true);
             while (keys.hasNext()){
+                code = (Long) keys.next();
+                pay =  (GPR2005Payoff_test3)Payoffs.get(code);
+                keys2 = pay.getX().keySet().iterator();
+                while (keys2.hasNext()){
+                    acKey = (Short) keys2.next();
+                    beliefConv = pay.getX().get(acKey);
+                    NN = beliefConv.getN();
+                    Ee = beliefConv.getNe();
+                    e = beliefConv.getMu();
+                    mu = (double)Ee/NN;
+                    mu = Math.abs(mu - e);
+                    if (NN >= t2){
+                        DOF++;
+
+                        if (e != 1.0 || e != 0.0) {
+                            chiSq += mu * mu * NN / (e * (1 - e));
+                        }
+                        sumDiff += mu;
+                    }
+                    writer.write(NN + ";" + Ee + ";" + e + ";" + mu + ";");
+                    writer.write("\r");
+                }
+            }
+            writer.write("chiSq = :;" + chiSq + ";DOF:;" + DOF + ";sumDiff:;" + sumDiff);
+            writer.write("\r");
+            /*keys = Payoffs.keySet().iterator();
+            if (keys.hasNext()){
+                Payoffs.get(keys.next()).setDof(0);
+            }*/
+            /*while (keys.hasNext()){
                 code = (Long) keys.next();
                 pay =  Payoffs.get(code);
                 if (pay instanceof MultiplePayoff){
@@ -1523,11 +1976,11 @@ public class Trader {
             keys = Payoffs.keySet().iterator();
             if (keys.hasNext()){
                 Payoffs.get(keys.next()).setDof(0);
-            }
+            }*/
             writer.close();
         }
-        catch (Exception e){
-            e.printStackTrace();
+        catch (Exception ex){
+            ex.printStackTrace();
             System.exit(1);
         }
     }
@@ -1629,11 +2082,27 @@ public class Trader {
         writeHistogram = b;
     }
 
+    public void setFixedBeliefs(boolean f){
+        fixedBeliefs = f;
+    }
+
+    public void setSimilar(boolean s){
+        similar = s;
+    }
+
+    public void setSymm(boolean s){
+        symm = s;
+    }
+
     public HashMap<Long, Payoff> getPayoffs(){
         return Payoffs;
     }
 
     public static HashMap<Short, Float> getPs() {
         return ps;
+    }
+
+    public void setStatesCount(int n){
+        statesCount = n;
     }
 }

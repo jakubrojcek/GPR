@@ -61,7 +61,7 @@ public class GPR2005Payoff_test extends Payoff {
 
         if (tremble){
             List<Short> keys = new ArrayList<Short>(hm.keySet());
-            maxIndex = keys.get(Payoff.random.nextInt(keys.size()));        // TODO: make sure
+            maxIndex = keys.get(Payoff.random.nextInt(keys.size()));
             max = hm.get(maxIndex);
         }
 
@@ -87,8 +87,7 @@ public class GPR2005Payoff_test extends Payoff {
         }*/
     }
 
-    public double update(short oldAction, float realDelta, boolean cancelled, byte unitTraded){   // TODO: this part works?
-    // TODO: unitTraded 0- first action, 1- second action
+    public double update(short oldAction, float realDelta, boolean cancelled, byte unitTraded){
         if(x.get(oldAction)[0].getN() < Payoff.nResetMax) {
                 x.get(oldAction)[unitTraded].increaseN();
         }
@@ -99,7 +98,7 @@ public class GPR2005Payoff_test extends Payoff {
             x.get(oldAction)[unitTraded].setMu((float) ((1.0 - alpha) * previousMu));
         } else {
             x.get(oldAction)[unitTraded].setMu((float) ((1.0 - alpha) * previousMu + alpha));
-            alpha = (1.0/(1 + previousMu * (x.get(oldAction))[unitTraded].getN())); // TODO: has this worked?
+            alpha = (1.0/(1 + previousMu * (x.get(oldAction))[unitTraded].getN()));
             x.get(oldAction)[unitTraded].setDeltaV((float) ((1.0 - alpha) * x.get(oldAction)[unitTraded].getDeltaV() +
                     alpha * realDelta));
         }
