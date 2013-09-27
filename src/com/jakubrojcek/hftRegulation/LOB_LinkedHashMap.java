@@ -1,7 +1,6 @@
 package com.jakubrojcek.hftRegulation;
 
 import com.jakubrojcek.Order;
-import com.jakubrojcek.gpr2005a.Trader;
 
 import java.util.*;
 
@@ -78,9 +77,7 @@ public class LOB_LinkedHashMap {
                         int oID = (Integer) keys.iterator().next();
                         Order o = book[i].remove(oID);
                         int traderID = o.getTraderID();
-                        if (model == "GPR2005") {
-                            traders.get(traderID).execution(fv, o);
-                        } else {traders.get(traderID).execution(fv, et);}
+                        traders.get(traderID).execution(fv, et);
                         ActiveOrders.remove(o);
                         int tempSizeCP = CurrentPosition.get(traderID).get(i + positionShift);
                         if (++tempSizeCP == 0){
@@ -105,9 +102,6 @@ public class LOB_LinkedHashMap {
                 Order o = book[i].remove(oID);
                 int traderID = o.getTraderID();
                 book[i].remove(oID);
-                if (model == "GPR2005"){
-                    traders.get(traderID).cancel(o);
-                }
                 ActiveOrders.remove(o);
                 int tempSizeCP = CurrentPosition.get(traderID).get(i + positionShift);
                 if (--tempSizeCP == 0){
@@ -149,9 +143,7 @@ public class LOB_LinkedHashMap {
                         int oID = (Integer) keys.iterator().next();
                         Order o = book[i].remove(oID);
                         int traderID = o.getTraderID();
-                        if (model == "GPR2005") {
-                            traders.get(traderID).execution(fv, o);
-                        } else {traders.get(traderID).execution(fv, et);}
+                        traders.get(traderID).execution(fv, et);
                         ActiveOrders.remove(o);
                         int tempSizeCP = CurrentPosition.get(traderID).get(i + positionShift);
                         if (--tempSizeCP == 0){
@@ -176,9 +168,6 @@ public class LOB_LinkedHashMap {
                 Order o = book[i].remove(oID);
                 int traderID = o.getTraderID();
                 book[i].remove(oID);
-                if (model == "GPR2005"){
-                    traders.get(traderID).cancel(o);
-                }
                 ActiveOrders.remove(o);
                 int tempSizeCP = CurrentPosition.get(traderID).get(i + positionShift);
                 if (++tempSizeCP == 0){
@@ -298,9 +287,7 @@ public class LOB_LinkedHashMap {
                      Order cp = book[pos].remove(book[pos].keySet().iterator().next());
                      Integer CPid = cp.getTraderID();
 
-                     if (model == "GPR2005") {
-                         traders.get(CPid).execution(FV, cp);
-                     } else {traders.get(CPid).execution(FV, o.getTimeStamp());}
+                     traders.get(CPid).execution(FV, o.getTimeStamp());
                      ActiveOrders.remove(cp);
                      Pt = pos;                                       // sets last transaction position
                      b = 1;                                          // sets last transaction direction, buy = 1
@@ -329,9 +316,7 @@ public class LOB_LinkedHashMap {
                  if (book[pos].size() > 0 && book[pos].get(book[pos].keySet().iterator().next()).isBuyOrder()){
                      Order cp = book[pos].remove(book[pos].keySet().iterator().next());
                      Integer CPid = cp.getTraderID();
-                     if (model == "GPR2005") {
-                         traders.get(CPid).execution(FV, cp);
-                     } else {traders.get(CPid).execution(FV, o.getTimeStamp());}
+                     traders.get(CPid).execution(FV, o.getTimeStamp());
                      ActiveOrders.remove(cp);
                      Pt = pos;           // set last transaction price
                      b = 0;              // set last transaction direction, 0=sell

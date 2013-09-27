@@ -1,7 +1,7 @@
 import com.jakubrojcek.Order;
 import com.jakubrojcek.hftRegulation.History;
 import com.jakubrojcek.hftRegulation.LOB_LinkedHashMap;
-import com.jakubrojcek.gpr2005a.Trader;
+import com.jakubrojcek.hftRegulation.Trader;
 
 import java.util.*;
 
@@ -51,12 +51,15 @@ public class ThirdLobTest {
         orders.add(o3); orders.add(o4);
         book.transactionRule(2, orders);
         int[] bookSizes;
-        for (int i = 0; i < 1000000; i++){
-            bookSizes = book.getBookSizes();
-        }
-        // put in some orders of size one
+        bookSizes = book.getBookSizes();
+        orders = new ArrayList<Order>();
+        orders.add(new Order(3, 0.1, false, 1, 3));
+        //book.transactionRule(3, orders);
+        bookSizes = book.getBookSizes();
 
-
+        // testing if trader holds belief and order reference
+        Trader tr = new Trader(false, 0.0f);
+        o1.setPosition(11);
         /* categories of traders: fast, slow, private value: negative, zero, positive
   that means 4 categories of traders. Fast have zero PV */
         double timeStamp2 = System.nanoTime();

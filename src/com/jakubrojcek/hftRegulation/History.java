@@ -2,7 +2,6 @@ package com.jakubrojcek.hftRegulation;
 
 import com.jakubrojcek.Order;
 import com.jakubrojcek.Trade;
-import com.jakubrojcek.gpr2005a.Trader;
 
 import java.io.FileWriter;
 import java.util.ArrayList;
