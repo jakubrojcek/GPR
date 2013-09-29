@@ -157,52 +157,70 @@ public class Trader {
         long At = BookInfo[1];              // Best Ask position
         Long code = HashCode(P, q, x, BookInfo, BookSizes);
         tempQs = states.containsKey(code) ? states.get(code) : new HashMap<Integer, BeliefQ>();
-        int action;
-        double max, payoff, p1;
+        int action = -1, nLO = 0, pos;               // TODO: if initialize to NO, then make nPayoffs shorter? or just the for loop till nPayoffs - 1?
+        double max = -1.0, p1 = -1.0, sum = 0.0;
 
         short b = (short) Math.max(BookInfo[0] - LL + 1, 0);             // + 1 in order to start from one above B
         b = (short) Math.min(end, b);
         short a = (short) Math.min(BookInfo[1] - LL + end, 2 * end);
         a = (short) Math.max(end, a);
-        for(short i = b; i < nPayoffs; i++){ // searching for best payoff
+
+        if (isReturning){
+            action = order.isBuyOrder() ? order.getPosition() - LL + end //TODO: adjust for the positionShift here or in the book
+                                        : order.getPosition() - LL;
+            if (action >= b && action < a){                         // still in the range for LO, else is cancelled for sure TODO: b and a work here?
+                p1 = order.isBuyOrder() ? (discountFactorS.get(action)[Math.abs(order.getQ())] * ((breakPoint - action) * tickSize + privateValue))
+                                        : (discountFactorB.get(action)[Math.abs(order.getQ())] * ((action - breakPoint) * tickSize - privateValue));
+                // TODO: make sure the Q updates as the priority increases-> in the book
+                max = tempQs.containsKey(action) ? tempQs.get(action).getQ()
+                                                 : -1.0;
+                max = Math.max(max, p1);
+            } else {action = -1;}                                   // otherwise could have action == 2 * end and the SMO would not be computed later
+        }
+
+        for(int i = b; i < nPayoffs; i++){ // searching for best payoff
             p1 = -1.0f;
-            if (tempQs.containsKey(i)){
-                payoff = tempQs.get(i).getQ();
-            } else {
-                if (i < end){
-
-                } else if (i < a) {
-
-                } else if (i == (2 * end)){
-
-                } else if (i == (2 * end + 1)){
-
-                } else if (i == 2 * end + 2) {
-
+            if (i != action){
+                if (tempQs.containsKey(i)){
+                    p1 = tempQs.get(i).getQ();
+                } else {
+                    if (i < end){                                                // payoff to sell limit order
+                        p1 = (discountFactorB.get(i)[Math.abs(BookSizes[LL + i])] *
+                                ((i - breakPoint) * tickSize - privateValue));
+                    } else if (i < a) {                                          // payoff to buy limit order
+                        p1 = (discountFactorS.get(i)[Math.abs(BookSizes[LL + i])] *
+                                ((breakPoint - i) * tickSize + privateValue));
+                    } else if (i == (2 * end)){
+                        p1 = ((Bt - fvPos) * tickSize - privateValue);           // payoff to sell market order
+                    } else if (i == (2 * end + 1)){
+                        p1 = ((fvPos - At) * tickSize + privateValue);           // payoff to buy market order
+                    } else if (i == (2 * end + 2)){
+                        double Rt = (isHFT) ? 1.0 / ReturnFrequencyHFT           // TODO: can I integrate over future differently?
+                                            : 1.0 / ReturnFrequencyNonHFT;       // expected return time
+                        p1 = (Math.exp(-rho * (Rt)) * (sum / Math.max(1, nLO))); // 2 for averaging over 14
+                    }
+                }
+                if (p1 > 0){
+                    nLO++;
+                    sum += p1;
+                    if (p1 > max){
+                        max = p1;
+                        action = i;
+                    }
                 }
             }
-        }
-        double sum = 0;                     // used to compute payoff to no-order
-        for (int i = 0; i < end; i++){      // Limit order payoffs for ticks LL through HL
-            // SLOs
-            p[i] = (float) (discountFactorB.get(i)[Math.abs(BookSizes[LL + i])] *
-                    ((i - breakPoint) * tickSize - privateValue));
-            // BLOs
-            p[i + end + 1] = (float) (discountFactorS.get(i)[Math.abs(BookSizes[LL + i])] *
-                    ((breakPoint - i) * tickSize + privateValue));
-            double LOpayoff = (p[i] > p[i + end + 1]) ?
-                                                 p[i] : p[i + end + 1];
-            // choose bigger one -> the one with positive payoff
-            sum += LOpayoff;
+
         }
 
-        // computing payoff from MO
-        p[end] = (float)((Bt - fvPos) * tickSize - privateValue); // payoff to sell market order
-        p[2 * end + 1] = (float)((fvPos - At) * tickSize + privateValue); // payoff to buy market order
-
-        sum +=  (p[end] > p[2 * end + 1]) ? p[end]
-                : p[2 * end + 1];
-
+        // TODO: updateMax comes here
+        if (tempQs.containsKey(action)){
+            belief = tempQs.get(action);
+            // TODO: increase n when chosen or when updated? look into GPR code and Bertsekas & Tsitsiklis
+        } else {
+            belief = new BeliefQ((short) 1, max);
+            tempQs.put(action, belief);
+        }
+        // TODO: previous action LO has probably better priority in the queue, higher possible payoff than whay I compute before
         if (P >= LL && P <= HL){  // previous action position is in the LO range
             int p25 = P - LL;
             if (x == 1){ // last LO was sell
