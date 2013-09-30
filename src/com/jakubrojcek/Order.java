@@ -13,12 +13,12 @@ public class Order {
     private double timeStamp;
     private boolean buyOrder;
     private boolean firstShare;
-    private short action;
-    private short q;
+    private int action;
+    private int q;
     private int size;
     private int position;
 
-    public Order(int traderID, double timeStamp, boolean buyOrder, boolean fs, short action, short q, int position){
+    public Order(int traderID, double timeStamp, boolean buyOrder, boolean fs, int action, int q, int position){
         this.traderID = traderID;
         this.timeStamp = timeStamp;
         this.buyOrder = buyOrder;
@@ -55,11 +55,11 @@ public class Order {
         return buyOrder;
     }
 
-    public short getAction() {
+    public int getAction() {
         return action;
     }
 
-    public short getQ() {
+    public int getQ() {
         return q;
     }
 

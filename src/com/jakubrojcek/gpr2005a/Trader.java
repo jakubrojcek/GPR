@@ -1317,7 +1317,7 @@ public class Trader {
         if (Payoffs.containsKey(code)){              // TODO: if SYMM doesn't work, delete this, uncomment above
             GPR2005Payoff_test3 pay = (GPR2005Payoff_test3) Payoffs.get(code);
             if (symm){
-                short actionSymm = o.getAction();
+                short actionSymm = (short) o.getAction();
                 float dv = (float) (fundamentalValue - PriceFV);
                 if (actionSymm >= end && actionSymm < (2 *end)){
                     actionSymm = (short)(2* end - 1 - o.getAction());
@@ -1325,17 +1325,17 @@ public class Trader {
                 }
                 if(pay.getX().containsKey((short) ((actionSymm << 7) + o.getQ()))){
                     if (fixedBeliefs){
-                        pay.updateNe(actionSymm, o.getQ(), dv, false);
+                        pay.updateNe(actionSymm, (short)o.getQ(), dv, false);
                     } else {
-                        pay.update(actionSymm, o.getQ(), dv, false);
+                        pay.update(actionSymm, (short)o.getQ(), dv, false);
                     }
                 }
             } else {
                 if(pay.getX().containsKey((short) ((o.getAction() << 7) + o.getQ()))){
                     if (fixedBeliefs){
-                        pay.updateNe(o.getAction(), o.getQ(), (float) (fundamentalValue - PriceFV), false);
+                        pay.updateNe((short)o.getAction(), (short)o.getQ(), (float) (fundamentalValue - PriceFV), false);
                     } else {
-                        pay.update(o.getAction(), o.getQ(), (float) (fundamentalValue - PriceFV), false);
+                        pay.update((short)o.getAction(), (short)o.getQ(), (float) (fundamentalValue - PriceFV), false);
                     }
                 }
             }
@@ -1422,23 +1422,23 @@ public class Trader {
         if (Payoffs.containsKey(code)){          // TODO: if SYMM doesn't work, delete this, uncomment above
             GPR2005Payoff_test3 pay = (GPR2005Payoff_test3) Payoffs.get(code);
             if (symm){
-                short actionSymm = o.getAction();
+                short actionSymm = (short)o.getAction();
                 if (actionSymm >= end && actionSymm < (2 *end)){
                     actionSymm = (short)(2* end - 1 - o.getAction());
                 }
                 if(pay.getX().containsKey((short) ((actionSymm << 7) + o.getQ()))){
                     if (fixedBeliefs){
-                        pay.updateNe(actionSymm, o.getQ(), 0.0f, true);
+                        pay.updateNe(actionSymm, (short)o.getQ(), 0.0f, true);
                     } else {
-                        pay.update(actionSymm, o.getQ(), 0.0f, true);
+                        pay.update(actionSymm, (short)o.getQ(), 0.0f, true);
                     }
                 }
             } else {
                 if(pay.getX().containsKey((short) ((o.getAction() << 7) + o.getQ()))){
                     if (fixedBeliefs){
-                        pay.updateNe(o.getAction(), o.getQ(), 0.0f, true);
+                        pay.updateNe((short)o.getAction(), (short)o.getQ(), 0.0f, true);
                     } else {
-                        pay.update(o.getAction(), o.getQ(), 0.0f, true);
+                        pay.update((short)o.getAction(), (short)o.getQ(), 0.0f, true);
                     }
                 }
             }

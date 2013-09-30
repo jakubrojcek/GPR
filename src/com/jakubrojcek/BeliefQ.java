@@ -30,7 +30,7 @@ public class BeliefQ {
         this.n = n;
     }
 
-    public void setQ(float q) {
+    public void setQ(double q) {
         this.q = q;
     }
 

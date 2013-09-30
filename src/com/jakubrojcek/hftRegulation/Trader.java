@@ -36,7 +36,8 @@ public class Trader {
     private boolean isReturning = false;// is he returning this time? info from priorities
     private float rho = 0.05f;          // trading "impatience" parameter
     private double PriceFV;             // current fundamental value-> price at middle position
-    private BeliefQ belief;              // reference to an old Belief, to be updated
+    private double EventTime = 0.0;     // event time
+    private BeliefQ belief;             // reference to an old Belief, to be updated
     private Order order = null;         // reference to an old Order, to update the old Belief
 
     static int TraderCount = 0;         // counting number of traders, gives traderID as well
@@ -59,6 +60,7 @@ public class Trader {
     static int breakPoint;              // breaking point for positive, negative, represents FV position on the LO grid
     static int nPayoffs;                // size of payoff vectors
     static int fvPos;                   // tick of fundamental value
+    static int nResetMax = 32767;       // nReset-> resets n to specific value for "forced learning" 32767 is max short             //
     static double prTremble = 0.0;      // probability of trembling
     static boolean writeDecisions = false;   // to writeDecisions things in trader?
     static boolean writeDiagnostics = false; // to writeDiagnostics things in trader?
@@ -126,8 +128,8 @@ public class Trader {
 
     // decision about the price is made here, so far random
     public ArrayList<Order> decision(Hashtable<Byte, Byte> Priorities, int[] BookSizes, int[] BookInfo,
-                               double EventTime, double priceFV){
-
+                               double et, double priceFV){
+        orders = new ArrayList<Order>();
         PriceFV = priceFV;                  // get price of the fundamental value = fundamental value
         int pricePosition;                  // pricePosition at which to submit
         boolean buyOrder = false;           // buy order?
@@ -156,8 +158,10 @@ public class Trader {
         long Bt = BookInfo[0];              // Best Bid position
         long At = BookInfo[1];              // Best Ask position
         Long code = HashCode(P, q, x, BookInfo, BookSizes);
-        tempQs = states.containsKey(code) ? states.get(code) : new HashMap<Integer, BeliefQ>();
-        int action = -1, nLO = 0, pos;               // TODO: if initialize to NO, then make nPayoffs shorter? or just the for loop till nPayoffs - 1?
+        // TODO: do I need to declare the tempQs here or is static OK?
+        tempQs = states.containsKey(code) ? states.get(code)
+                                          : new HashMap<Integer, BeliefQ>();
+        int action = -1, nLO = 0;               // TODO: if initialize to NO, then make nPayoffs shorter? or just the for loop till nPayoffs - 1?
         double max = -1.0, p1 = -1.0, sum = 0.0;
 
         short b = (short) Math.max(BookInfo[0] - LL + 1, 0);             // + 1 in order to start from one above B
@@ -174,7 +178,8 @@ public class Trader {
                 // TODO: make sure the Q updates as the priority increases-> in the book
                 max = tempQs.containsKey(action) ? tempQs.get(action).getQ()
                                                  : -1.0;
-                max = Math.max(max, p1);
+                max = Math.max(max, p1);                            // max, because priority should have improved
+                                                    // TODO: but still, won't this create some cicularity in udpating?
             } else {action = -1;}                                   // otherwise could have action == 2 * end and the SMO would not be computed later
         }
 
@@ -209,95 +214,46 @@ public class Trader {
                     }
                 }
             }
-
         }
 
-        // TODO: updateMax comes here
+        if (isReturning){                                  // updating old belief if trader is returning
+            if(belief.getN() < nResetMax) {
+                belief.increaseN();
+            }
+            double alpha = (1.0/(1.0 + (belief.getN())));  // updating factor
+            double previousQ = belief.getQ();
+            belief.setQ((1.0 - alpha) * previousQ +
+                    alpha * Math.exp( - rho * (EventTime - et)) * max);
+        } else {                                           // storing event time if new trader
+            isReturning = true;
+            EventTime = et;
+        }
         if (tempQs.containsKey(action)){
-            belief = tempQs.get(action);
-            // TODO: increase n when chosen or when updated? look into GPR code and Bertsekas & Tsitsiklis
+            belief = tempQs.get(action);                   // obtaining the belief-> store as private value
         } else {
             belief = new BeliefQ((short) 1, max);
-            tempQs.put(action, belief);
-        }
-        // TODO: previous action LO has probably better priority in the queue, higher possible payoff than whay I compute before
-        if (P >= LL && P <= HL){  // previous action position is in the LO range
-            int p25 = P - LL;
-            if (x == 1){ // last LO was sell
-                sum -= p[p25];
-                p[p25] = (float)(discountFactorB.get(p25)[q] * ((p25 - breakPoint) * tickSize - privateValue));
-                sum += p[p25];
-            } else {     // last LO was buy
-                sum -= p[p25 + end + 1];
-                p[p25 + end + 1] = (float)(discountFactorS.get(p25)[q] * ((breakPoint - p25) * tickSize + privateValue)); //BLO
-                sum += p[p25 + end + 1];
-            }
-            /*System.out.println("Position is " + P + " p25 is " + p25 + " p[p25] is " + p[p25]
-            + " p[p25 + 14] is " + p[p25 + 14] + " q- priority at P is " + q);*/
+            tempQs.put(action, belief);                    // obtaining the belief-> store as private value
         }
 
-        // computing payoff from no-order or cancellation //TODO: put CFEE, TIF here
-        double Rt = (isHFT) ? 1.0 / ReturnFrequencyHFT
-                : 1.0 / ReturnFrequencyNonHFT; // expected return time
-        p[2 * end + 2] = (float) (Math.exp(-rho * (Rt)) * (2 * sum / (p.length - 1))); // 2 for averaging over 14
-        /* no-order payoff is average of other actions payoffs, discounted by expected return time */
-
-        if (!Payoffs.containsKey(code)){ // new state, new com.jakubrojcek.gpr2005a.SinglePayoff created
-            statesCount++;
-            SinglePayoff pay = new SinglePayoff(p, EventTime);
-            Payoffs.put(code, pay);      // insert a com.jakubrojcek.gpr2005a.Payoff object made of com.jakubrojcek.gpr2005a.SinglePayoff to the Payoffs table
-            action = pay.getMaxIndex();
-            continuationValue = pay.getMax();
-        } else{
-            Payoff pay = Payoffs.get(code);   // get from HashTable
-            if (pay instanceof SinglePayoff){ //Transfer com.jakubrojcek.gpr2005a.SinglePayoff to com.jakubrojcek.gpr2005a.MultiplePayoff
-                //statesCount++;
-                MultiplePayoff pay2 = new MultiplePayoff(p, EventTime, (SinglePayoff) pay);//
-                Payoffs.put(code, pay2);
-                continuationValue = pay2.getMax();
-                action = pay2.getMaxIndex();
-            } else {                                                 // com.jakubrojcek.gpr2005a.MultiplePayoff occurring again
-                if (prTremble > 0 && Math.random() < prTremble){     // trembling comes here
-                    ((MultiplePayoff) pay).updateMax(p, EventTime, true);
-                } else{                                              // here no trembling
-                    ((MultiplePayoff) pay).updateMax(p, EventTime, false);
-                }
-                continuationValue = ((MultiplePayoff) pay).getMax();
-                action = ((MultiplePayoff) pay).getMaxIndex();
-                diff = ((MultiplePayoff) pay).getDiff();
-            }
-        }
         //if (writeDiagnostics){writeDiagnostics(diff, (short)action);}
 
-        // update old-state beliefs
-        if (isReturning){
-            // TODO: update the old Belief here
-        } else {isReturning = true;} // sets to true even if hasn't submitted LO/MO
-
+        // creating an order
         if (action > end){
             buyOrder = true;
         }
-
-        pricePosition = (action < end) ? LL + action : LL + action - end - 1;
-        if (action == end){
-            pricePosition = BookInfo[0];}            // position is Bid
+        pricePosition = (action < end) ? action + LL
+                                       : action + LL - end;
+        if (action == 2 * end){                                     // position is Bid
+            pricePosition = BookInfo[0];
+            buyOrder = false;
+        }
         if (action == 2 * end + 1){pricePosition = BookInfo[1];}    // position is Ask
-        /*System.out.println("action = " + action + " pricePosition = " + pricePosition
-        + " buy? " + buyOrder + " payoff " + continuationValue);*/
-        /*for (float f : p){
-            System.out.println(f);
-        }*/
-
-        Order currentOrder = new Order(traderID, EventTime, buyOrder, true, action, (short) 0, pricePosition);
-
-        if (action == end){action = (short)(2 * end + 2);}
-        if (action == 2 * end + 1){action = (short)(2 * end + 2);}
-
-        Short[] action2 = {action, 127};
-        if (writeDecisions){writeDecision(BookInfo, BookSizes, action2);}                                     // printing data for output tables
+        Order currentOrder = new Order(traderID, EventTime, buyOrder, true, action, 0, pricePosition);
+        orders.add(currentOrder);
+        //if (writeDecisions){writeDecision(BookInfo, BookSizes, (short)action);}                                     // printing data for output tables
 
 
-        if (action == end || action == 2 * end + 1) {
+        if (action == 2 * end || action == 2 * end + 1) {
             isTraded = true;                                    // isTraded set to true if submitting MOs
         }
 
@@ -305,16 +261,37 @@ public class Trader {
     }
 
     // used to update payoff of action taken in a state upon execution
-    public void execution(double fundamentalValue, double EventTime){
+    public void execution(double fundamentalValue, double et, Order o){
         double payoff;
         tradeCount++;
+        if (o.getAction() < end){       // sell LO executed
+            payoff = (o.getAction() - breakPoint) * tickSize - privateValue
+                    - (fundamentalValue - PriceFV);
+        } else {                        // buy LO executed
+            payoff = (breakPoint - (o.getAction() - end)) * tickSize + privateValue
+                    + (fundamentalValue - PriceFV);
+        }
+        if(belief.getN() < nResetMax) {
+            belief.increaseN();
+        }
+        double alpha = (1.0/(1.0 + (belief.getN())));  // updating factor
+        double previousQ = belief.getQ();
+        belief.setQ((1.0 - alpha) * previousQ +
+                alpha * Math.exp( - rho * (EventTime - et)) * payoff);
         isTraded = true;
     }
 
     // use to cancel limit order in normal setting
-    public void cancel(double EventTime){
+    public void cancel(double et){
         double payoff = 0.0;
-        isTraded = true;
+        if(belief.getN() < nResetMax) {
+            belief.increaseN();
+        }
+        double alpha = (1.0/(1.0 + (belief.getN())));  // updating factor
+        double previousQ = belief.getQ();
+        belief.setQ((1.0 - alpha) * previousQ +
+                alpha * Math.exp( - rho * (EventTime - et)) * payoff);
+        isTraded = true;                         // TODO: payoff should be zero? is he also done?
     }
 
     // writing decisions
