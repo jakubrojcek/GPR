@@ -68,7 +68,7 @@ public class ThirdLobTest {
         bookSizes = book.getBookSizes();
         orders = new ArrayList<Order>();
         orders.add(new Order(3, 0.1, false, 1, 0, 3));
-        //book.transactionRule(3, orders);
+        book.transactionRule(3, orders);
         bookSizes = book.getBookSizes();
 
         // testing if trader holds belief and order reference

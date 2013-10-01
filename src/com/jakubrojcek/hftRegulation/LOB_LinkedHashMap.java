@@ -225,6 +225,7 @@ public class LOB_LinkedHashMap {
                  } else if (pos == nPoints - 1){        // if BMO executed against fringe, just continue
                  } else{
                      OrderID++;
+                     o.setOrderID(OrderID);
                      o.setPosition(pos + positionShift);
                      o.setQ(book[pos].size());
                      book[pos].put(OrderID,o);           // put some key number here
@@ -248,6 +249,7 @@ public class LOB_LinkedHashMap {
                  } else if (pos == 0){      // if SMO executed against fringe, just continue
                  } else{
                      OrderID++;
+                     o.setOrderID(OrderID);
                      o.setPosition(pos + positionShift);
                      o.setQ(book[pos].size());
                      book[pos].put(OrderID, o);           // put some key number here
