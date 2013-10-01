@@ -1,10 +1,7 @@
 package com.jakubrojcek.hftRegulation;
 
 import com.jakubrojcek.*;
-import com.jakubrojcek.gpr2005a.GPR2005Payoff_test3;
-import com.jakubrojcek.gpr2005a.MultiplePayoff;
-import com.jakubrojcek.gpr2005a.Payoff;
-import com.jakubrojcek.gpr2005a.SinglePayoff;
+import com.jakubrojcek.gpr2005a.*;
 import org.apache.commons.math3.distribution.NormalDistribution;
 
 import java.io.FileWriter;
@@ -46,6 +43,7 @@ public class Trader {
     static HashMap<Long, HashMap<Integer, BeliefQ>> states;/* Beliefs about payoffs for different actions
     + max + maxIndex in state=code */
     HashMap<Integer, BeliefQ> tempQs;
+    LOB_LinkedHashMap book;             // reference to the book
     static double ReturnFrequencyHFT;   // returning frequency of HFT
     static double ReturnFrequencyNonHFT;// returning frequency of NonHFT
     static Hashtable<Integer, Double[]> discountFactorB = new Hashtable<Integer, Double[]>();    // container for discount factors computed using tauB
@@ -92,8 +90,9 @@ public class Trader {
 
     // constructor of the main trader- loads parameters from main
     public Trader(int is, double[] tb, double[] ts, byte numberPrices, int FVpos, double tickS, double rFast, double rSlow,
-                  int ll, int hl, int e, int md, int bp, int hti, double pt, String f){
+                  int ll, int hl, int e, int md, int bp, int hti, double pt, String f, LOB_LinkedHashMap b){
         states = new HashMap<Long, HashMap<Integer, BeliefQ>>(hti);
+        book = b;
         infoSize = is;
         LL = ll;
         HL = hl;
@@ -168,10 +167,11 @@ public class Trader {
         b = (short) Math.min(end, b);
         short a = (short) Math.min(BookInfo[1] - LL + end, 2 * end);
         a = (short) Math.max(end, a);
-
+        int oldPos;
         if (isReturning){
-            action = order.isBuyOrder() ? order.getPosition() - LL + end //TODO: adjust for the positionShift here or in the book
-                                        : order.getPosition() - LL;
+            oldPos = order.getPosition() - book.getPositionShift();
+            action = order.isBuyOrder() ? oldPos - LL + end //TODO: adjust for the positionShift here or in the book
+                                        : oldPos - LL;
             if (action >= b && action < a){                         // still in the range for LO, else is cancelled for sure TODO: b and a work here?
                 p1 = order.isBuyOrder() ? (discountFactorS.get(action)[Math.abs(order.getQ())] * ((breakPoint - action) * tickSize + privateValue))
                                         : (discountFactorB.get(action)[Math.abs(order.getQ())] * ((action - breakPoint) * tickSize - privateValue));
@@ -224,10 +224,8 @@ public class Trader {
             double previousQ = belief.getQ();
             belief.setQ((1.0 - alpha) * previousQ +
                     alpha * Math.exp( - rho * (EventTime - et)) * max);
-        } else {                                           // storing event time if new trader
-            isReturning = true;
-            EventTime = et;
         }
+
         if (tempQs.containsKey(action)){
             belief = tempQs.get(action);                   // obtaining the belief-> store as private value
         } else {
@@ -248,28 +246,39 @@ public class Trader {
             buyOrder = false;
         }
         if (action == 2 * end + 1){pricePosition = BookInfo[1];}    // position is Ask
-        Order currentOrder = new Order(traderID, EventTime, buyOrder, true, action, 0, pricePosition);
-        orders.add(currentOrder);
-        //if (writeDecisions){writeDecision(BookInfo, BookSizes, (short)action);}                                     // printing data for output tables
-
-
+        Order currentOrder = new Order(traderID, EventTime, buyOrder, true, 1, 0, pricePosition);
+        if (isReturning){
+            oldPos = order.getPosition() - book.getPositionShift();
+            // TODO: is the array orders otherwise null?
+            if (oldPos != pricePosition || order.isBuyOrder() != buyOrder){
+                order = currentOrder;
+                orders.add(currentOrder);
+            }
+        } else {
+            order = currentOrder;
+            orders.add(currentOrder);
+            isReturning = true;
+        }
         if (action == 2 * end || action == 2 * end + 1) {
             isTraded = true;                                    // isTraded set to true if submitting MOs
         }
 
+        //if (writeDecisions){writeDecision(BookInfo, BookSizes, (short)action);}                                     // printing data for output tables
+        EventTime = et;
         return orders;
     }
 
     // used to update payoff of action taken in a state upon execution
-    public void execution(double fundamentalValue, double et, Order o){
+    public void execution(double fundamentalValue, double et){
+        int pos = order.getPosition() - book.getPositionShift();
         double payoff;
-        tradeCount++;
-        if (o.getAction() < end){       // sell LO executed
-            payoff = (o.getAction() - breakPoint) * tickSize - privateValue
-                    - (fundamentalValue - PriceFV);
-        } else {                        // buy LO executed
-            payoff = (breakPoint - (o.getAction() - end)) * tickSize + privateValue
+        tradeCount++;            // TODO: change using action to using only FV, FVpos
+        if (order.isBuyOrder()){                    // buy LO executed
+            payoff = (breakPoint - (pos - LL)) * tickSize + privateValue
                     + (fundamentalValue - PriceFV);
+        } else {                                // sell LO executed
+            payoff = (pos - LL - breakPoint) * tickSize - privateValue
+                    - (fundamentalValue - PriceFV);
         }
         if(belief.getN() < nResetMax) {
             belief.increaseN();
@@ -283,15 +292,7 @@ public class Trader {
 
     // use to cancel limit order in normal setting
     public void cancel(double et){
-        double payoff = 0.0;
-        if(belief.getN() < nResetMax) {
-            belief.increaseN();
-        }
-        double alpha = (1.0/(1.0 + (belief.getN())));  // updating factor
-        double previousQ = belief.getQ();
-        belief.setQ((1.0 - alpha) * previousQ +
-                alpha * Math.exp( - rho * (EventTime - et)) * payoff);
-        isTraded = true;                         // TODO: payoff should be zero? is he also done?
+        order = null;
     }
 
     // writing decisions
@@ -493,7 +494,7 @@ public class Trader {
 
     // used to print the data analysed for convergence- occurrences os states, payoffs, time since last hit
     public void printStatesDensity(double et){
-        Payoff pay;
+        /*Payoff pay;
         short [] n;
         float[] p;
         try{
@@ -516,9 +517,9 @@ public class Trader {
                     writer2.write(s + "\r");
                 }
 
-                /* if (pay instanceof com.jakubrojcek.gpr2005a.SinglePayoff){
+                *//* if (pay instanceof com.jakubrojcek.gpr2005a.SinglePayoff){
                     writer.writeDecisions(et - ((com.jakubrojcek.gpr2005a.SinglePayoff) pay).getEventTime() + ";" + "\r");
-                }*/
+                }*//*
             }
             writer.close();
             writer2.close();
@@ -526,7 +527,7 @@ public class Trader {
         catch (Exception e){
             e.printStackTrace();
             System.exit(1);
-        }
+        }*/
     }
 
     // prints Histogram of bookSizes-> so the book into a csv file. The first var is the actual FV
@@ -550,7 +551,7 @@ public class Trader {
 
     // deletes the com.jakubrojcek.gpr2005a.Payoff of a state which has fromPreviousRound set to true
     public void purge(){
-        double rn;
+        /*double rn;
         Iterator it = Payoffs.keySet().iterator();
         ArrayList<Long> toDelete = new ArrayList<Long>();
         int all = 0;
@@ -568,18 +569,18 @@ public class Trader {
         for (Long L : toDelete){
             Payoffs.remove(L);
         }
-        System.out.println("all: " + all + " deleted: " + deleted);
+        System.out.println("all: " + all + " deleted: " + deleted);*/
     }
 
     // resets n in Payoffs, sets purge indicator to true-> true until next time the state is hit
     public void nReset(byte n, short m){
-        Long code;
+        /*Long code;
         Payoff pay;
         Iterator keys = Payoffs.keySet().iterator();
-/*        code = (Long) keys.next();
+*//*        code = (Long) keys.next();
         pay =  Payoffs.get(code);
         pay.setnReset(n, m);
-        pay.nReset();*/
+        pay.nReset();*//*
         while (keys.hasNext()){
             code = (Long) keys.next();
             pay =  Payoffs.get(code);
@@ -589,7 +590,7 @@ public class Trader {
             } else if (pay instanceof MultiplePayoff) {
                 ((MultiplePayoff) pay).setFromPreviousRound(true);
             }
-        }
+        }*/
     }
 
     // prints diagnostics collected from data in decisions
@@ -617,7 +618,7 @@ public class Trader {
     }
 
     public void printConvergence(int t2){
-        Long code;
+        /*Long code;
         //Payoff pay;
         GPR2005Payoff_test3 pay;
         Iterator keys = Payoffs.keySet().iterator();
@@ -661,11 +662,11 @@ public class Trader {
             }
             writer.write("chiSq = :;" + chiSq + ";DOF:;" + DOF + ";sumDiff:;" + sumDiff);
             writer.write("\r");
-            /*keys = Payoffs.keySet().iterator();
+            *//*keys = Payoffs.keySet().iterator();
             if (keys.hasNext()){
                 Payoffs.get(keys.next()).setDof(0);
-            }*/
-            /*while (keys.hasNext()){
+            }*//*
+            *//*while (keys.hasNext()){
                 code = (Long) keys.next();
                 pay =  Payoffs.get(code);
                 if (pay instanceof MultiplePayoff){
@@ -675,13 +676,13 @@ public class Trader {
             keys = Payoffs.keySet().iterator();
             if (keys.hasNext()){
                 Payoffs.get(keys.next()).setDof(0);
-            }*/
+            }*//*
             writer.close();
         }
         catch (Exception ex){
             ex.printStackTrace();
             System.exit(1);
-        }
+        }*/
     }
 
     // prints decisions data collected from actions in different states

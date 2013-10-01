@@ -137,10 +137,10 @@ public class ReducedStatesTest {
         History h = new History(traders, folder); // create history
         // create map of traders
 
+        LOB_LinkedHashMap book = new LOB_LinkedHashMap(model, FV, FVpos, maxDepth, end, tickSize, nP, h, traders);
         Trader trader = new Trader(infoSize, tauB, tauS, nP, FVpos, tickSize, ReturnFrequencyHFT,
                 ReturnFrequencyNonHFT, LL, HL, end, maxDepth, breakPoint, hti, prTremble, folder);
         trader.computeInitialBeliefs(deltaLow, privateValueMean, privateValueStdev);
-        LOB_LinkedHashMap book = new LOB_LinkedHashMap(model, FV, FVpos, maxDepth, end, tickSize, nP, h, traders);
         // create book
         book.makeBook(Prices);
 

@@ -14,7 +14,7 @@ public class Order {
     private boolean buyOrder;
     private boolean firstShare;
     private int action;
-    private int q;
+    private int q;                      // priority in the queue
     private int size;
     private int position;
 
@@ -28,11 +28,12 @@ public class Order {
         this.position = position;
     }
 
-    public Order(int traderID, double timeStamp, boolean buyOrder, int size, int position){
+    public Order(int traderID, double timeStamp, boolean buyOrder, int size, int Q, int position){
         this.traderID = traderID;
         this.timeStamp = timeStamp;
         this.buyOrder = buyOrder;
         this.size = size;
+        this.q = Q;
         this.position = position;
     }
     
@@ -79,11 +80,15 @@ public class Order {
         this.action = action;
     }
 
-    public void setQ(short q) {
+    public void setQ(int q) {
         this.q = q;
     }
 
     public boolean isFirstShare() {
         return firstShare;
+    }
+
+    public void increasePriority(int i){
+        q -= i;
     }
 }
