@@ -57,7 +57,7 @@ public class ThirdLobTest {
         ArrayList<Order> orders = new ArrayList<Order>();
         Order o1 = new Order(1, 0.1, true, 1, 0, 2);
         Order o2 = new Order(1, 0.1, true, 1, 0, 3);
-        Order o3 = new Order(2, 0.1, false, 1, 1, 5);
+        Order o3 = new Order(2, 0.1, false, 1, 0, 5);
         Order o4 = new Order(2, 0.1, false, 1, 1, 5);
         orders.add(o1); orders.add(o2);
         book.transactionRule(1, orders);
