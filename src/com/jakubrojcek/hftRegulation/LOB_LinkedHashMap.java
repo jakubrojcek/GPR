@@ -202,7 +202,7 @@ public class LOB_LinkedHashMap {
         return BookInfo;
     }
        
-     public void transactionRule(int oID, ArrayList<Order> orders){
+     public Integer transactionRule(Integer oID, ArrayList<Order> orders){
          hist.addOrderData(BookInfo[1] - BookInfo[0]); // quoted spread
          int pos, size;
          for (Order o : orders){
@@ -222,6 +222,7 @@ public class LOB_LinkedHashMap {
                      for (Order order : collO){
                          order.increasePriority(size);
                      }
+                     oID = null;
                  } else if (pos == nPoints - 1){        // if BMO executed against fringe, just continue
                  } else{
                      OrderID++;
@@ -246,6 +247,7 @@ public class LOB_LinkedHashMap {
                      for (Order order : collO){
                          order.increasePriority(size);
                      }
+                     oID = null;
                  } else if (pos == 0){      // if SMO executed against fringe, just continue
                  } else{
                      OrderID++;
@@ -258,6 +260,7 @@ public class LOB_LinkedHashMap {
              }
          }
          BookSizes();
+         return oID;
     }
 
     public void BookSizes(){

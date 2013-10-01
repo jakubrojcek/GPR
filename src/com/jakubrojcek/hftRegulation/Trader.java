@@ -1,8 +1,6 @@
 package com.jakubrojcek.hftRegulation;
 
 import com.jakubrojcek.*;
-import com.jakubrojcek.gpr2005a.*;
-import org.apache.commons.math3.distribution.NormalDistribution;
 
 import java.io.FileWriter;
 import java.util.ArrayList;
@@ -14,7 +12,6 @@ import java.io.FileWriter;
 import java.util.*;
 
 import com.jakubrojcek.*;
-import org.apache.commons.math3.distribution.NormalDistribution;
 
 /**
  * Created by IntelliJ IDEA.
@@ -68,7 +65,6 @@ public class Trader {
     static Diagnostics diag;
     static int [] bookSizesHistory;
     static int[] previousTraderAction;
-    static Payoff InitialPayoff;
     static ArrayList<Order> orders;     // result of decision, passed to LOB.transactionRule
     static HashMap<Short, Float> ps;
     static boolean fixedBeliefs = false;// when true, doesn't update, holds beliefs fixed
@@ -122,41 +118,28 @@ public class Trader {
         bookSizesHistory = new int[2 * nP + 1];
         bookSizesHistory[0] = 0;
         previousTraderAction = new int[3];
-        InitialPayoff = new Payoff(rho, nPayoffs, end, LL, maxDepth, nP);              // initialize static variables for com.jakubrojcek.gpr2005a.Payoff class
     }
 
     // decision about the price is made here, so far random
-    public ArrayList<Order> decision(Hashtable<Byte, Byte> Priorities, int[] BookSizes, int[] BookInfo,
+    public ArrayList<Order> decision(int[] BookSizes, int[] BookInfo,
                                double et, double priceFV){
         orders = new ArrayList<Order>();
         PriceFV = priceFV;                  // get price of the fundamental value = fundamental value
         int pricePosition;                  // pricePosition at which to submit
         boolean buyOrder = false;           // buy order?
 
-        int P = Priorities.get(nP);                             // pricePosition position in previous action
-        int q = (P != (nP + 1)) ? Priorities.get((byte)P) : 0;  // priority of the order at P
-        int x = 0;                                              // order was buy(2) or sell(1) or no order (0)
-        if (isReturning && P != nP + 1){                        // returning and has outstanding order
-            x = (BookSizes[P] > 0) ? 2 : 1;                     // TODO: this I will know if the order is still let's say not null or not active or cancelled or executed
-            if (P == BookInfo[0] && BookSizes[P] == 1 && x == 2){
-                BookSizes[P] = 0;
-                int j = nP - 1;
-                while (BookSizes[j] <= 0 && j > 0){
-                    j--;
-                }
-                BookInfo[0] = j;
-            } else if (P == BookInfo[1] && BookSizes[P] == -1 && x == 1){
-                BookSizes[P] = 0;
-                int j = 0;
-                while (BookSizes[j] >= 0 && j < nP - 1){
-                    j++;
-                }
-                BookInfo[1] = j;
-            }
+        int oldPos = 0;
+        int q = 0;
+        int x = 0;
+        if (isReturning){                                       // pricePosition position in previous action
+            oldPos = order.getPosition() - book.getPositionShift();
+            q  = order.getQ();
+            x = order.isBuyOrder() ? 1 : 0;
         }
+        // TODO: make sure, he doesn't execute against himself
         long Bt = BookInfo[0];              // Best Bid position
         long At = BookInfo[1];              // Best Ask position
-        Long code = HashCode(P, q, x, BookInfo, BookSizes);
+        Long code = HashCode(oldPos, q, x, BookInfo, BookSizes);
         // TODO: do I need to declare the tempQs here or is static OK?
         tempQs = states.containsKey(code) ? states.get(code)
                                           : new HashMap<Integer, BeliefQ>();
@@ -167,9 +150,8 @@ public class Trader {
         b = (short) Math.min(end, b);
         short a = (short) Math.min(BookInfo[1] - LL + end, 2 * end);
         a = (short) Math.max(end, a);
-        int oldPos;
+
         if (isReturning){
-            oldPos = order.getPosition() - book.getPositionShift();
             action = order.isBuyOrder() ? oldPos - LL + end //TODO: adjust for the positionShift here or in the book
                                         : oldPos - LL;
             if (action >= b && action < a){                         // still in the range for LO, else is cancelled for sure TODO: b and a work here?
