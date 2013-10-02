@@ -63,11 +63,12 @@ public class LOB_LinkedHashMap {
         }
     }
 
-    public void FVup(double fv, double et, int tickChange){
+    public ArrayList<Integer> FVup(double fv, double et, int tickChange){
         // (1) book shift, (2) 31+1, (3) currentPosition, (4) pricePosition
-
+        ArrayList<Integer> tradersExecuted = new ArrayList<Integer>();
         Set keys;
         for (int i = tickChange; i > 0; i--){
+            positionShift++;
             keys = book[i].keySet();
             if (!keys.isEmpty()){
                 if (!book[i].get(keys.iterator().next()).isBuyOrder()){
@@ -77,6 +78,7 @@ public class LOB_LinkedHashMap {
                         int traderID = o.getTraderID();
                         traders.get(traderID).execution(fv, et);
                         ActiveOrders.remove(o);
+                        tradersExecuted.add(traderID);
                         keys.remove(oID);
                     }
                 }
@@ -91,6 +93,7 @@ public class LOB_LinkedHashMap {
                 int traderID = o.getTraderID();
                 book[i].remove(oID);
                 ActiveOrders.remove(o);
+                traders.get(traderID).cancel(et);
                 keys.remove(oID);
             }
         }
@@ -104,25 +107,28 @@ public class LOB_LinkedHashMap {
             System.arraycopy(Prices, 1, Prices, 0, nPoints - 1);
             Prices[nPoints - 1] = Prices[nPoints - 2] + tickSize;
             Pt = Math.max(Pt--, 0); // not to fall of the grid
-            positionShift++;
         }
         FV = fv;
         BookSizes();
+        return tradersExecuted;
     }
 
-    public void FVdown(double fv, double et, int tickChange){
+    public ArrayList<Integer> FVdown(double fv, double et, int tickChange){
         // (1) book shift, (2) 31-1, (3) currentPosition, (4) pricePosition
+        ArrayList<Integer> tradersExecuted = new ArrayList<Integer>();
         Set keys;
         for (int i = nPoints - 1 - tickChange; i < nPoints - 1; i++){
+            positionShift--;                // TODO: check if shifts the right number of ticks
             keys = book[i].keySet();
             if (!keys.isEmpty()){
-                if (book[i].get(keys.iterator().next()).isBuyOrder()){
+                if (book[i].get(keys.iterator().next()).isBuyOrder()){ // executing buyers at (nP - 2)
                     while (! keys.isEmpty()){
                         int oID = (Integer) keys.iterator().next();
                         Order o = book[i].remove(oID);
                         int traderID = o.getTraderID();
                         traders.get(traderID).execution(fv, et);
                         ActiveOrders.remove(o);
+                        tradersExecuted.add(traderID);
                         keys.remove(oID);
                     }
                 }
@@ -131,12 +137,13 @@ public class LOB_LinkedHashMap {
 
         for (int i = nPoints - 1 - tickChange; i < nPoints; i++){      // TODO: nPoints - tickChange, <=
             keys = book[i].keySet();
-            while (!keys.isEmpty()){                        // removing SLOs from the zero position
+            while (!keys.isEmpty()){                        // removing SLOs from the (nP - 1) position
                 int oID = (Integer) keys.iterator().next();
                 Order o = book[i].remove(oID);
                 int traderID = o.getTraderID();
                 book[i].remove(oID);
                 ActiveOrders.remove(o);
+                traders.get(traderID).cancel(et);
                 keys.remove(oID);
             }
         }
@@ -149,10 +156,10 @@ public class LOB_LinkedHashMap {
             System.arraycopy(Prices, 0, Prices, 1, nPoints - 1);
             Prices[0] = Prices[1] - tickSize;
             Pt = Math.min(Pt++, nPoints - 1);                        // not to fall of the grid
-            positionShift--;
         }
         FV = fv;
         BookSizes();
+        return tradersExecuted;
     }
     
     public int[] getBookInfo(){
@@ -205,13 +212,18 @@ public class LOB_LinkedHashMap {
      public Integer transactionRule(Integer oID, ArrayList<Order> orders){
          hist.addOrderData(BookInfo[1] - BookInfo[0]); // quoted spread
          int pos, size;
-         // TODO: I still don't cancel his previous order, book[pos].remove Order, maybe submit Order with field cancelled from trader.decision rule?
          for (Order o : orders){
              pos = o.getPosition();
              size = o.getSize();
              if (o.isCancelled()){        // TODO: test if this works
+                 int Q = o.getQ();
                  pos = o.getPosition() - positionShift;
                  book[pos].remove(o.getOrderID());
+                 Collection<Order> collO = book[pos].values();
+                 for (Order order : collO){                             // increase priorities of the remaining orders
+                     Q--;
+                     if (Q < 0){order.increasePriority(size);}
+                 }
              } else {
                  if (o.isBuyOrder()){
                      if (book[pos].size() > 0 && !book[pos].get(book[pos].keySet().iterator().next()).isBuyOrder()){

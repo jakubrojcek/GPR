@@ -39,8 +39,8 @@ public class Trader {
     static int statesCount = 0;         // counting number of unique states
     static HashMap<Long, HashMap<Integer, BeliefQ>> states;/* Beliefs about payoffs for different actions
     + max + maxIndex in state=code */
-    HashMap<Integer, BeliefQ> tempQs;
-    LOB_LinkedHashMap book;             // reference to the book
+    static HashMap<Integer, BeliefQ> tempQs;
+    static LOB_LinkedHashMap book;      // reference to the book
     static double ReturnFrequencyHFT;   // returning frequency of HFT
     static double ReturnFrequencyNonHFT;// returning frequency of NonHFT
     static Hashtable<Integer, Double[]> discountFactorB = new Hashtable<Integer, Double[]>();    // container for discount factors computed using tauB
@@ -140,10 +140,9 @@ public class Trader {
         long Bt = BookInfo[0];              // Best Bid position
         long At = BookInfo[1];              // Best Ask position
         Long code = HashCode(oldPos, q, x, BookInfo, BookSizes);
-        // TODO: do I need to declare the tempQs here or is static OK? otherwise it erases the states entries??
         tempQs = states.containsKey(code) ? states.get(code)
                                           : new HashMap<Integer, BeliefQ>();
-        int action = -1, nLO = 0;               // TODO: if initialize to NO, then make nPayoffs shorter? or just the for loop till nPayoffs - 1?
+        int action = -1, nLO = 0;
         double max = -1.0, p1 = -1.0, sum = 0.0;
 
         short b = (short) Math.max(BookInfo[0] - LL + 1, 0);             // + 1 in order to start from one above B
@@ -154,10 +153,9 @@ public class Trader {
         if (isReturning){
             action = order.isBuyOrder() ? oldPos - LL + end
                                         : oldPos - LL;
-            if (action >= b && action < a){                         // still in the range for LO, else is cancelled for sure TODO: b and a work here?
+            if (action >= b && action < a){                         // still in the range for LO, else is cancelled for sure
                 p1 = order.isBuyOrder() ? (discountFactorS.get(action - end)[Math.abs(order.getQ())] * ((breakPoint - action - end) * tickSize + privateValue))
                                         : (discountFactorB.get(action)[Math.abs(order.getQ())] * ((action - breakPoint) * tickSize - privateValue));
-                // TODO: make sure the Q updates as the priority increases-> in the book
                 max = tempQs.containsKey(action) ? tempQs.get(action).getQ()
                                                  : -1.0;
                 max = Math.max(max, p1);                            // max, because priority should have improved
@@ -187,7 +185,7 @@ public class Trader {
                         p1 = (Math.exp(-rho * (Rt)) * (sum / Math.max(1, nLO))); // 2 for averaging over 14
                     }
                 }
-                if (p1 > 0){
+                if (p1 >= 0){
                     nLO++;
                     sum += p1;
                     if (p1 > max){
@@ -214,7 +212,9 @@ public class Trader {
             belief = new BeliefQ((short) 1, max);
             tempQs.put(action, belief);                    // obtaining the belief-> store as private value
         }
-        // TODO: put the tempQs to the states HashMap, otherwise what is this exercise for?
+        if (!states.containsKey(code)){
+            states.put(code, tempQs);
+        }
         //if (writeDiagnostics){writeDiagnostics(diff, (short)action);}
 
         // creating an order
@@ -255,7 +255,6 @@ public class Trader {
         if (action == 2 * end || action == 2 * end + 1) {
             isTraded = true;                                    // isTraded set to true if submitting MOs
         }
-
         //if (writeDecisions){writeDecision(BookInfo, BookSizes, (short)action);}                                     // printing data for output tables
         EventTime = et;
         return orders;
@@ -265,7 +264,7 @@ public class Trader {
     public void execution(double fundamentalValue, double et){
         int pos = order.getPosition() - book.getPositionShift();
         double payoff;
-        tradeCount++;            // TODO: change using action to using only FV, FVpos
+        tradeCount++;
         if (order.isBuyOrder()){                    // buy LO executed
             payoff = (breakPoint - (pos - LL)) * tickSize + privateValue
                     + (fundamentalValue - PriceFV);

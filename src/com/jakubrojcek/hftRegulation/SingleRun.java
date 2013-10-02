@@ -130,8 +130,7 @@ public class SingleRun {
                     tr = new Trader(true, 0.0f);
                     ID = tr.getTraderID();
                     ArrayList<Order> orders = tr.decision(book.getBookSizes(), book.getBookInfo(), EventTime, FV);
-                    // TODO: is the array orders null if I didn't put a CurrentOrder or Cancelled Order in?
-                    if (orders != null){
+                    if (!orders.isEmpty()){
                         Integer IDr = book.transactionRule(ID , orders);
                         if (IDr == null){              // order put to the book
                             traders.put(IDr, tr);
@@ -161,7 +160,7 @@ public class SingleRun {
                     ID = tr.getTraderID();
                     traders.put(ID, tr);
                     ArrayList<Order> orders = tr.decision(book.getBookSizes(), book.getBookInfo(), EventTime, FV);
-                    if (orders != null){
+                    if (!orders.isEmpty()){
                         Integer IDr = book.transactionRule(ID , orders);
                         if (IDr == null){              // order put to the book
                             traders.put(IDr, tr);
@@ -181,40 +180,50 @@ public class SingleRun {
                 } else if (rn < x3){                   // Returning HFT
                     ID = book.randomHFTtraderID();
                     ArrayList<Order> orders = traders.get(ID).decision(book.getBookSizes(), book.getBookInfo(), EventTime, FV);
-                    if (orders != null){
+                    if (!orders.isEmpty()){
                         ID = book.transactionRule(ID , orders);
                         if (ID != null){
                             traders.remove(ID);        // returning trader has executed, remove him
+                            ReturningHFT--;
                         }
                     }
                     // TODO: I have null for both the same order and for cancellation, reconcile
                 } else if (rn < x4){                   // Returning nonHFT
                     ID = book.randomNonHFTtraderID();
                     ArrayList<Order> orders = traders.get(ID).decision(book.getBookSizes(), book.getBookInfo(), EventTime, FV);
-                    if (orders != null){
+                    if (!orders.isEmpty()){
                         ID = book.transactionRule(ID , orders);
                         if (ID != null){
                             traders.remove(ID);        // returning trader has executed, remove him
+                            ReturningNonHFT--;
                         }
                     }
                 } else{                                // Change in FV
                     double rn3 = Math.random();
+                    ArrayList<Integer> tradersExecuted = new ArrayList<Integer>();
                     if (rn3 < FVplus){
                         FV = FV + sigma * tickSize;
-                        book.FVup(FV, EventTime, (int) sigma);
+                        tradersExecuted = book.FVup(FV, EventTime, (int) sigma);
                     } else {
                         FV = FV - sigma * tickSize;
-                        book.FVdown(FV, EventTime, (int) sigma);
+                        tradersExecuted = book.FVdown(FV, EventTime, (int) sigma);
+                    }
+                    for (Integer trID : tradersExecuted){
+                        if (traders.get(trID).getIsHFT()){
+                            ReturningHFT--;
+                        } else {
+                            ReturningNonHFT--;
+                        }
                     }
                 }
 
-                if (i % 100000 == 0) {
+                /*if (i % 100000 == 0) {
                     System.out.println(i + " events");
                 }
 
                 if (i % 10000 == 0) {
                     writePrint(i);
-                }
+                }*/
                 /*if (i % 10000000 == 0) {              // TODO: put this printing outside the loop
                     h.addStatisticsData(i, trader.getStatesCount());   // multiple payoffs count
                     if (writeDiagnostics){
