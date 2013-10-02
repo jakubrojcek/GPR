@@ -13,6 +13,7 @@ public class Order {
     private double timeStamp;
     private boolean buyOrder;
     private boolean firstShare;
+    private boolean cancelled = false;
     private int action;
     private int q;                      // priority in the queue
     private int size;
@@ -68,6 +69,10 @@ public class Order {
         return position;
     }
 
+    public boolean isCancelled() {
+        return cancelled;
+    }
+
     public void setOrderID(int orderID) {
         this.orderID = orderID;
     }
@@ -82,6 +87,10 @@ public class Order {
 
     public void setQ(int q) {
         this.q = q;
+    }
+
+    public void setCancelled(boolean cancelled) {
+        this.cancelled = cancelled;
     }
 
     public boolean isFirstShare() {

@@ -140,7 +140,7 @@ public class Trader {
         long Bt = BookInfo[0];              // Best Bid position
         long At = BookInfo[1];              // Best Ask position
         Long code = HashCode(oldPos, q, x, BookInfo, BookSizes);
-        // TODO: do I need to declare the tempQs here or is static OK?
+        // TODO: do I need to declare the tempQs here or is static OK? otherwise it erases the states entries??
         tempQs = states.containsKey(code) ? states.get(code)
                                           : new HashMap<Integer, BeliefQ>();
         int action = -1, nLO = 0;               // TODO: if initialize to NO, then make nPayoffs shorter? or just the for loop till nPayoffs - 1?
@@ -152,10 +152,10 @@ public class Trader {
         a = (short) Math.max(end, a);
 
         if (isReturning){
-            action = order.isBuyOrder() ? oldPos - LL + end //TODO: adjust for the positionShift here or in the book
+            action = order.isBuyOrder() ? oldPos - LL + end
                                         : oldPos - LL;
             if (action >= b && action < a){                         // still in the range for LO, else is cancelled for sure TODO: b and a work here?
-                p1 = order.isBuyOrder() ? (discountFactorS.get(action)[Math.abs(order.getQ())] * ((breakPoint - action) * tickSize + privateValue))
+                p1 = order.isBuyOrder() ? (discountFactorS.get(action - end)[Math.abs(order.getQ())] * ((breakPoint - action - end) * tickSize + privateValue))
                                         : (discountFactorB.get(action)[Math.abs(order.getQ())] * ((action - breakPoint) * tickSize - privateValue));
                 // TODO: make sure the Q updates as the priority increases-> in the book
                 max = tempQs.containsKey(action) ? tempQs.get(action).getQ()
@@ -175,8 +175,8 @@ public class Trader {
                         p1 = (discountFactorB.get(i)[Math.abs(BookSizes[LL + i])] *
                                 ((i - breakPoint) * tickSize - privateValue));
                     } else if (i < a) {                                          // payoff to buy limit order
-                        p1 = (discountFactorS.get(i)[Math.abs(BookSizes[LL + i])] *
-                                ((breakPoint - i) * tickSize + privateValue));
+                        p1 = (discountFactorS.get(i - end)[Math.abs(BookSizes[LL + i - end])] *
+                                ((breakPoint - i - end) * tickSize + privateValue));
                     } else if (i == (2 * end)){
                         p1 = ((Bt - fvPos) * tickSize - privateValue);           // payoff to sell market order
                     } else if (i == (2 * end + 1)){
@@ -214,7 +214,7 @@ public class Trader {
             belief = new BeliefQ((short) 1, max);
             tempQs.put(action, belief);                    // obtaining the belief-> store as private value
         }
-
+        // TODO: put the tempQs to the states HashMap, otherwise what is this exercise for?
         //if (writeDiagnostics){writeDiagnostics(diff, (short)action);}
 
         // creating an order
@@ -228,19 +228,30 @@ public class Trader {
             buyOrder = false;
         }
         if (action == 2 * end + 1){pricePosition = BookInfo[1];}    // position is Ask
-        Order currentOrder = new Order(traderID, EventTime, buyOrder, true, 1, 0, pricePosition);
+        Order currentOrder = new Order(traderID, et, buyOrder, 1, 0, pricePosition);
         if (isReturning){
-            oldPos = order.getPosition() - book.getPositionShift();
-            // TODO: is the array orders otherwise null?
-            if (oldPos != pricePosition || order.isBuyOrder() != buyOrder){
+            if ((order != null)){
+                oldPos = order.getPosition() - book.getPositionShift();
+                if (action == (2 * end + 2)){
+                    order.setCancelled(true);
+                    Order orderCancelled = order;
+                    orders.add(orderCancelled);
+                } else if ((oldPos != pricePosition) || (order.isBuyOrder() != buyOrder)){
+                    order.setCancelled(true);
+                    Order orderCancelled = order;
+                    orders.add(orderCancelled);
+                    orders.add(currentOrder);
+                    order = currentOrder;
+                }
+            } else if (action != (2 * end + 2)){
                 order = currentOrder;
                 orders.add(currentOrder);
             }
-        } else {
+        } else if (action != (2 * end + 2)){
             order = currentOrder;
             orders.add(currentOrder);
-            isReturning = true;
         }
+        isReturning = true;
         if (action == 2 * end || action == 2 * end + 1) {
             isTraded = true;                                    // isTraded set to true if submitting MOs
         }

@@ -205,57 +205,65 @@ public class LOB_LinkedHashMap {
      public Integer transactionRule(Integer oID, ArrayList<Order> orders){
          hist.addOrderData(BookInfo[1] - BookInfo[0]); // quoted spread
          int pos, size;
+         // TODO: I still don't cancel his previous order, book[pos].remove Order, maybe submit Order with field cancelled from trader.decision rule?
          for (Order o : orders){
              pos = o.getPosition();
              size = o.getSize();
-             if (o.isBuyOrder()){
-                 if (book[pos].size() > 0 && !book[pos].get(book[pos].keySet().iterator().next()).isBuyOrder()){
-                     Order cp = book[pos].remove(book[pos].keySet().iterator().next());
-                     Integer CPid = cp.getTraderID();
-                     traders.get(CPid).execution(FV, o.getTimeStamp());
-                     ActiveOrders.remove(cp);
-                     Pt = pos;                                       // sets last transaction position
-                     b = 1;                                          // sets last transaction direction, buy = 1
-                     hist.addTrade(o, cp, o.getTimeStamp(), Prices[pos], FV);
-                     hist.addOrderData(pos - (double)(BookInfo[1] + BookInfo[0]) / 2); // effective spread
-                     Collection<Order> collO = book[pos].values();
-                     for (Order order : collO){
-                         order.increasePriority(size);
-                     }
-                     oID = null;
-                 } else if (pos == nPoints - 1){        // if BMO executed against fringe, just continue
-                 } else{
-                     OrderID++;
-                     o.setOrderID(OrderID);
-                     o.setPosition(pos + positionShift);
-                     o.setQ(book[pos].size());
-                     book[pos].put(OrderID,o);           // put some key number here
-                     ActiveOrders.add(o);
-                 }
-
+             if (o.isCancelled()){        // TODO: test if this works
+                 pos = o.getPosition() - positionShift;
+                 book[pos].remove(o.getOrderID());
              } else {
-                 if (book[pos].size() > 0 && book[pos].get(book[pos].keySet().iterator().next()).isBuyOrder()){
-                     Order cp = book[pos].remove(book[pos].keySet().iterator().next());
-                     Integer CPid = cp.getTraderID();
-                     traders.get(CPid).execution(FV, o.getTimeStamp());
-                     ActiveOrders.remove(cp);
-                     Pt = pos;           // set last transaction price
-                     b = 0;              // set last transaction direction, 0=sell
-                     hist.addTrade(cp, o, o.getTimeStamp(), Prices[pos], FV);
-                     hist.addOrderData((double) (BookInfo[1] + BookInfo[0]) / 2 - pos);
-                     Collection<Order> collO = book[pos].values();
-                     for (Order order : collO){
-                         order.increasePriority(size);
+                 if (o.isBuyOrder()){
+                     if (book[pos].size() > 0 && !book[pos].get(book[pos].keySet().iterator().next()).isBuyOrder()){
+                         Order cp = book[pos].remove(book[pos].keySet().iterator().next());
+                         Integer CPid = cp.getTraderID();
+                         traders.get(CPid).execution(FV, o.getTimeStamp());
+                         ActiveOrders.remove(cp);
+                         Pt = pos;                                       // sets last transaction position
+                         b = 1;                                          // sets last transaction direction, buy = 1
+                         hist.addTrade(o, cp, o.getTimeStamp(), Prices[pos], FV);
+                         hist.addOrderData(pos - (double)(BookInfo[1] + BookInfo[0]) / 2); // effective spread
+                         Collection<Order> collO = book[pos].values();
+                         for (Order order : collO){
+                             order.increasePriority(size);
+                         }
+                         oID = CPid;
+                     } else if (pos == nPoints - 1){        // if BMO executed against fringe, just continue
+                     } else{
+                         OrderID++;
+                         o.setOrderID(OrderID);
+                         o.setPosition(pos + positionShift);
+                         o.setQ(book[pos].size());
+                         book[pos].put(OrderID,o);           // put some key number here
+                         ActiveOrders.add(o);
+                         oID = null;
                      }
-                     oID = null;
-                 } else if (pos == 0){      // if SMO executed against fringe, just continue
-                 } else{
-                     OrderID++;
-                     o.setOrderID(OrderID);
-                     o.setPosition(pos + positionShift);
-                     o.setQ(book[pos].size());
-                     book[pos].put(OrderID, o);           // put some key number here
-                     ActiveOrders.add(o);
+
+                 } else {
+                     if (book[pos].size() > 0 && book[pos].get(book[pos].keySet().iterator().next()).isBuyOrder()){
+                         Order cp = book[pos].remove(book[pos].keySet().iterator().next());
+                         Integer CPid = cp.getTraderID();
+                         traders.get(CPid).execution(FV, o.getTimeStamp());
+                         ActiveOrders.remove(cp);
+                         Pt = pos;           // set last transaction price
+                         b = 0;              // set last transaction direction, 0=sell
+                         hist.addTrade(cp, o, o.getTimeStamp(), Prices[pos], FV);
+                         hist.addOrderData((double) (BookInfo[1] + BookInfo[0]) / 2 - pos);
+                         Collection<Order> collO = book[pos].values();
+                         for (Order order : collO){
+                             order.increasePriority(size);
+                         }
+                         oID = CPid;
+                     } else if (pos == 0){      // if SMO executed against fringe, just continue
+                     } else{
+                         OrderID++;
+                         o.setOrderID(OrderID);
+                         o.setPosition(pos + positionShift);
+                         o.setQ(book[pos].size());
+                         book[pos].put(OrderID, o);           // put some key number here
+                         ActiveOrders.add(o);
+                         oID = null;
+                     }
                  }
              }
          }
