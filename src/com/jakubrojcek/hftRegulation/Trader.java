@@ -126,19 +126,29 @@ public class Trader {
         orders = new ArrayList<Order>();
         PriceFV = priceFV;                  // get price of the fundamental value = fundamental value
         int pricePosition;                  // pricePosition at which to submit
+        int forbiddenMarketOrder = 0;       // if 2 * end, SMO forbidden, 2 * end + 1 BMO forbidden, to not execute against himself
         boolean buyOrder = false;           // buy order?
-
+        long Bt = BookInfo[0];              // Best Bid position
+        long At = BookInfo[1];              // Best Ask position
         int oldPos = 0;
         int q = 0;
         int x = 0;
-        if (isReturning){                                       // pricePosition position in previous action
+        if (isReturning && order != null){  // pricePosition position in previous action
             oldPos = order.getPosition() - book.getPositionShift();
             q  = order.getQ();
-            x = order.isBuyOrder() ? 1 : 0;
+            if(order.isBuyOrder()){
+                x = 1;                                     // TODO: test this
+                if (oldPos == Bt){
+                    forbiddenMarketOrder = 2 * end;
+                }
+            } else {
+                x = 0;
+                if (oldPos == At){
+                    forbiddenMarketOrder = 2 * end + 1;
+                }
+            }
         }
-        // TODO: make sure, he doesn't execute against himself
-        long Bt = BookInfo[0];              // Best Bid position
-        long At = BookInfo[1];              // Best Ask position
+        // TODO: how to specify hashCode for a new trader in terms of oldPos, q, x?
         Long code = HashCode(oldPos, q, x, BookInfo, BookSizes);
         tempQs = states.containsKey(code) ? states.get(code)
                                           : new HashMap<Integer, BeliefQ>();
@@ -176,13 +186,17 @@ public class Trader {
                         p1 = (discountFactorS.get(i - end)[Math.abs(BookSizes[LL + i - end])] *
                                 ((breakPoint - i - end) * tickSize + privateValue));
                     } else if (i == (2 * end)){
-                        p1 = ((Bt - fvPos) * tickSize - privateValue);           // payoff to sell market order
+                        if (i != forbiddenMarketOrder){
+                            p1 = ((Bt - fvPos) * tickSize - privateValue);           // payoff to sell market order
+                        } else {p1 = -1.0;}
                     } else if (i == (2 * end + 1)){
-                        p1 = ((fvPos - At) * tickSize + privateValue);           // payoff to buy market order
+                        if (i != forbiddenMarketOrder){
+                            p1 = ((fvPos - At) * tickSize + privateValue);           // payoff to buy market order
+                        } else {p1 = -1.0;}
                     } else if (i == (2 * end + 2)){
                         double Rt = (isHFT) ? 1.0 / ReturnFrequencyHFT           // TODO: can I integrate over future differently?
                                             : 1.0 / ReturnFrequencyNonHFT;       // expected return time
-                        p1 = (Math.exp(-rho * (Rt)) * (sum / Math.max(1, nLO))); // 2 for averaging over 14
+                        p1 = (Math.exp(-rho * Rt) * (sum / Math.max(1, nLO))); // 2 for averaging over 14
                     }
                 }
                 if (p1 >= 0){
@@ -257,6 +271,7 @@ public class Trader {
         }
         //if (writeDecisions){writeDecision(BookInfo, BookSizes, (short)action);}                                     // printing data for output tables
         EventTime = et;
+        if (writeHistogram){writeHistogram(BookSizes);}
         return orders;
     }
 
@@ -455,12 +470,12 @@ public class Trader {
             int Pt = BookInfo[6];                   // last transaction pricePosition position
             int b = BookInfo[7];                    // 1 if last transaction buy, 0 if sell
             int a = pv;                             // private value zero(0), negative (1), positive (2)
-            int l = (isHFT) ? 1 : 0;                // arrival frequency slow (0), fast (1)
+            int h = (isHFT) ? 1 : 0;                // arrival frequency slow (0), fast (1)
 
             /*Long code = (Bt<<50) + (At<<44) + (lBt<<40) + (lAt<<36) + (dBt<<29) + (dSt<<22) + (Pt<<16) + (b<<15) +
                     + (P<<9) + (q<<5) + (x<<3) + (a<<1) + l;*/
             code = (Bt<<34) + (At<<29) + (lBt<<27) + (lAt<<25) + (dBt<<22) + (dSt<<19) + (Pt<<14) + (b<<13) +
-                    + (P<<8) + (q<<5) + (x<<3) + (a<<1) + l;
+                    + (P<<8) + (q<<5) + (x<<3) + (a<<1) + h;
 
         }
         else if (infoSize == 8){

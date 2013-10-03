@@ -219,6 +219,7 @@ public class LOB_LinkedHashMap {
                  int Q = o.getQ();
                  pos = o.getPosition() - positionShift;
                  book[pos].remove(o.getOrderID());
+                 ActiveOrders.remove(o);
                  Collection<Order> collO = book[pos].values();
                  for (Order order : collO){                             // increase priorities of the remaining orders
                      Q--;
@@ -303,6 +304,7 @@ public class LOB_LinkedHashMap {
                 buy = book[i].get(book[i].keySet().iterator().next()).isBuyOrder();  // buy orders at book[i]?
                 BookSizes[i] = buy ? Math.min(sizeNum, maxDepth) : - Math.min(sizeNum, maxDepth);   // max size at each tick is maxDepth- 7 or 15
             }
+            orderNum += sizeNum;
             sizeNum = 0;
         }
         if (ActiveOrders.size() != orderNum){
