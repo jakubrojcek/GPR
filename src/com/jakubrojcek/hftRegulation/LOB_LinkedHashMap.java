@@ -98,13 +98,10 @@ public class LOB_LinkedHashMap {
             }
         }
 
-        for (int i = 0; i < nPoints - tickChange; i++){
-            book[i] = book[i + tickChange];
-        }
-
+        System.arraycopy(Prices, tickChange, Prices, 0, nPoints - tickChange);
+        System.arraycopy(book, tickChange, book, 0, nPoints - tickChange);
         for (int i = tickChange; i > 0; i--){
             book[nPoints - i] = new LinkedHashMap();
-            System.arraycopy(Prices, 1, Prices, 0, nPoints - 1);
             Prices[nPoints - 1] = Prices[nPoints - 2] + tickSize;
             Pt = Math.max(Pt--, 0); // not to fall of the grid
         }
@@ -145,15 +142,14 @@ public class LOB_LinkedHashMap {
                 ActiveOrders.remove(o);
                 traders.get(traderID).cancel(et);
                 keys.remove(oID);
+                // TODO: I think I don't remove traders from all places here..
             }
         }
 
-        for (int i = nPoints - 1; i > tickChange - 1; i--){
-            book[i] = book[i - tickChange];
-        }
+        System.arraycopy(Prices, 0, Prices, tickChange, nPoints - tickChange);
+        System.arraycopy(book, 0, book, tickChange, nPoints - tickChange);
         for (int i = 0; i < tickChange; i++){
             book[i] = new LinkedHashMap();
-            System.arraycopy(Prices, 0, Prices, 1, nPoints - 1);
             Prices[0] = Prices[1] - tickSize;
             Pt = Math.min(Pt++, nPoints - 1); // not to fall of the grid
         }
@@ -225,8 +221,7 @@ public class LOB_LinkedHashMap {
                 ActiveOrders.remove(o);
                 Collection<Order> collO = book[pos].values();
                 for (Order order : collO){ // increase priorities of the remaining orders
-                    Q--;
-                    if (Q < 0){order.increasePriority(size);}
+                    if (Q < order.getQ()){order.increasePriority(size);}
                     // TODO: problem is that the order has no OrderID..
                 }
             } else {

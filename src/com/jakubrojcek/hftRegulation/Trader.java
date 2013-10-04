@@ -136,7 +136,10 @@ public class Trader {
         int q = 0;
         int x = 0;
         if (isReturning && order != null){ // pricePosition position in previous action
-            oldPos = order.getPosition() - book.getPositionShift();
+            oldPos = order.getPosition() - book.getPositionShift();  //
+            if (oldPos > nP || oldPos < 0){         // TODO: delete this after debugging
+                System.out.println("debug");
+            }
             q = Math.min(maxDepth, order.getQ());
             if(order.isBuyOrder()){
                 x = 1; // TODO: test this
@@ -153,7 +156,7 @@ public class Trader {
         // TODO: how to specify hashCode for a new trader in terms of oldPos, q, x?
         Long code = HashCode(oldPos, q, x, BookInfo, BookSizes);
         tempQs = states.containsKey(code) ? states.get(code)
-                : new HashMap<Integer, BeliefQ>();
+                                          : new HashMap<Integer, BeliefQ>();
         int action = -1, nLO = 0;
         double max = -1.0, p1 = -1.0, sum = 0.0;
 
@@ -163,22 +166,41 @@ public class Trader {
         a = (short) Math.max(end, a);
 
         if (isReturning && order != null){
-            action = order.isBuyOrder() ? oldPos - LL + end
-                    : oldPos - LL;
-            if (action >= b && action < a){ // still in the range for LO, else is cancelled for sure
-                // TODO: q == -1??
-                p1 = order.isBuyOrder() ? (discountFactorS.get(action - end)[Math.abs(q)] * ((breakPoint - action - end) * tickSize + privateValue))
-                        : (discountFactorB.get(action)[Math.abs(q)] * ((action - breakPoint) * tickSize - privateValue));
-                max = tempQs.containsKey(action) ? tempQs.get(action).getQ()
-                        : -1.0;
-                max = Math.max(max, p1); // max, because priority should have improved
-                // TODO: but still, won't this create some cicularity in udpating?
-            } else {action = -1;} // otherwise could have action == 2 * end and the SMO would not be computed later
+            if (isTraded){
+                System.out.println("this shouldn't be");
+            }
+
+            // TODO: there's something wrong with the position, he submits the same order as his previous in hope it's a MO, but at the same time, because he already has a similar LO, this one doesn't get through
+            // TODO: also, he has a buy LO behind "a" for example, shouldn't be possible
+            boolean buy = order.isBuyOrder();
+            if (buy){
+                action = oldPos - LL + end;
+                if (action >= end && action < a){               // still in the range for LO, else is cancelled for sure
+                    p1 = (discountFactorS.get(action - end)[Math.abs(q)] * ((breakPoint - action + end) * tickSize + privateValue));
+                    max = tempQs.containsKey(action) ? tempQs.get(action).getQ()
+                                                     : -1.0;
+                    max = Math.max(max, p1);                    // max, because priority should have improved
+                } else {
+                    System.out.println("no such action");
+                    action = -1;                                // otherwise could have action == 2 * end and the SMO would not be computed later
+                }
+            } else {
+                action = oldPos - LL;
+                if (action >= 0 && action <  end){              // still in the range for LO, else is cancelled for sure
+                    p1 = (discountFactorB.get(action)[Math.abs(q)] * ((action - breakPoint) * tickSize - privateValue));
+                    max = tempQs.containsKey(action) ? tempQs.get(action).getQ()
+                                                     : -1.0;
+                    max = Math.max(max, p1);                    // max, because priority should have improved
+                } else {
+                    System.out.println("no such action");
+                    action = -1;                                // otherwise could have action == 2 * end and the SMO would not be computed later
+                }
+            }
         }
 
         for(int i = b; i < nPayoffs; i++){ // searching for best payoff
             p1 = -1.0f;
-            if (i != action){
+            if (i != action || i != forbiddenMarketOrder){
                 if (tempQs.containsKey(i)){
                     p1 = tempQs.get(i).getQ();
                 } else {
@@ -187,25 +209,21 @@ public class Trader {
                                 ((i - breakPoint) * tickSize - privateValue));
                     } else if (i < a) { // payoff to buy limit order
                         p1 = (discountFactorS.get(i - end)[Math.abs(BookSizes[LL + i - end])] *
-                                ((breakPoint - i - end) * tickSize + privateValue));
+                                ((breakPoint - i + end) * tickSize + privateValue));
                     } else if (i == (2 * end)){
-                        if (i != forbiddenMarketOrder){
-                            p1 = ((Bt - fvPos) * tickSize - privateValue); // payoff to sell market order
-                        } else {p1 = -1.0;}
+                        p1 = ((Bt - fvPos) * tickSize - privateValue); // payoff to sell market order
                     } else if (i == (2 * end + 1)){
-                        if (i != forbiddenMarketOrder){
-                            p1 = ((fvPos - At) * tickSize + privateValue); // payoff to buy market order
-                        } else {p1 = -1.0;}
+                        p1 = ((fvPos - At) * tickSize + privateValue); // payoff to buy market order
                     } else if (i == (2 * end + 2)){
                         double Rt = (isHFT) ? 1.0 / ReturnFrequencyHFT // TODO: can I integrate over future differently?
-                                : 1.0 / ReturnFrequencyNonHFT; // expected return time
+                                            : 1.0 / ReturnFrequencyNonHFT; // expected return time
                         p1 = (Math.exp(-rho * Rt) * (sum / Math.max(1, nLO))); // 2 for averaging over 14
                     }
                 }
                 if (p1 >= 0){
                     nLO++;
                     sum += p1;
-                    if (p1 > max){
+                    if (p1 >= max){
                         max = p1;
                         action = i;
                     }
@@ -221,8 +239,8 @@ public class Trader {
             double previousQ = belief.getQ();
             belief.setQ((1.0 - alpha) * previousQ +
                     alpha * Math.exp( - rho * (EventTime - et)) * max);
-        }
-
+        }       // TODO: check, do they update the old belief also when not executed? if no, then I the event time should be the property of the order
+                // TODO: check then if I should leave the old belief unchanged if they don't update on every return
         if (tempQs.containsKey(action)){
             belief = tempQs.get(action); // obtaining the belief-> store as private value
         } else {
@@ -244,7 +262,7 @@ public class Trader {
             pricePosition = BookInfo[0];
             buyOrder = false;
         }
-        if (action == 2 * end + 1){pricePosition = BookInfo[1];} // position is Ask
+        if (action == (2 * end + 1)){pricePosition = BookInfo[1];} // position is Ask
         Order currentOrder = new Order(traderID, et, buyOrder, 1, 0, pricePosition);
         if (isReturning){
             if ((order != null)){
@@ -269,7 +287,7 @@ public class Trader {
             orders.add(currentOrder);
         }
         isReturning = true;
-        if (action == 2 * end || action == 2 * end + 1) {
+        if ((action == 2 * end) || (action == 2 * end + 1)) {
             isTraded = true; // isTraded set to true if submitting MOs
         }
         //if (writeDecisions){writeDecision(BookInfo, BookSizes, (short)action);} // printing data for output tables
@@ -285,7 +303,7 @@ public class Trader {
         tradeCount++;
         if (order.isBuyOrder()){ // buy LO executed
             payoff = (breakPoint - (pos - LL)) * tickSize + privateValue
-                    + (fundamentalValue - PriceFV);
+                    + (fundamentalValue - PriceFV);     // TODO: check this updating again, is the second part needed?
         } else { // sell LO executed
             payoff = (pos - LL - breakPoint) * tickSize - privateValue
                     - (fundamentalValue - PriceFV);
