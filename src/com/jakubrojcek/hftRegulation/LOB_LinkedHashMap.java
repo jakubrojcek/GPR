@@ -212,6 +212,7 @@ public class LOB_LinkedHashMap {
             pos = o.getPosition();
             size = o.getSize();
             if (o.isCancelled()){ // TODO: test if this works
+                oID = null;
                 int Q = o.getQ();
                 pos = o.getPosition() - positionShift;
                 Order removed = book[pos].remove(o.getOrderID());
@@ -222,7 +223,6 @@ public class LOB_LinkedHashMap {
                 Collection<Order> collO = book[pos].values();
                 for (Order order : collO){ // increase priorities of the remaining orders
                     if (Q < order.getQ()){order.increasePriority(size);}
-                    // TODO: problem is that the order has no OrderID..
                 }
             } else {
                 if (o.isBuyOrder()){
@@ -241,6 +241,7 @@ public class LOB_LinkedHashMap {
                         }
                         oID = CPid;
                     } else if (pos == nPoints - 1){ // if BMO executed against fringe, just continue
+                        oID = o.getTraderID();
                     } else{
                         OrderID++;
                         o.setOrderID(OrderID);
@@ -267,6 +268,7 @@ public class LOB_LinkedHashMap {
                         }
                         oID = CPid;
                     } else if (pos == 0){ // if SMO executed against fringe, just continue
+                        oID = o.getTraderID();
                     } else{
                         OrderID++;
                         o.setOrderID(OrderID);

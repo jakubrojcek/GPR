@@ -257,7 +257,7 @@ public class Trader {
             buyOrder = true;
         }
         pricePosition = (action < end) ? action + LL
-                : action + LL - end;
+                                       : action + LL - end;
         if (action == 2 * end){ // position is Bid
             pricePosition = BookInfo[0];
             buyOrder = false;
@@ -265,12 +265,13 @@ public class Trader {
         if (action == (2 * end + 1)){pricePosition = BookInfo[1];} // position is Ask
         Order currentOrder = new Order(traderID, et, buyOrder, 1, 0, pricePosition);
         if (isReturning){
-            if ((order != null)){
+            if (order != null){
                 oldPos = order.getPosition() - book.getPositionShift();
                 if (action == (2 * end + 2)){
                     order.setCancelled(true);
                     Order orderCancelled = order;
                     orders.add(orderCancelled);
+                    order = null;
                 } else if ((oldPos != pricePosition) || (order.isBuyOrder() != buyOrder)){
                     order.setCancelled(true);
                     Order orderCancelled = order;

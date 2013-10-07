@@ -126,11 +126,11 @@ public class SingleRun {
                 if (rn < x1){                          // New arrival HFT
                     tr = new Trader(true, 0.0f);
                     ID = tr.getTraderID();
+                    traders.put(ID, tr);
                     ArrayList<Order> orders = tr.decision(book.getBookSizes(), book.getBookInfo(), EventTime, FV);
                     if (!orders.isEmpty()){
                         Integer IDr = book.transactionRule(ID , orders);
                         if (IDr == null){              // order put to the book
-                            traders.put(IDr, tr);
                             traderIDsHFT.add(IDr);
                             ReturningHFT++;
                         } else if (ID != IDr) {        // returns another trader-> executed counterparty
@@ -142,6 +142,9 @@ public class SingleRun {
                                 traderIDsNonHFT.remove(IDr);
                             }
                             traders.remove(IDr);
+                            traders.remove(ID);
+                        } else {                       // MO against fringe
+                            traders.remove(ID);
                         }
                     } else {
                         traders.put(ID, tr);
@@ -164,7 +167,6 @@ public class SingleRun {
                     if (!orders.isEmpty()){
                         Integer IDr = book.transactionRule(ID , orders);
                         if (IDr == null){              // order put to the book
-                            traders.put(ID, tr);
                             traderIDsNonHFT.add(ID);
                             ReturningNonHFT++;
                         } else if (ID != IDr) {        // returns another trader-> executed counterparty
@@ -176,6 +178,9 @@ public class SingleRun {
                                 traderIDsNonHFT.remove(IDr);
                             }
                             traders.remove(IDr);
+                            traders.remove(ID);
+                        } else {                       // MO against fringe
+                            traders.remove(ID);
                         }
                     } else {
                         traders.put(ID, tr);
@@ -186,11 +191,23 @@ public class SingleRun {
                     ID = traderIDsHFT.get((int) (Math.random() * traderIDsHFT.size()));
                     ArrayList<Order> orders = traders.get(ID).decision(book.getBookSizes(), book.getBookInfo(), EventTime, FV);
                     if (!orders.isEmpty()){
-                        ID = book.transactionRule(ID , orders);
-                        if (ID != null){
-                            traders.remove(ID);        // returning trader has executed, remove him
+                        Integer IDr = book.transactionRule(ID , orders);
+                        if (ID == IDr) {               // executed against fringe, remove ID trader
+                            traders.remove(ID);
                             ReturningHFT--;
                             traderIDsHFT.remove(ID);
+                        } else if (IDr != null){       // returning trader has executed, remove him and the counterparty as well
+                            traders.remove(ID);
+                            ReturningHFT--;
+                            traderIDsHFT.remove(ID);
+                            if (traders.get(IDr).getIsHFT()){
+                                ReturningHFT--;
+                                traderIDsHFT.remove(IDr);
+                            } else {
+                                ReturningNonHFT--;
+                                traderIDsNonHFT.remove(IDr);
+                            }
+                            traders.remove(IDr);
                         }
                     }
                     // TODO: I have null for both the same order and for cancellation, reconcile
@@ -198,11 +215,23 @@ public class SingleRun {
                     ID = traderIDsNonHFT.get((int) (Math.random() * traderIDsNonHFT.size()));
                     ArrayList<Order> orders = traders.get(ID).decision(book.getBookSizes(), book.getBookInfo(), EventTime, FV);
                     if (!orders.isEmpty()){
-                        ID = book.transactionRule(ID , orders);
-                        if (ID != null){
-                            traders.remove(ID);        // returning trader has executed, remove him
+                        Integer IDr = book.transactionRule(ID , orders);
+                        if (ID == IDr){                // executed against fringe, remove ID trader
+                            traders.remove(ID);
                             ReturningNonHFT--;
                             traderIDsNonHFT.remove(ID);
+                        } else if (IDr != null){       // returning trader has executed, remove him and the counterparty as well
+                            traders.remove(ID);
+                            ReturningNonHFT--;
+                            traderIDsNonHFT.remove(ID);
+                            if (traders.get(IDr).getIsHFT()){
+                                ReturningHFT--;
+                                traderIDsHFT.remove(IDr);
+                            } else {
+                                ReturningNonHFT--;
+                                traderIDsNonHFT.remove(IDr);
+                            }
+                            traders.remove(IDr);
                         }
                     }
                 } else{                                // Change in FV
