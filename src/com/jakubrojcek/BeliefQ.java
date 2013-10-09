@@ -9,9 +9,9 @@ package com.jakubrojcek;
  */
 public class BeliefQ {
     private int n = 0;                // number of times updated
-    private int ne;               // number of times executed
-    private double q;               // execution probability
-    private double diff;             // difference of new vs old execution probability
+    private int ne = 0;               // number of times executed
+    private double q;                 // execution probability or Q factor in continuous time
+    private double diff;              // difference of new vs old execution probability
 
     public BeliefQ(short n, double q) {
         this.n = n;

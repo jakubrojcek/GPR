@@ -91,7 +91,6 @@ public class LOB_LinkedHashMap {
                 int oID = (Integer) keys.iterator().next();
                 Order o = book[i].remove(oID);
                 int traderID = o.getTraderID();
-                book[i].remove(oID);
                 ActiveOrders.remove(o);
                 traders.get(traderID).cancel(et);
                 keys.remove(oID);
@@ -138,7 +137,6 @@ public class LOB_LinkedHashMap {
                 int oID = (Integer) keys.iterator().next();
                 Order o = book[i].remove(oID);
                 int traderID = o.getTraderID();
-                book[i].remove(oID);
                 ActiveOrders.remove(o);
                 traders.get(traderID).cancel(et);
                 keys.remove(oID);

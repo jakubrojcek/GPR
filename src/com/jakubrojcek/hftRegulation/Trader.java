@@ -125,6 +125,9 @@ public class Trader {
     // decision about the price is made here, so far random
     public ArrayList<Order> decision(int[] BookSizes, int[] BookInfo,
                                      double et, double priceFV){
+        if (isTraded){
+            System.out.println("this shouldn't be");
+        }
         orders = new ArrayList<Order>();
         PriceFV = priceFV; // get price of the fundamental value = fundamental value
         int pricePosition; // pricePosition at which to submit
@@ -166,10 +169,6 @@ public class Trader {
         a = (short) Math.max(end, a);
 
         if (isReturning && order != null){
-            if (isTraded){
-                System.out.println("this shouldn't be");
-            }
-
             // TODO: there's something wrong with the position, he submits the same order as his previous in hope it's a MO, but at the same time, because he already has a similar LO, this one doesn't get through
             // TODO: also, he has a buy LO behind "a" for example, shouldn't be possible
             boolean buy = order.isBuyOrder();
@@ -197,39 +196,50 @@ public class Trader {
                 }
             }
         }
+       /* max = -1.0; // TODO: delete this after testing
+        action = -1;*/
+        if (prTremble > 0.0 && Math.random() < prTremble){
 
-        for(int i = b; i < nPayoffs; i++){ // searching for best payoff
-            p1 = -1.0f;
-            if (i != action || i != forbiddenMarketOrder){
-                if (tempQs.containsKey(i)){
-                    p1 = tempQs.get(i).getQ();
-                } else {
-                    if (i < end){ // payoff to sell limit order
-                        p1 = (discountFactorB.get(i)[Math.abs(BookSizes[LL + i])] *
-                                ((i - breakPoint) * tickSize - privateValue));
-                    } else if (i < a) { // payoff to buy limit order
-                        p1 = (discountFactorS.get(i - end)[Math.abs(BookSizes[LL + i - end])] *
-                                ((breakPoint - i + end) * tickSize + privateValue));
-                    } else if (i == (2 * end)){
-                        p1 = ((Bt - fvPos) * tickSize - privateValue); // payoff to sell market order
-                    } else if (i == (2 * end + 1)){
-                        p1 = ((fvPos - At) * tickSize + privateValue); // payoff to buy market order
-                    } else if (i == (2 * end + 2)){
-                        double Rt = (isHFT) ? 1.0 / ReturnFrequencyHFT // TODO: can I integrate over future differently?
-                                            : 1.0 / ReturnFrequencyNonHFT; // expected return time
-                        p1 = (Math.exp(-rho * Rt) * (sum / Math.max(1, nLO))); // 2 for averaging over 14
+        } else {
+            for(int i = b; i < nPayoffs; i++){ // searching for best payoff
+                p1 = -1.0f;
+                if (i != action || i != forbiddenMarketOrder){
+                    if (tempQs.containsKey(i)){
+                        p1 = tempQs.get(i).getQ();
+                    } else {
+                        if (i < end){ // payoff to sell limit order
+                            p1 = (discountFactorB.get(i)[Math.abs(BookSizes[LL + i])] *
+                                    ((i - breakPoint) * tickSize - privateValue));
+                        } else if (i < a) { // payoff to buy limit order
+                            p1 = (discountFactorS.get(i - end)[Math.abs(BookSizes[LL + i - end])] *
+                                    ((breakPoint - i + end) * tickSize + privateValue));
+                        } else if (i == (2 * end)){
+                            p1 = ((Bt - fvPos) * tickSize - privateValue); // payoff to sell market order
+                        } else if (i == (2 * end + 1)){
+                            p1 = ((fvPos - At) * tickSize + privateValue); // payoff to buy market order
+                        } else if (i == (2 * end + 2)){
+                            double Rt = (isHFT) ? 1.0 / ReturnFrequencyHFT // TODO: can I integrate over future differently?
+                                    : 1.0 / ReturnFrequencyNonHFT; // expected return time
+                            p1 = (Math.exp(-rho * Rt) * (sum / Math.max(1, nLO))); // 2 for averaging over 14
+                        }
                     }
-                }
-                if (p1 >= 0){
-                    nLO++;
-                    sum += p1;
-                    if (p1 >= max){
-                        max = p1;
-                        action = i;
+                    /*if (p1 != -1.0){
+                        p1 = Math.random();
+                    } else {
+                        continue;
+                    }*/
+                    if (p1 >= 0){
+                        nLO++;
+                        sum += p1;
+                        if (p1 >= max){
+                            max = p1;
+                            action = i;
+                        }
                     }
                 }
             }
         }
+
 
         if (isReturning){ // updating old belief if trader is returning
             if(belief.getN() < nResetMax) {
@@ -238,19 +248,20 @@ public class Trader {
             double alpha = (1.0/(1.0 + (belief.getN()))); // updating factor
             double previousQ = belief.getQ();
             belief.setQ((1.0 - alpha) * previousQ +
-                    alpha * Math.exp( - rho * (EventTime - et)) * max);
+                    alpha * Math.exp( - rho * (et - EventTime)) * max);
         }       // TODO: check, do they update the old belief also when not executed? if no, then I the event time should be the property of the order
                 // TODO: check then if I should leave the old belief unchanged if they don't update on every return
         if (tempQs.containsKey(action)){
             belief = tempQs.get(action); // obtaining the belief-> store as private value
         } else {
+            statesCount++;
             belief = new BeliefQ((short) 1, max);
             tempQs.put(action, belief); // obtaining the belief-> store as private value
         }
         if (!states.containsKey(code)){
             states.put(code, tempQs);
         }
-        //if (writeDiagnostics){writeDiagnostics(diff, (short)action);}
+
 
         // creating an order
         if (action > end){
@@ -264,6 +275,8 @@ public class Trader {
         }
         if (action == (2 * end + 1)){pricePosition = BookInfo[1];} // position is Ask
         Order currentOrder = new Order(traderID, et, buyOrder, 1, 0, pricePosition);
+        currentOrder.setAction((short) action);            // TODO: delete afterwards
+
         if (isReturning){
             if (order != null){
                 oldPos = order.getPosition() - book.getPositionShift();
@@ -287,13 +300,15 @@ public class Trader {
             order = currentOrder;
             orders.add(currentOrder);
         }
-        isReturning = true;
+
         if ((action == 2 * end) || (action == 2 * end + 1)) {
             isTraded = true; // isTraded set to true if submitting MOs
         }
+        isReturning = true;
         //if (writeDecisions){writeDecision(BookInfo, BookSizes, (short)action);} // printing data for output tables
         EventTime = et;
         if (writeHistogram){writeHistogram(BookSizes);}
+        if (writeDiagnostics){writeDiagnostics((short)action);}
         return orders;
     }
 
@@ -311,11 +326,13 @@ public class Trader {
         }
         if(belief.getN() < nResetMax) {
             belief.increaseN();
+            belief.increaseNe();
         }
         double alpha = (1.0/(1.0 + (belief.getN()))); // updating factor
         double previousQ = belief.getQ();
         belief.setQ((1.0 - alpha) * previousQ +
-                alpha * Math.exp( - rho * (EventTime - et)) * payoff);
+                alpha * Math.exp( - rho * (et - EventTime)) * payoff);
+        if (writeDiagnostics){writeDiagnostics(belief.getQ() - previousQ);}
         isTraded = true;
     }
 
@@ -351,6 +368,16 @@ public class Trader {
         diag.addDiff(diff);
         diag.addAction(ac, (byte)1, max);
     }
+    private void writeDiagnostics(Short[] ac, double max){
+        diag.addAction(ac, (byte)1, max);
+    }
+    private void writeDiagnostics(short ac){
+        diag.addAction(ac);
+    }
+    private void writeDiagnostics(double diff){
+        diag.addDiff(diff);
+    }
+
 
     // Hash code computed dependent on various Information Size (2, 4, 6, 7, 8)
     public Long HashCode(int P, int q, int x, int[] BookInfo, int [] BS){
@@ -523,40 +550,26 @@ System.out.println("problem");
 
     // used to print the data analysed for convergence- occurrences os states, payoffs, time since last hit
     public void printStatesDensity(double et){
-        /*Payoff pay;
-short [] n;
-float[] p;
-try{
-String outputFileName = folder + "occurrences.csv";
-String outputFileName2 = folder + "payoffs.csv";
-FileWriter writer = new FileWriter(outputFileName, true);
-FileWriter writer2 = new FileWriter(outputFileName2, true);
-Iterator keys = Payoffs.keySet().iterator();
-while (keys.hasNext()){
-pay = Payoffs.get(keys.next());
-if (pay instanceof MultiplePayoff){
-writer.write(((MultiplePayoff)pay).getN() + ";" + "\r");
-n = ((MultiplePayoff)pay).getNarray();
-p = ((MultiplePayoff)pay).getP();
-int sz = n.length;
-String s = new String();
-for (int i = 0; i < sz; i++){
-s = s + n[i] + ";" + p[i] + ";";
-}
-writer2.write(s + "\r");
-}
-
-*//* if (pay instanceof com.jakubrojcek.gpr2005a.SinglePayoff){
-writer.writeDecisions(et - ((com.jakubrojcek.gpr2005a.SinglePayoff) pay).getEventTime() + ";" + "\r");
-}*//*
-}
-writer.close();
-writer2.close();
-}
-catch (Exception e){
-e.printStackTrace();
-System.exit(1);
-}*/
+        try{
+            String outputFileName = folder + "occurrences.csv";
+            String outputFileName2 = folder + "payoffs.csv";
+            FileWriter writer = new FileWriter(outputFileName, true);
+            FileWriter writer2 = new FileWriter(outputFileName2, true);
+            Collection<HashMap<Integer, BeliefQ>> colHM = states.values();
+            Collection<BeliefQ> colBelief;
+            for (HashMap<Integer, BeliefQ> hm : colHM){
+                colBelief = hm.values();
+                for (BeliefQ beliefQ : colBelief){
+                    writer.write( beliefQ.getN() + ";" + beliefQ.getNe() + ";" + beliefQ.getQ() + ";" + "\r");
+                }
+            }
+            writer.close();
+            writer2.close();
+        }
+        catch (Exception e){
+            e.printStackTrace();
+            System.exit(1);
+        }
     }
 
     // prints Histogram of bookSizes-> so the book into a csv file. The first var is the actual FV
@@ -637,7 +650,7 @@ if (pay instanceof SinglePayoff){
         try{
             String outputFileName = folder + "diagnostics2.csv";
             FileWriter writer = new FileWriter(outputFileName, true);
-            writer.write(diag.printDiagnostics("payoffs"));
+            writer.write(diag.printDiagnostics("actions"));
             writer.close();
         }
         catch (Exception e){

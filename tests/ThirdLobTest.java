@@ -19,7 +19,7 @@ public class ThirdLobTest {
     public static void main(String[] args) {
         double timeStamp1 = System.nanoTime();
         String model = "returning";
-        String folder = "D:\\_paper1 HFT, MM, rebates and market quality\\Matlab Analysis\\Returning\\";
+        String folder = "D:\\_paper1 HFT, MM, rebates and market quality\\Matlab Analysis\\";
         String outputNameTransactions = "Transactions8.csv";  // output file name
         String outputNameBookData = "BookData8.csv";   // output file name
         String outputNameStatsData = "stats8.csv";   // output file name
@@ -29,9 +29,9 @@ public class ThirdLobTest {
         double prTremble = 0.0;                 // probability of trembling
         byte nP = 9;                            // number of prices tracked by the book, 8 in the base case, 6/11 in tick size experiment
         int nHFT = 0;                           // # of HFT's fast traders, fixed
-        int nPositiveNonHFT = 10;               // # of positive PV slow traders
-        int nZeroNonHFT = 20;                   // # of zero PV slow traders
-        int nNegativeNonHFT = 10;               // # of negative PV slow traders
+        int nPositiveNonHFT = 1;               // # of positive PV slow traders
+        int nZeroNonHFT = 2;                   // # of zero PV slow traders
+        int nNegativeNonHFT = 1;               // # of negative PV slow traders
         int NewNonHFT = nNegativeNonHFT + nPositiveNonHFT + nZeroNonHFT;
         double lambdaArrival = 1;               // arrival frequency, same for all
         double lambdaFV = 0.125;                // frequency of FV changes
@@ -111,18 +111,18 @@ public class ThirdLobTest {
                 FprivateValues, PVdistrb, sigma, tickSize, FVplus, header, book, traders, h, trader, outputNameStatsData,
                 outputNameTransactions, outputNameBookData);
 
-        int nEvents = 1000000;         // number of events
+        int nEvents = 10000000;         // number of events
         int ReturningHFT = 0;           // # of returning HFT traders in the book
         int ReturningNonHFT = 0;        // # of returning nonHFT traders in the book
         boolean write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
-        boolean writeDiagnostics = false;// write diagnostics controls diagnostics
+        boolean writeDiagnostics = true;// write diagnostics controls diagnostics
         boolean writeHistogram = true; // write histogram
         boolean purge = false;          // purge in this com.jakubrojcek.gpr2005a.SingleRun?
         boolean nReset = false;         // reset n in this com.jakubrojcek.gpr2005a.SingleRun?
-        //trader.setPrTremble(0.1);
+        trader.setPrTremble(0.1);
         //trader.setWriteDec(true);
         trader.setWriteDiag(writeDiagnostics);
-        //trader.setWriteHist(writeHistogram);
+        trader.setWriteHist(writeHistogram);
         double EventTime = 0.0;                 // captures time
         double[] RunOutcome =
                 sr.run(nEvents, nHFT, NewNonHFT, ReturningHFT, ReturningNonHFT, EventTime, FV,
@@ -131,7 +131,7 @@ public class ThirdLobTest {
         FV = RunOutcome[1];
         ReturningHFT = (int) RunOutcome[2];
         ReturningNonHFT = (int) RunOutcome[3];
-
+        trader.printStatesDensity(EventTime); // occurrences Beliefs
 
         /* categories of traders: fast, slow, private value: negative, zero, positive
   that means 4 categories of traders. Fast have zero PV */

@@ -53,6 +53,20 @@ public class Diagnostics {
             }
         }
     }
+    public void addAction(short ac){
+        if (!actions.containsKey(ac)){
+            actions.put(ac, 1);
+        } else {
+            int n = actions.get(ac);
+            actions.put(ac, n + 1);
+        }
+        if (!payoffs.containsKey(ac)){
+            payoffs.put(ac, 0.0);
+        } else {
+            double f = payoffs.get(ac);
+            payoffs.put(ac, f + 0.0);
+        }
+    }
 
     // printing diagnostics here
    public String printDiagnostics(String version){
