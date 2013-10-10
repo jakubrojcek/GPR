@@ -204,6 +204,7 @@ public class LOB_LinkedHashMap {
     }
 
     public Integer transactionRule(Integer oID, ArrayList<Order> orders){
+        int traderID = oID;
         hist.addOrderData(BookInfo[1] - BookInfo[0]); // quoted spread
         int pos, size;
         for (Order o : orders){
@@ -278,6 +279,9 @@ public class LOB_LinkedHashMap {
                     }
                 }
             }
+        }
+        if (oID == null && traders.get(traderID).getIsTraded()){
+            System.out.print("is traded and has limit order");
         }
         BookSizes();
         return oID;
