@@ -111,10 +111,10 @@ public class ThirdLobTest {
                 FprivateValues, PVdistrb, sigma, tickSize, FVplus, header, book, traders, h, trader, outputNameStatsData,
                 outputNameTransactions, outputNameBookData);
 
-        int nEvents = 10000000;         // number of events
+        int nEvents = 20000000;         // number of events
         int ReturningHFT = 0;           // # of returning HFT traders in the book
         int ReturningNonHFT = 0;        // # of returning nonHFT traders in the book
-        boolean write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
+        boolean write = true;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
         boolean writeDiagnostics = true;// write diagnostics controls diagnostics
         boolean writeHistogram = true; // write histogram
         boolean purge = false;          // purge in this com.jakubrojcek.gpr2005a.SingleRun?
@@ -131,8 +131,26 @@ public class ThirdLobTest {
         FV = RunOutcome[1];
         ReturningHFT = (int) RunOutcome[2];
         ReturningNonHFT = (int) RunOutcome[3];
-        trader.printStatesDensity(EventTime); // occurrences Beliefs
 
+        /*nEvents = 10000000;         // number of events
+        write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
+        writeDiagnostics = true;// write diagnostics controls diagnostics
+        writeHistogram = true; // write histogram
+        purge = false;          // purge in this com.jakubrojcek.gpr2005a.SingleRun?
+        nReset = false;         // reset n in this com.jakubrojcek.gpr2005a.SingleRun?
+        trader.setPrTremble(0.0);
+        //trader.setWriteDec(true);
+        trader.setWriteDiag(writeDiagnostics);
+        trader.setWriteHist(writeHistogram);
+        RunOutcome =
+                sr.run(nEvents, nHFT, NewNonHFT, ReturningHFT, ReturningNonHFT, EventTime, FV,
+                        write, purge, nReset, writeDiagnostics, writeHistogram);
+        EventTime = RunOutcome[0];
+        FV = RunOutcome[1];
+        ReturningHFT = (int) RunOutcome[2];
+        ReturningNonHFT = (int) RunOutcome[3];
+        */ // occurrences Beliefs
+        trader.printStatesDensity(EventTime);
         /* categories of traders: fast, slow, private value: negative, zero, positive
   that means 4 categories of traders. Fast have zero PV */
         double timeStamp2 = System.nanoTime();

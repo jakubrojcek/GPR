@@ -199,11 +199,40 @@ public class Trader {
        /* max = -1.0; // TODO: delete this after testing
         action = -1;*/
         if (prTremble > 0.0 && Math.random() < prTremble){
-
+            HashMap<Integer, Double> p = new HashMap<Integer, Double>();
+            if (action != -1){
+                p.put(action, max);
+            }
+            for(int i = b; i < nPayoffs; i++){ // searching for best payoff
+                if (i != action || i != forbiddenMarketOrder){       // TODO: doesn't work if we have oldAction
+                    if (tempQs.containsKey(i)){
+                        p.put(i,tempQs.get(i).getQ());
+                    } else {
+                        if (i < end){ // payoff to sell limit order
+                            p.put(i,(discountFactorB.get(i)[Math.abs(BookSizes[LL + i])] *
+                                    ((i - breakPoint) * tickSize - privateValue)));
+                        } else if (i < a) { // payoff to buy limit order
+                            p.put(i, (discountFactorS.get(i - end)[Math.abs(BookSizes[LL + i - end])] *
+                                    ((breakPoint - i + end) * tickSize + privateValue)));
+                        } else if (i == (2 * end)){
+                            p.put(i, ((Bt - fvPos) * tickSize - privateValue)); // payoff to sell market order
+                        } else if (i == (2 * end + 1)){
+                            p.put(i, ((fvPos - At) * tickSize + privateValue)); // payoff to buy market order
+                        } else if (i == (2 * end + 2)){
+                            double Rt = (isHFT) ? 1.0 / ReturnFrequencyHFT // TODO: can I integrate over future differently?
+                                    : 1.0 / ReturnFrequencyNonHFT; // expected return time
+                            p.put(i, (Math.exp(-rho * Rt) * (sum / Math.max(1, nLO)))); // 2 for averaging over 14
+                        }
+                    }
+                }
+            }
+            ArrayList<Integer> actions = new ArrayList(p.keySet());
+            action = actions.get((int) (Math.random() * actions.size()));
+            max = p.get(action);
         } else {
             for(int i = b; i < nPayoffs; i++){ // searching for best payoff
                 p1 = -1.0f;
-                if (i != action || i != forbiddenMarketOrder){
+                if (i != action || i != forbiddenMarketOrder){    // TODO: doesn't work if we have oldAction
                     if (tempQs.containsKey(i)){
                         p1 = tempQs.get(i).getQ();
                     } else {
