@@ -204,19 +204,17 @@ public class LOB_LinkedHashMap {
     }
 
     public Integer transactionRule(Integer oID, ArrayList<Order> orders){
-        int traderID = oID;
         hist.addOrderData(BookInfo[1] - BookInfo[0]); // quoted spread
         int pos, size;
         for (Order o : orders){
-            pos = o.getPosition();
             size = o.getSize();
             if (o.isCancelled()){ // TODO: test if this works
                 oID = null;
                 int Q = o.getQ();
                 pos = o.getPosition() - positionShift;
                 Order removed = book[pos].remove(o.getOrderID());
-                if (!ActiveOrders.contains(removed)){
-                    System.out.println("debug");
+                if (removed == null){
+                    System.out.println("not removed");
                 }
                 ActiveOrders.remove(o);
                 Collection<Order> collO = book[pos].values();
@@ -224,6 +222,7 @@ public class LOB_LinkedHashMap {
                     if (Q < order.getQ()){order.increasePriority(size);}
                 }
             } else {
+                pos = o.getPosition();
                 if (o.isBuyOrder()){
                     if (book[pos].size() > 0 && !book[pos].get(book[pos].keySet().iterator().next()).isBuyOrder()){
                         Order cp = book[pos].remove(book[pos].keySet().iterator().next());
@@ -279,9 +278,6 @@ public class LOB_LinkedHashMap {
                     }
                 }
             }
-        }
-        if (oID == null && traders.get(traderID).getIsTraded()){
-            System.out.print("is traded and has limit order");
         }
         BookSizes();
         return oID;
