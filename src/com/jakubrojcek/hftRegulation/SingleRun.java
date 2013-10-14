@@ -39,15 +39,15 @@ public class SingleRun {
     LOB_LinkedHashMap book;
 
     boolean header = false;
-    String outputNameTransactions;      // output file name
-    String outputNameBookData;          // output file name
-    String outputNameStatsData;         // output file name
+    String outputNameTransactions; // output file name
+    String outputNameBookData; // output file name
+    String outputNameStatsData; // output file name
 
-    boolean write = false;              // writeDecisions output in this SingleRun?
-    boolean writeDiagnostics = false;   // write diagnostics
-    boolean writeHistogram = false;     // write histogram
-    boolean purge = false;              // purge SingleRun?
-    boolean nReset = false;             // reset SingleRun?
+    boolean write = false; // writeDecisions output in this SingleRun?
+    boolean writeDiagnostics = false; // write diagnostics
+    boolean writeHistogram = false; // write histogram
+    boolean purge = false; // purge SingleRun?
+    boolean nReset = false; // reset SingleRun?
 
     double Lambda;
 
@@ -77,8 +77,8 @@ public class SingleRun {
     }
 
     public double[] run(int nEvents, int nHFT, int NewNonHFT,
-                      int rHFT, int rNonHFT, double EventTime, double FV,
-                      boolean w, boolean p, boolean n, boolean wd, boolean wh){
+                        int rHFT, int rNonHFT, double EventTime, double FV,
+                        boolean w, boolean p, boolean n, boolean wd, boolean wh){
         ReturningHFT = rHFT;
         ReturningNonHFT = rNonHFT;
         write = w;
@@ -86,8 +86,8 @@ public class SingleRun {
         writeHistogram = wh;
         purge = p;
         nReset = n;
-        ArrayList<Integer> traderIDsHFT = new ArrayList<Integer>();        // holder for IDs of HFT traders
-        ArrayList<Integer> traderIDsNonHFT = new ArrayList<Integer>();     // holder for IDs of nonHFT traders
+        ArrayList<Integer> traderIDsHFT = new ArrayList<Integer>(); // holder for IDs of HFT traders
+        ArrayList<Integer> traderIDsNonHFT = new ArrayList<Integer>(); // holder for IDs of nonHFT traders
         if (purge){
             trader.purge();
         }
@@ -110,31 +110,31 @@ public class SingleRun {
                 prob4 = (double) ReturningNonHFT * ReturnFrequencyNonHFT / Lambda;
                 prob5 = lambdaFVchange / Lambda;
                 // for now prob of change in FV is equal to 0
-                x1 = prob1;                            // 1. new HFT
-                x2 = x1 + prob2;                       // 2. new nonHFT
-                x3 = x2 + prob3;                       // 3. reentry HFT
-                x4 = x3 + prob4;                       // 4. reentry nonHFT
-                x5 = x4 + prob5;                       // 5. Change in fundamental value
+                x1 = prob1; // 1. new HFT
+                x2 = x1 + prob2; // 2. new nonHFT
+                x3 = x2 + prob3; // 3. reentry HFT
+                x4 = x3 + prob4; // 4. reentry nonHFT
+                x5 = x4 + prob5; // 5. Change in fundamental value
                 if (Math.abs(x5 - 1.0) > 0.00001){
                     System.out.println("Probabilities do not sum to 1.");
                 }
 
-                double rn = Math.random();             // to determine event
+                double rn = Math.random(); // to determine event
                 Trader tr;
                 Integer ID;
                 float FVrealization;
                 boolean removed = true;
-                if (rn < x1){                          // New arrival HFT
+                if (rn < x1){ // New arrival HFT
                     tr = new Trader(true, 0.0f);
                     ID = tr.getTraderID();
                     traders.put(ID, tr);
                     ArrayList<Order> orders = tr.decision(book.getBookSizes(), book.getBookInfo(), EventTime, FV);
                     if (!orders.isEmpty()){
                         Integer IDr = book.transactionRule(ID , orders);
-                        if (IDr == null){              // order put to the book
+                        if (IDr == null){ // order put to the book
                             traderIDsHFT.add(IDr);
                             ReturningHFT++;
-                        } else if (!ID.equals(IDr)) {        // returns another trader-> executed counterparty
+                        } else if (!ID.equals(IDr)) { // returns another trader-> executed counterparty
                             if (traders.get(IDr).getIsHFT()){
                                 ReturningHFT--;
                                 traderIDsHFT.remove(IDr);
@@ -144,7 +144,7 @@ public class SingleRun {
                             }
                             traders.remove(IDr);
                             traders.remove(ID);
-                        } else {                       // MO against fringe
+                        } else { // MO against fringe
                             traders.remove(ID);
                         }
                     } else {
@@ -152,7 +152,7 @@ public class SingleRun {
                         traderIDsHFT.add(ID);
                         ReturningHFT++;
                     }
-                } else if (rn < x2){                   // New arrival nonHFT
+                } else if (rn < x2){ // New arrival nonHFT
                     double rn2 = Math.random();
                     if (rn2 < DistributionPV[0]){
                         FVrealization = FprivateValues[0];
@@ -167,10 +167,10 @@ public class SingleRun {
                     ArrayList<Order> orders = tr.decision(book.getBookSizes(), book.getBookInfo(), EventTime, FV);
                     if (!orders.isEmpty()){
                         Integer IDr = book.transactionRule(ID , orders);
-                        if (IDr == null){              // order put to the book
+                        if (IDr == null){ // order put to the book
                             traderIDsNonHFT.add(ID);
                             ReturningNonHFT++;
-                        } else if (!ID.equals(IDr)) {        // returns another trader-> executed counterparty
+                        } else if (!ID.equals(IDr)) { // returns another trader-> executed counterparty
                             if (traders.get(IDr).getIsHFT()){
                                 ReturningHFT--;
                                 traderIDsHFT.remove(IDr);
@@ -180,23 +180,23 @@ public class SingleRun {
                             }
                             traders.remove(IDr);
                             traders.remove(ID);
-                        } else {                       // MO against fringe
+                        } else { // MO against fringe
                             traders.remove(ID);
                         }
                     } else {
                         traderIDsNonHFT.add(ID);
                         ReturningNonHFT++;
                     }
-                } else if (rn < x3){                   // Returning HFT
+                } else if (rn < x3){ // Returning HFT
                     ID = traderIDsHFT.get((int) (Math.random() * traderIDsHFT.size()));
                     ArrayList<Order> orders = traders.get(ID).decision(book.getBookSizes(), book.getBookInfo(), EventTime, FV);
                     if (!orders.isEmpty()){
                         Integer IDr = book.transactionRule(ID , orders);
-                        if (ID.equals(IDr)) {               // executed against fringe, remove ID trader
+                        if (ID.equals(IDr)) { // executed against fringe, remove ID trader
                             traders.remove(ID);
                             ReturningHFT--;
                             traderIDsHFT.remove(ID);
-                        } else if (IDr != null){       // returning trader has executed, remove him and the counterparty as well
+                        } else if (IDr != null){ // returning trader has executed, remove him and the counterparty as well
                             ReturningHFT--;
                             traderIDsHFT.remove(ID);
                             if (traders.get(IDr).getIsHFT()){
@@ -211,7 +211,7 @@ public class SingleRun {
                         }
                     }
                     // TODO: I have null for both the same order and for cancellation, reconcile
-                } else if (rn < x4){                   // Returning nonHFT
+                } else if (rn < x4){ // Returning nonHFT
                     ID = traderIDsNonHFT.get((int) (Math.random() * traderIDsNonHFT.size()));
                     if(!traderIDsNonHFT.contains(ID)){
                         System.out.println("doesn't contain ID");
@@ -219,11 +219,11 @@ public class SingleRun {
                     ArrayList<Order> orders = traders.get(ID).decision(book.getBookSizes(), book.getBookInfo(), EventTime, FV);
                     if (!orders.isEmpty()){
                         Integer IDr = book.transactionRule(ID , orders);
-                        if (ID.equals(IDr)){                // executed against fringe, remove ID trader
+                        if (ID.equals(IDr)){ // executed against fringe, remove ID trader
                             traders.remove(ID);
                             ReturningNonHFT--;
                             traderIDsNonHFT.remove(ID);
-                        } else if (IDr != null){       // returning trader has executed, remove him and the counterparty as well
+                        } else if (IDr != null){ // returning trader has executed, remove him and the counterparty as well
                             ReturningNonHFT--;
                             traderIDsNonHFT.remove(ID);
                             if (traders.get(IDr).getIsHFT()){
@@ -237,7 +237,7 @@ public class SingleRun {
                             traders.remove(IDr);
                         }
                     }
-                } else{                                // Change in FV
+                } else{ // Change in FV
                     double rn3 = Math.random();
                     ArrayList<Integer> tradersExecuted = new ArrayList<Integer>();
                     if (rn3 < FVplus){
@@ -270,45 +270,45 @@ public class SingleRun {
                 if (i % 10000 == 0) {
                     writePrint(i);
                 }
-                /*if (i % 10000000 == 0) {              // TODO: put this printing outside the loop
-                    h.addStatisticsData(i, trader.getStatesCount());   // multiple payoffs count
-                    if (writeDiagnostics){
-                        trader.printDiagnostics();
-                        trader.resetDiagnostics();
-                        //trader.printConvergence(100);
-                    }
-                    if (write){
-                        h.printTransactions(header, outputNameTransactions);
-                        h.printBookData(header, outputNameBookData);
-                        trader.printDecisions();
-                        trader.printHistogram();
-                        trader.printDiagnostics();
-                        trader.resetDecisionHistory();
-                        trader.resetHistogram();
-                        trader.resetDiagnostics();
-                    }
-                    h.printStatisticsData(header, outputNameStatsData);
-                    h.resetHistory();
+                /*if (i % 10000000 == 0) { // TODO: put this printing outside the loop
+h.addStatisticsData(i, trader.getStatesCount()); // multiple payoffs count
+if (writeDiagnostics){
+trader.printDiagnostics();
+trader.resetDiagnostics();
+//trader.printConvergence(100);
+}
+if (write){
+h.printTransactions(header, outputNameTransactions);
+h.printBookData(header, outputNameBookData);
+trader.printDecisions();
+trader.printHistogram();
+trader.printDiagnostics();
+trader.resetDecisionHistory();
+trader.resetHistogram();
+trader.resetDiagnostics();
+}
+h.printStatisticsData(header, outputNameStatsData);
+h.resetHistory();
 
-                }*/   //where events happen
-               /* if (i % 100000000 == 0) {
-                    if (purge){
-                        trader.purge();
-                    }
-                    if (nReset){
-                        trader.nReset((byte)3, (short) 10000);
-                    }
+}*/ //where events happen
+                /* if (i % 100000000 == 0) {
+                if (purge){
+                trader.purge();
+                }
+                if (nReset){
+                trader.nReset((byte)3, (short) 10000);
+                }
                 }*/
             }
         }
         if (write){
-            trader.printConvergence(100);  // TODO: print out loud here :) not before, because it's with fixed beliefs
+            trader.printConvergence(100); // TODO: print out loud here :) not before, because it's with fixed beliefs
         }
         return new double[]{EventTime, FV, ReturningHFT, ReturningNonHFT};
     }
 
     private void writePrint (int i){
-        h.addStatisticsData(i, trader.getStatesCount());   // multiple payoffs count
+        h.addStatisticsData(i, trader.getStatesCount()); // multiple payoffs count
         if (writeDiagnostics){
             trader.printDiagnostics();
             trader.resetDiagnostics();
@@ -326,13 +326,13 @@ public class SingleRun {
         h.printStatisticsData(header, outputNameStatsData);
         h.resetHistory();
 
-         /*if (i % 5000000 == 0) {
-            if (purge){
-                trader.purge();
-            }
-            if (nReset){
-                trader.nReset((byte)3, (short) 10000);
-            }
+        /*if (i % 5000000 == 0) {
+        if (purge){
+        trader.purge();
+        }
+        if (nReset){
+        trader.nReset((byte)3, (short) 10000);
+        }
         }*/
     }
 
