@@ -135,12 +135,12 @@ public class Trader {
         boolean buyOrder = false; // buy order?
         long Bt = BookInfo[0]; // Best Bid position
         long At = BookInfo[1]; // Best Ask position
-        int oldPos = 0;
+        int oldPos = 0, oldAction = -1;
         int q = 0;
         int x = 0;
         if (isReturning && order != null){ // pricePosition position in previous action
-            oldPos = order.getPosition() - book.getPositionShift();  //
-            if (oldPos > nP || oldPos < 0){         // TODO: delete this after debugging
+            oldPos = order.getPosition() - book.getPositionShift(); //
+            if (oldPos > nP || oldPos < 0){ // TODO: delete this after debugging
                 System.out.println("debug");
             }
             q = Math.min(maxDepth, order.getQ());
@@ -159,7 +159,7 @@ public class Trader {
         // TODO: how to specify hashCode for a new trader in terms of oldPos, q, x?
         Long code = HashCode(oldPos, q, x, BookInfo, BookSizes);
         tempQs = states.containsKey(code) ? states.get(code)
-                                          : new HashMap<Integer, BeliefQ>();
+                : new HashMap<Integer, BeliefQ>();
         int action = -1, nLO = 0;
         double max = -1.0, p1 = -1.0, sum = 0.0;
 
@@ -174,37 +174,39 @@ public class Trader {
             boolean buy = order.isBuyOrder();
             if (buy){
                 action = oldPos - LL + end;
-                if (action >= end && action < a){               // still in the range for LO, else is cancelled for sure
+                if (action >= end && action < a){ // still in the range for LO, else is cancelled for sure
                     p1 = (discountFactorS.get(action - end)[Math.abs(q)] * ((breakPoint - action + end) * tickSize + privateValue));
                     max = tempQs.containsKey(action) ? tempQs.get(action).getQ()
-                                                     : -1.0;
-                    max = Math.max(max, p1);                    // max, because priority should have improved
+                            : -1.0;
+                    max = Math.max(max, p1); // max, because priority should have improved
+                    oldAction = action;
                 } else {
                     System.out.println("no such action");
-                    action = -1;                                // otherwise could have action == 2 * end and the SMO would not be computed later
+                    action = -1; // otherwise could have action == 2 * end and the SMO would not be computed later
                 }
             } else {
                 action = oldPos - LL;
-                if (action >= 0 && action <  end){              // still in the range for LO, else is cancelled for sure
+                if (action >= 0 && action < end){ // still in the range for LO, else is cancelled for sure
                     p1 = (discountFactorB.get(action)[Math.abs(q)] * ((action - breakPoint) * tickSize - privateValue));
                     max = tempQs.containsKey(action) ? tempQs.get(action).getQ()
-                                                     : -1.0;
-                    max = Math.max(max, p1);                    // max, because priority should have improved
+                            : -1.0;
+                    max = Math.max(max, p1); // max, because priority should have improved
+                    oldAction = action;
                 } else {
                     System.out.println("no such action");
-                    action = -1;                                // otherwise could have action == 2 * end and the SMO would not be computed later
+                    action = -1; // otherwise could have action == 2 * end and the SMO would not be computed later
                 }
             }
         }
-       /* max = -1.0; // TODO: delete this after testing
-        action = -1;*/
+        /* max = -1.0; // TODO: delete this after testing
+      action = -1;*/
         if (prTremble > 0.0 && Math.random() < prTremble){
             HashMap<Integer, Double> p = new HashMap<Integer, Double>();
             if (action != -1){
                 p.put(action, max);
             }
             for(int i = b; i < nPayoffs; i++){ // searching for best payoff
-                if (i != action || i != forbiddenMarketOrder){       // TODO: doesn't work if we have oldAction
+                if (i != oldAction && i != forbiddenMarketOrder){ // TODO: doesn't work if we have oldAction
                     if (tempQs.containsKey(i)){
                         p.put(i,tempQs.get(i).getQ());
                     } else {
@@ -227,12 +229,12 @@ public class Trader {
                 }
             }
             ArrayList<Integer> actions = new ArrayList(p.keySet());
-            action = actions.get((int) (Math.random() * actions.size()));
+            action = actions.get((int) (Math.random() * actions.size())); // TODO: replace this by true random key-> this is limited by the size of actions key array
             max = p.get(action);
         } else {
             for(int i = b; i < nPayoffs; i++){ // searching for best payoff
                 p1 = -1.0f;
-                if (i != action || i != forbiddenMarketOrder){    // TODO: doesn't work if we have oldAction
+                if (i != oldAction && i != forbiddenMarketOrder){ // TODO: doesn't work if we have oldAction-> had to change to AND instead of OR
                     if (tempQs.containsKey(i)){
                         p1 = tempQs.get(i).getQ();
                     } else {
@@ -252,11 +254,6 @@ public class Trader {
                             p1 = (Math.exp(-rho * Rt) * (sum / Math.max(1, nLO))); // 2 for averaging over 14
                         }
                     }
-                    /*if (p1 != -1.0){
-                        p1 = Math.random();
-                    } else {
-                        continue;
-                    }*/
                     if (p1 >= 0){
                         nLO++;
                         sum += p1;
@@ -278,8 +275,8 @@ public class Trader {
             double previousQ = belief.getQ();
             belief.setQ((1.0 - alpha) * previousQ +
                     alpha * Math.exp( - rho * (et - EventTime)) * max);
-        }       // TODO: check, do they update the old belief also when not executed? if no, then I the event time should be the property of the order
-                // TODO: check then if I should leave the old belief unchanged if they don't update on every return
+        } // TODO: check, do they update the old belief also when not executed? if no, then I the event time should be the property of the order
+        // TODO: check then if I should leave the old belief unchanged if they don't update on every return
         if (tempQs.containsKey(action)){
             belief = tempQs.get(action); // obtaining the belief-> store as private value
         } else {
@@ -297,24 +294,28 @@ public class Trader {
             buyOrder = true;
         }
         pricePosition = (action < end) ? action + LL
-                                       : action + LL - end;
+                : action + LL - end;
         if (action == 2 * end){ // position is Bid
             pricePosition = BookInfo[0];
             buyOrder = false;
         }
         if (action == (2 * end + 1)){pricePosition = BookInfo[1];} // position is Ask
         Order currentOrder = new Order(traderID, et, buyOrder, 1, 0, pricePosition);
-        currentOrder.setAction((short) action);            // TODO: delete afterwards
+        currentOrder.setAction((short) action); // TODO: delete afterwards
 
         if (isReturning){
             if (order != null){
                 oldPos = order.getPosition() - book.getPositionShift();
-                if (action == (2 * end + 2)){
+                if ((buyOrder != order.isBuyOrder()) && pricePosition == oldPos){
+                    System.out.println("see what's here: is he buying at much worse price?");
+                    // TODO: it seems that he feels not limited by a, b when choosing his action
+                }
+                if (action == (2 * end + 2)){                        // no action
                     order.setCancelled(true);
                     Order orderCancelled = order;
                     orders.add(orderCancelled);
                     order = null;
-                } else if ((oldPos != pricePosition) || (order.isBuyOrder() != buyOrder)){
+                } else if ((oldPos != pricePosition) || (order.isBuyOrder() != buyOrder)){   // different position or different direction
                     order.setCancelled(true);
                     Order orderCancelled = order;
                     orders.add(orderCancelled);
@@ -330,7 +331,7 @@ public class Trader {
             orders.add(currentOrder);
         }
 
-        if ((action == 2 * end) || (action == 2 * end + 1)) {
+        if ((action == (2 * end)) || (action == (2 * end + 1))) {
             isTraded = true; // isTraded set to true if submitting MOs
         }
         isReturning = true;
@@ -348,7 +349,7 @@ public class Trader {
         tradeCount++;
         if (order.isBuyOrder()){ // buy LO executed
             payoff = (breakPoint - (pos - LL)) * tickSize + privateValue
-                    + (fundamentalValue - PriceFV);     // TODO: check this updating again, is the second part needed?
+                    + (fundamentalValue - PriceFV); // TODO: check this updating again, is the second part needed?
         } else { // sell LO executed
             payoff = (pos - LL - breakPoint) * tickSize - privateValue
                     - (fundamentalValue - PriceFV);
@@ -363,6 +364,7 @@ public class Trader {
                 alpha * Math.exp( - rho * (et - EventTime)) * payoff);
         if (writeDiagnostics){writeDiagnostics(belief.getQ() - previousQ);}
         isTraded = true;
+        order = null;
     }
 
     // use to cancel limit order in normal setting
@@ -863,4 +865,3 @@ System.exit(1);
         statesCount = n;
     }
 }
-
