@@ -350,13 +350,26 @@ public class Trader {
         if (!fixedBeliefs){
             if(belief.getN() < nResetMax) {
                 belief.increaseN();
-                belief.increaseNe();
             }
             double alpha = (1.0/(1.0 + (belief.getN()))); // updating factor
             double previousQ = belief.getQ();
             belief.setQ((1.0 - alpha) * previousQ +
                     alpha * Math.exp( - rho * (et - EventTime)) * payoff);
             if (writeDiagnostics){writeDiagnostics(belief.getQ() - previousQ);}
+        } else {
+            if (belief.getNe() == 0){
+                belief.increaseNe();
+                belief.setDiff(0.0f);
+                belief.setQ(payoff);
+            } else {
+                if(belief.getNe() < nResetMax) {
+                    belief.increaseNe();
+                }
+                double alpha = (1.0/(1.0 + (belief.getNe()))); // updating factor
+                double previousQ = belief.getDiff();
+                belief.setDiff((float)((1.0 - alpha) * previousQ +
+                        alpha * Math.exp( - rho * (et - EventTime)) * payoff));
+            }
         }
         isTraded = true;
         order = null;
@@ -686,7 +699,7 @@ System.out.println("all: " + all + " deleted: " + deleted);*/
         }
     }
 
-    public void printConvergence(int t2){
+    public void printConvergence(int t2, String convergenceType){
         previousStates = statesConstructor.getTempStates();     // TODO: is this passing trick working?
         long code;
         Iterator keys2;
@@ -701,7 +714,7 @@ System.out.println("all: " + all + " deleted: " + deleted);*/
         BeliefQ previousBelief;
         Iterator keys = states.keySet().iterator();
         try{
-            String outputFileName = folder + "convergence.csv";
+            String outputFileName = folder + convergenceType;
             FileWriter writer = new FileWriter(outputFileName, true);
             while (keys.hasNext()){
                 code = (Long) keys.next();
@@ -714,9 +727,14 @@ System.out.println("all: " + all + " deleted: " + deleted);*/
                         if (previousBeliefs.containsKey(acKey)){
                             currentBelief = currentBeliefs.get(acKey);
                             previousBelief = previousBeliefs.get(acKey);
-                            if (currentBelief.getN() > 3){
-                                qDiff = Math.abs(currentBelief.getQ() - previousBelief.getQ());
-                                kDiff = currentBelief.getN() - previousBelief.getN();
+                            if (currentBelief.getNe() > t2){
+                                if (convergenceType == "convergence.csv"){
+                                    qDiff = Math.abs(currentBelief.getQ() - previousBelief.getQ());
+                                    kDiff = currentBelief.getN() - previousBelief.getN();
+                                } else if (convergenceType == "convergenceSecond.csv"){
+                                    qDiff = Math.abs(currentBelief.getDiff() - previousBelief.getDiff());
+                                    kDiff = currentBelief.getNe();
+                                }
                                 writer.write(qDiff + ";" + kDiff + ";");
                                 writer.write("\r");
                                 if (kDiff > 0){

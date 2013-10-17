@@ -264,7 +264,11 @@ public class SingleRun {
                 }
 
                 if (i % 10000000 == 0) {
-                    trader.printConvergence(3);
+                    if (write){
+                        trader.printConvergence(3, "convergenceSecond.csv");
+                    } else {
+                        trader.printConvergence(3, "convergence.csv");
+                    }
                     System.out.println(i + " events");
                 }
 

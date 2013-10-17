@@ -153,7 +153,7 @@ public class ThirdLobTest {
         FV = RunOutcome[1];
         ReturningHFT = (int) RunOutcome[2];
         ReturningNonHFT = (int) RunOutcome[3];
-        for (int i = 0; i < 1; i++){
+        for (int i = 0; i < 5; i++){
             nEvents = 300000000;         // number of events
             write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
             writeDiagnostics = true;// write diagnostics controls diagnostics
