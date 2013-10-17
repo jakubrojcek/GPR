@@ -213,9 +213,6 @@ public class LOB_LinkedHashMap {
                 int Q = o.getQ();
                 pos = o.getPosition() - positionShift;
                 Order removed = book[pos].remove(o.getOrderID());
-                if (removed == null){
-                    System.out.println("not removed");
-                }
                 ActiveOrders.remove(o);
                 Collection<Order> collO = book[pos].values();
                 for (Order order : collO){ // increase priorities of the remaining orders

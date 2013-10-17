@@ -13,7 +13,7 @@ public class BeliefQ {
     private double q;                 // execution probability or Q factor in continuous time
     private double diff;              // difference of new vs old execution probability
 
-    public BeliefQ(short n, double q) {
+    public BeliefQ(int n, double q) {
         this.n = n;
         this.q = q;
     }
@@ -26,7 +26,7 @@ public class BeliefQ {
         return q;
     }
 
-    public void setN(short n) {
+    public void setN(int n) {
         this.n = n;
     }
 

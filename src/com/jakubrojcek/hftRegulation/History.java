@@ -87,7 +87,7 @@ public class History {
                     loHFT = t.isSellerIsHFT() ? 1 : 0;
                 }
                 //writer.writeDecisions(history.get(i).printTrade());
-                writer.write(moHFT + ";" + mo + ";" + loHFT + ";" + lo + ";" + (t.getFV() - t.getPrice()) + ";" + "\r");
+                writer.write(moHFT + ";" + mo + ";" + loHFT + ";" + lo + ";" + t.getFV() + ";" + t.getPrice() + ";" + "\r");
             }
             writer.close();
         }

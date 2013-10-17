@@ -33,6 +33,8 @@ public class SingleRun {
     double FVplus;
     int ReturningHFT = 0;
     int ReturningNonHFT = 0;
+    ArrayList<Integer> traderIDsHFT;        // holder for IDs of HFT traders
+    ArrayList<Integer> traderIDsNonHFT;     // holder for IDs of nonHFT traders
     HashMap<Integer, Trader> traders;
     History h;
     Trader trader;
@@ -74,6 +76,8 @@ public class SingleRun {
         outputNameTransactions = trans;
         outputNameBookData = bookd;
         header = head;
+        traderIDsHFT = new ArrayList<Integer>();
+        traderIDsNonHFT = new ArrayList<Integer>();
     }
 
     public double[] run(int nEvents, int nHFT, int NewNonHFT,
@@ -86,8 +90,7 @@ public class SingleRun {
         writeHistogram = wh;
         purge = p;
         nReset = n;
-        ArrayList<Integer> traderIDsHFT = new ArrayList<Integer>(); // holder for IDs of HFT traders
-        ArrayList<Integer> traderIDsNonHFT = new ArrayList<Integer>(); // holder for IDs of nonHFT traders
+
         if (purge){
             trader.purge();
         }
@@ -212,10 +215,7 @@ public class SingleRun {
                     }
                     // TODO: I have null for both the same order and for cancellation, reconcile
                 } else if (rn < x4){ // Returning nonHFT
-                    ID = traderIDsNonHFT.get((int) (Math.random() * traderIDsNonHFT.size()));
-                    if(!traderIDsNonHFT.contains(ID)){
-                        System.out.println("doesn't contain ID");
-                    }
+                    ID = traderIDsNonHFT.get(((int) Math.random() * traderIDsNonHFT.size()));
                     ArrayList<Order> orders = traders.get(ID).decision(book.getBookSizes(), book.getBookInfo(), EventTime, FV);
                     if (!orders.isEmpty()){
                         Integer IDr = book.transactionRule(ID , orders);
@@ -263,46 +263,15 @@ public class SingleRun {
                     System.out.println("error");
                 }
 
-                if (i % 100000 == 0) {
+                if (i % 10000000 == 0) {
+                    trader.printConvergence(3);
                     System.out.println(i + " events");
                 }
 
                 if (i % 10000 == 0) {
                     writePrint(i);
                 }
-                /*if (i % 10000000 == 0) { // TODO: put this printing outside the loop
-h.addStatisticsData(i, trader.getStatesCount()); // multiple payoffs count
-if (writeDiagnostics){
-trader.printDiagnostics();
-trader.resetDiagnostics();
-//trader.printConvergence(100);
-}
-if (write){
-h.printTransactions(header, outputNameTransactions);
-h.printBookData(header, outputNameBookData);
-trader.printDecisions();
-trader.printHistogram();
-trader.printDiagnostics();
-trader.resetDecisionHistory();
-trader.resetHistogram();
-trader.resetDiagnostics();
-}
-h.printStatisticsData(header, outputNameStatsData);
-h.resetHistory();
-
-}*/ //where events happen
-                /* if (i % 100000000 == 0) {
-                if (purge){
-                trader.purge();
-                }
-                if (nReset){
-                trader.nReset((byte)3, (short) 10000);
-                }
-                }*/
             }
-        }
-        if (write){
-            trader.printConvergence(100); // TODO: print out loud here :) not before, because it's with fixed beliefs
         }
         return new double[]{EventTime, FV, ReturningHFT, ReturningNonHFT};
     }
@@ -329,11 +298,10 @@ h.resetHistory();
         /*if (i % 5000000 == 0) {
         if (purge){
         trader.purge();
-        }
-        if (nReset){
-        trader.nReset((byte)3, (short) 10000);
-        }
         }*/
+         if (nReset){
+            trader.nReset((byte)3, (short) 100);
+        }
     }
 
 }
