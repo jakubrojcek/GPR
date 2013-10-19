@@ -34,7 +34,7 @@ public class BeliefQ {
         this.q = q;
     }
 
-    public void setDiff(float diff) {
+    public void setDiff(double diff) {
         this.diff = diff;
     }
 

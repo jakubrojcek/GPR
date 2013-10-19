@@ -112,7 +112,7 @@ public class ThirdLobTest {
                 FprivateValues, PVdistrb, sigma, tickSize, FVplus, header, book, traders, h, trader, outputNameStatsData,
                 outputNameTransactions, outputNameBookData);
 
-        int nEvents = 10000000;         // number of events
+        int nEvents = 1000000;         // number of events
         int ReturningHFT = 0;           // # of returning HFT traders in the book
         int ReturningNonHFT = 0;        // # of returning nonHFT traders in the book
         boolean write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
@@ -135,16 +135,36 @@ public class ThirdLobTest {
         ReturningHFT = (int) RunOutcome[2];
         ReturningNonHFT = (int) RunOutcome[3];
 
-        nEvents = 300000000;         // number of events
+        nEvents = 3000000;         // number of events
         write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
         writeDiagnostics = true;// write diagnostics controls diagnostics
         writeHistogram = false; // write histogram
         purge = false;          // purge in this com.jakubrojcek.gpr2005a.SingleRun?
-        nReset = true;         // reset n in this com.jakubrojcek.gpr2005a.SingleRun?
+        nReset = false;         // reset n in this com.jakubrojcek.gpr2005a.SingleRun?
         trader.setPrTremble(0.1);
         //trader.setWriteDec(false);
         trader.setWriteDiag(writeDiagnostics);
-        trader.setOnline(true);
+        //trader.setWriteHist(writeHistogram);
+        RunOutcome =
+                sr.run(nEvents, nHFT, NewNonHFT, ReturningHFT, ReturningNonHFT, EventTime, FV,
+                        write, purge, nReset, writeDiagnostics, writeHistogram);
+        EventTime = RunOutcome[0];
+        FV = RunOutcome[1];
+        ReturningHFT = (int) RunOutcome[2];
+        ReturningNonHFT = (int) RunOutcome[3];
+
+
+        nEvents = 30000000;         // number of events
+        write = true;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
+        writeDiagnostics = true;// write diagnostics controls diagnostics
+        writeHistogram = false; // write histogram
+        purge = false;          // purge in this com.jakubrojcek.gpr2005a.SingleRun?
+        nReset = false;         // reset n in this com.jakubrojcek.gpr2005a.SingleRun?
+        trader.setPrTremble(0.1);
+        //trader.setWriteDec(false);
+        trader.setWriteDiag(writeDiagnostics);
+        trader.setFixedBeliefs(true);
+        trader.setOnline(false);
         //trader.setWriteHist(writeHistogram);
         RunOutcome =
                 sr.run(nEvents, nHFT, NewNonHFT, ReturningHFT, ReturningNonHFT, EventTime, FV,

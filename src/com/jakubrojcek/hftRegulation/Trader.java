@@ -357,12 +357,19 @@ public class Trader {
                     alpha * Math.exp( - rho * (et - EventTime)) * payoff);
             if (writeDiagnostics){writeDiagnostics(belief.getQ() - previousQ);}
         } else {
-            if (belief.getNe() == 0){
-                belief.increaseNe();
-                belief.setDiff(0.0f);
-                belief.setQ(payoff);
-            } else {
+            if (belief.getN() == 1){
                 if(belief.getNe() < nResetMax) {
+                    belief.increaseNe();
+                }
+                double alpha = (1.0/(1.0 + (belief.getNe()))); // updating factor
+                double previousQ = belief.getQ();
+                belief.setQ((1.0 - alpha) * previousQ +
+                        alpha * Math.exp( - rho * (et - EventTime)) * payoff);
+            } else {
+                if (belief.getNe() == 0){
+                    belief.increaseNe();
+                    belief.setDiff(belief.getQ());
+                } else if(belief.getNe() < nResetMax) {
                     belief.increaseNe();
                 }
                 double alpha = (1.0/(1.0 + (belief.getNe()))); // updating factor
@@ -727,14 +734,18 @@ System.out.println("all: " + all + " deleted: " + deleted);*/
                         if (previousBeliefs.containsKey(acKey)){
                             currentBelief = currentBeliefs.get(acKey);
                             previousBelief = previousBeliefs.get(acKey);
-                            if (currentBelief.getNe() > t2){
-                                if (convergenceType == "convergence.csv"){
-                                    qDiff = Math.abs(currentBelief.getQ() - previousBelief.getQ());
-                                    kDiff = currentBelief.getN() - previousBelief.getN();
-                                } else if (convergenceType == "convergenceSecond.csv"){
-                                    qDiff = Math.abs(currentBelief.getDiff() - previousBelief.getDiff());
-                                    kDiff = currentBelief.getNe();
+                            if (convergenceType == "convergenceSecond.csv" && (currentBelief.getNe() > t2)){
+                                qDiff = Math.abs(currentBelief.getDiff() - previousBelief.getQ());
+                                kDiff = currentBelief.getNe();
+                                writer.write(qDiff + ";" + kDiff + ";" + currentBelief.getDiff() + ";" +  previousBelief.getQ() + ";");
+                                writer.write("\r");
+                                if (kDiff > 0){
+                                    sumDiff += (qDiff / kDiff);
+                                    nSum += kDiff;
                                 }
+                            } else if (convergenceType == "convergence.csv" && (currentBelief.getN() > t2)){
+                                qDiff = Math.abs(currentBelief.getQ() - previousBelief.getQ());
+                                kDiff = currentBelief.getN() - previousBelief.getN();
                                 writer.write(qDiff + ";" + kDiff + ";");
                                 writer.write("\r");
                                 if (kDiff > 0){
