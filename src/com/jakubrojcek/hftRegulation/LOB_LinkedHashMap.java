@@ -114,7 +114,7 @@ public class LOB_LinkedHashMap {
         ArrayList<Integer> tradersExecuted = new ArrayList<Integer>();
         Set keys;
         for (int i = nPoints - 1 - tickChange; i < nPoints - 1; i++){
-            positionShift--; // TODO: check if shifts the right number of ticks
+            positionShift--;
             keys = book[i].keySet();
             if (!keys.isEmpty()){
                 if (book[i].get(keys.iterator().next()).isBuyOrder()){ // executing buyers at (nP - 2)
@@ -131,7 +131,7 @@ public class LOB_LinkedHashMap {
             }
         }
 
-        for (int i = nPoints - 1 - tickChange; i < nPoints; i++){ // TODO: nPoints - tickChange, <=
+        for (int i = nPoints - 1 - tickChange; i < nPoints; i++){
             keys = book[i].keySet();
             while (!keys.isEmpty()){ // removing SLOs from the (nP - 1) position
                 int oID = (Integer) keys.iterator().next();
@@ -140,7 +140,6 @@ public class LOB_LinkedHashMap {
                 ActiveOrders.remove(o);
                 traders.get(traderID).cancel(et);
                 keys.remove(oID);
-                // TODO: I think I don't remove traders from all places here..
             }
         }
 
@@ -212,7 +211,7 @@ public class LOB_LinkedHashMap {
                 oID = null;
                 int Q = o.getQ();
                 pos = o.getPosition() - positionShift;
-                Order removed = book[pos].remove(o.getOrderID());
+                book[pos].remove(o.getOrderID());
                 ActiveOrders.remove(o);
                 Collection<Order> collO = book[pos].values();
                 for (Order order : collO){ // increase priorities of the remaining orders

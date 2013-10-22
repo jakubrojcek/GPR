@@ -27,16 +27,17 @@ public class ThirdLobTest {
         int hti = 5000000;                      // initial capacity for Payoffs HashTable
         int infoSize = 7;                       // 2-bid, ask, 5- GPR 2005, 6-depth at bid,ask, 8-depth off bid,ask
         double prTremble = 0.0;                 // probability of trembling
-        byte nP = 8;                            // number of prices tracked by the book, 8 in the base case, 6/11 in tick size experiment
+        byte nP = 10;                            // number of prices tracked by the book, 8 in the base case, 6/11 in tick size experiment
         int nHFT = 0;                           // # of HFT's fast traders, fixed
-        int nPositiveNonHFT = 1;               // # of positive PV slow traders
-        int nZeroNonHFT = 2;                   // # of zero PV slow traders
-        int nNegativeNonHFT = 1;               // # of negative PV slow traders
+        int nPositiveNonHFT = 1;                // # of positive PV slow traders
+        int nZeroNonHFT = 2;                    // # of zero PV slow traders
+        int nNegativeNonHFT = 1;                // # of negative PV slow traders
+        double tif = 0.0;                       // time if force
         int NewNonHFT = nNegativeNonHFT + nPositiveNonHFT + nZeroNonHFT;
-        double lambdaArrival = 1;               // arrival frequency, same for all
+        double lambdaArrival = 0.1;               // arrival frequency, same for all
         double lambdaFV = 0.125;                // frequency of FV changes
         double ReturnFrequencyHFT = 10;          // returning frequency of HFT
-        double ReturnFrequencyNonHFT = 1;     // returning frequency of NonHFT
+        double ReturnFrequencyNonHFT = 10;     // returning frequency of NonHFT
         int maxDepth = 7;                      // 0 to 7 which matter
         int FVpos = nP/2;                          // position of the fundamental value
         int HL = FVpos + 2; //                  // Lowest  allowed limit order price.  LL + HL = nP-1 for allowed orders centered around E(v)
@@ -108,22 +109,22 @@ public class ThirdLobTest {
         Trader trader = new Trader(infoSize, tauB, tauS, nP, FVpos, tickSize, ReturnFrequencyHFT,
                 ReturnFrequencyNonHFT, LL, HL, end, maxDepth, breakPoint, hti, prTremble, folder, book);
         book.makeBook(Prices);
-        SingleRun sr = new SingleRun(model, lambdaArrival, lambdaFV, ReturnFrequencyHFT, ReturnFrequencyNonHFT,
+        SingleRun sr = new SingleRun(model, tif, lambdaArrival, lambdaFV, ReturnFrequencyHFT, ReturnFrequencyNonHFT,
                 FprivateValues, PVdistrb, sigma, tickSize, FVplus, header, book, traders, h, trader, outputNameStatsData,
                 outputNameTransactions, outputNameBookData);
 
-        int nEvents = 10000000;         // number of events
+        int nEvents = 100000000;         // number of events
         int ReturningHFT = 0;           // # of returning HFT traders in the book
         int ReturningNonHFT = 0;        // # of returning nonHFT traders in the book
         boolean write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
         boolean writeDiagnostics = true;// write diagnostics controls diagnostics
         boolean writeHistogram = false; // write histogram
-        boolean purge = false;          // purge in this com.jakubrojcek.gpr2005a.SingleRun?
-        boolean nReset = false;         // reset n in this com.jakubrojcek.gpr2005a.SingleRun?
+        boolean purge = false;          // purge in this SingleRun?
+        boolean nReset = false;         // reset n in this SingleRun?
         trader.setPrTremble(0.0);
-        //trader.setWriteDec(true);
+        trader.setWriteDec(false);
         trader.setWriteDiag(writeDiagnostics);
-        //trader.setWriteHist(writeHistogram);
+        trader.setWriteHist(writeHistogram);
         trader.setOnline(true);         // controls updating for returning trader
         trader.setFixedBeliefs(false);  // controls updating. if fixed beliefs => no updating
         double EventTime = 0.0;                 // captures time
@@ -135,7 +136,7 @@ public class ThirdLobTest {
         ReturningHFT = (int) RunOutcome[2];
         ReturningNonHFT = (int) RunOutcome[3];
 
-        nEvents = 300000000;         // number of events
+        nEvents = 100000000;         // number of events
         write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
         writeDiagnostics = true;// write diagnostics controls diagnostics
         writeHistogram = false; // write histogram
@@ -153,8 +154,8 @@ public class ThirdLobTest {
         ReturningHFT = (int) RunOutcome[2];
         ReturningNonHFT = (int) RunOutcome[3];
 
-        for (int i = 0; i < 5; i++){
-            nEvents = 300000000;         // number of events
+        for (int i = 0; i < 1; i++){
+            nEvents = 100000000;         // number of events
             write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
             writeDiagnostics = true;// write diagnostics controls diagnostics
             writeHistogram = false; // write histogram
@@ -174,7 +175,7 @@ public class ThirdLobTest {
             ReturningNonHFT = (int) RunOutcome[3];
         }
 
-        nEvents = 20000000;         // number of events
+        nEvents = 300000000;         // number of events
         write = true;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
         writeDiagnostics = true;// write diagnostics controls diagnostics
         writeHistogram = true; // write histogram

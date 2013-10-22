@@ -147,12 +147,12 @@ public class Trader {
             oldPos = order.getPosition() - book.getPositionShift(); //
             q = Math.min(maxDepth, order.getQ());
             if(order.isBuyOrder()){
-                x = 1; // TODO: test this
+                x = 2; // TODO: test this
                 if (oldPos == Bt){
                     forbiddenMarketOrder = 2 * end;
                 }
             } else {
-                x = 0;
+                x = 1;
                 if (oldPos == At){
                     forbiddenMarketOrder = 2 * end + 1;
                 }
@@ -171,8 +171,6 @@ public class Trader {
         a = (short) Math.max(end, a);
 
         if (isReturning && order != null){
-            // TODO: there's something wrong with the position, he submits the same order as his previous in hope it's a MO, but at the same time, because he already has a similar LO, this one doesn't get through
-            // TODO: also, he has a buy LO behind "a" for example, shouldn't be possible
             boolean buy = order.isBuyOrder();
             if (buy){
                 action = oldPos - LL + end;
@@ -271,8 +269,6 @@ public class Trader {
                 belief.setQ((1.0 - alpha) * previousQ +
                         alpha * Math.exp( - rho * (et - EventTime)) * max);
             }
-            // TODO: check, do they update the old belief also when not executed? if no, then I the event time should be the property of the order
-            // TODO: check then if I should leave the old belief unchanged if they don't update on every return
         }
 
         if (tempQs.containsKey(action)){
@@ -357,7 +353,7 @@ public class Trader {
                     alpha * Math.exp( - rho * (et - EventTime)) * payoff);
             if (writeDiagnostics){writeDiagnostics(belief.getQ() - previousQ);}
         } else {
-            if (belief.getN() == 1){
+            if (belief.getN() == 1){           // completely new belief, falls here until end
                 if(belief.getNe() < nResetMax) {
                     belief.increaseNe();
                 }
@@ -365,13 +361,13 @@ public class Trader {
                 double previousQ = belief.getQ();
                 belief.setQ((1.0 - alpha) * previousQ +
                         alpha * Math.exp( - rho * (et - EventTime)) * payoff);
-            } else {
-                if (belief.getNe() == 0){
+            } else {                           // old belief, can be taken into consideration for convergence
+                if (belief.getNe() == 0){      // first time updated
                     belief.increaseNe();
                     belief.setDiff(belief.getQ());
                 } else if(belief.getNe() < nResetMax) {
                     belief.increaseNe();
-                }
+                }                          // continue with normal update
                 double alpha = (1.0/(1.0 + (belief.getNe()))); // updating factor
                 double previousQ = belief.getDiff();
                 belief.setDiff((float)((1.0 - alpha) * previousQ +
@@ -634,7 +630,7 @@ System.out.println("problem");
             int sz = bookSizesHistory.length;
             writer3.write(bookSizesHistory[0] + ";");
             for (int i = 1; i < sz; i++){
-                writer3.write((double)bookSizesHistory[i]/(double)bookSizesHistory[0] + ";");
+                writer3.write((double)bookSizesHistory[i]/(double)Math.max(1, bookSizesHistory[0]) + ";");
             }
             writer3.write("\r");
             writer3.close();
@@ -715,8 +711,8 @@ System.out.println("all: " + all + " deleted: " + deleted);*/
         int acKey;
         int kDiff = 0;          // difference in occurences over SingleRun
         int nSum = 0;
-        double qDiff = 0.0;     // estimated execution probability
-        double sumDiff = 0.0;   // average difference
+        double qDiff = 0.0;     // difference in beliefs
+        double sumDiff = 0.0;   // average difference in beliefs
         BeliefQ currentBelief;
         BeliefQ previousBelief;
         Iterator keys = states.keySet().iterator();
@@ -736,12 +732,12 @@ System.out.println("all: " + all + " deleted: " + deleted);*/
                             previousBelief = previousBeliefs.get(acKey);
                             if (convergenceType == "convergenceSecond.csv" && (currentBelief.getNe() > t2)){
                                 qDiff = Math.abs(currentBelief.getDiff() - previousBelief.getQ());
-                                kDiff = currentBelief.getNe();
+                                kDiff = currentBelief.getNe();     // no minus, because it starts from 0
                                 writer.write(qDiff + ";" + kDiff + ";" + currentBelief.getDiff() + ";" +  previousBelief.getQ() + ";");
                                 writer.write("\r");
                                 if (kDiff > 0){
                                     sumDiff += (qDiff / kDiff);
-                                    nSum += kDiff;
+                                    nSum++;
                                 }
                             } else if (convergenceType == "convergence.csv" && (currentBelief.getN() > t2)){
                                 qDiff = Math.abs(currentBelief.getQ() - previousBelief.getQ());
@@ -749,15 +745,15 @@ System.out.println("all: " + all + " deleted: " + deleted);*/
                                 writer.write(qDiff + ";" + kDiff + ";");
                                 writer.write("\r");
                                 if (kDiff > 0){
-                                    sumDiff += (qDiff / kDiff);
-                                    nSum += kDiff;
+                                    sumDiff += (qDiff / kDiff);  // weighted difference
+                                    nSum++;                      // number of beliefs in sumDiff
                                 }
                             }
                         }
                     }
                 }
             }
-            System.out.println("convergence? " + (double) sumDiff / Math.max(1, nSum));
+            System.out.println("convergence? " + (double) sumDiff / Math.max(1, nSum)); // average weighted difference
             writer.close();
         }
         catch (Exception ex){
@@ -824,6 +820,10 @@ System.out.println("all: " + all + " deleted: " + deleted);*/
 
     public double getPriceFV() {
         return PriceFV;
+    }
+
+    public Order getOrder() {
+        return order;
     }
 
     // setters
