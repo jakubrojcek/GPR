@@ -78,6 +78,10 @@ public class Trade {
         return buyerIsHFT;
     }
 
+    public double getTimeTrade() {
+        return timeTrade;
+    }
+
     public double getFVbeforeBuyer() {
         return FVbeforeBuyer;
     }

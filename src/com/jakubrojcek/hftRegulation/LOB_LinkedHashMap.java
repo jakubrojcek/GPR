@@ -22,7 +22,6 @@ public class LOB_LinkedHashMap {
     double tickSize; // size of one tick
     byte nPoints; // number of available positions
     int maxDepth; // 0 to 7 which matter
-    int maxSumDepth;
     private int Pt = 0; // last transaction position
     private int b = 0; // 1 if last transaction buy, 0 if sell
     private int OrderID = 0; // id stamp for orders used as key in the book LHM
@@ -50,7 +49,6 @@ public class LOB_LinkedHashMap {
         tickSize = ts;
         BookSizes = new int[nPoints];
         maxDepth = md;
-        maxSumDepth = (e / 2 + 1) * maxDepth;
     }
 
     public void makeBook(double [] prices) {//initiates book with int[] prices
@@ -177,18 +175,18 @@ public class LOB_LinkedHashMap {
         Bt = j;
 
         j = 0;
-        while (j <= Bt){
+        while (j < Bt){
             Db += BookSizes[j];
             j++;
         }
-        Db = Math.min(Db, maxSumDepth); // limited to 90
+        Db = Math.min(Db, maxDepth); // limited to 90
 
         j = nPoints - 1;
-        while (j >= At){
+        while (j > At){
             Ds += BookSizes[j];
             j--;
         }
-        Ds = Math.max(Ds, - maxSumDepth); // limited to half of the LO grid at maxDepth
+        Ds = Math.max(Ds, - maxDepth); // limited to half of the LO grid at maxDepth
 
         BookInfo[0] = Bt; // best bid position
         BookInfo[1] = At; // best ask position
@@ -203,7 +201,7 @@ public class LOB_LinkedHashMap {
     }
 
     public Integer transactionRule(Integer oID, ArrayList<Order> orders){
-        hist.addOrderData(BookInfo[1] - BookInfo[0]); // quoted spread
+        hist.addQuotedSpread(BookInfo[1] - BookInfo[0]); // quoted spread
         int pos, size;
         for (Order o : orders){
             size = o.getSize();
@@ -228,7 +226,7 @@ public class LOB_LinkedHashMap {
                         Pt = pos; // sets last transaction position
                         b = 1; // sets last transaction direction, buy = 1
                         hist.addTrade(o, cp, o.getTimeStamp(), Prices[pos], FV);
-                        hist.addOrderData(pos - (double)(BookInfo[1] + BookInfo[0]) / 2); // effective spread
+                        hist.addEffSpread(pos - ((double)(BookInfo[1] + BookInfo[0]) / 2)); // effective spread
                         Collection<Order> collO = book[pos].values();
                         for (Order order : collO){
                             order.increasePriority(size);
@@ -255,7 +253,7 @@ public class LOB_LinkedHashMap {
                         Pt = pos; // set last transaction price
                         b = 0; // set last transaction direction, 0=sell
                         hist.addTrade(cp, o, o.getTimeStamp(), Prices[pos], FV);
-                        hist.addOrderData((double) (BookInfo[1] + BookInfo[0]) / 2 - pos);
+                        hist.addEffSpread(((double) (BookInfo[1] + BookInfo[0]) / 2) - pos);
                         Collection<Order> collO = book[pos].values();
                         for (Order order : collO){
                             order.increasePriority(size);

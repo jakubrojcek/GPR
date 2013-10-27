@@ -47,11 +47,11 @@ public class History {
                 traders.get(bID).getPriceFV(), traders.get(sID).getPriceFV(), timeTrade, price, fv));
     }
 
-    public void addOrderData(Double spread){
+    public void addEffSpread(Double spread){
         EffSpread.add(spread);
     }
 
-    public void addOrderData(Integer qspread){
+    public void addQuotedSpread(Integer qspread){
         QuotedSpread.add(qspread);
     }
 
@@ -87,7 +87,8 @@ public class History {
                     loHFT = t.isSellerIsHFT() ? 1 : 0;
                 }
                 //writer.writeDecisions(history.get(i).printTrade());
-                writer.write(moHFT + ";" + mo + ";" + loHFT + ";" + lo + ";" + t.getFV() + ";" + t.getPrice() + ";" + "\r");
+                writer.write(moHFT + ";" + mo + ";" + loHFT + ";" + lo + ";"  + t.getTimeTrade() +  ";"
+                        + t.getFV() + ";" + t.getPrice() + ";" + "\r");
             }
             writer.close();
         }

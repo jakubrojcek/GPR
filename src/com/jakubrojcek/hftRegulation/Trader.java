@@ -85,7 +85,7 @@ public class Trader {
         if (privateValue > 0){pv = 2;}
         else if (privateValue < 0){pv = 1;}
         else {pv = 0;}
-        this.privateValue = privateValue - 0.0625f;
+        this.privateValue = privateValue;// - 0.0625f;
     }
 
     // constructor of the main trader- loads parameters from main
@@ -232,7 +232,15 @@ public class Trader {
                 p1 = -1.0f;
                 if (i != oldAction && i != forbiddenMarketOrder){
                     if (tempQs.containsKey(i)){
-                        p1 = tempQs.get(i).getQ();
+                        if (i < end){
+                            if (BookSizes[i + LL] > -maxDepth){
+                                p1 = tempQs.get(i).getQ();
+                            }
+                        } else if (i < a){
+                            if (BookSizes[i + LL - end] < maxDepth){
+                                p1 = tempQs.get(i).getQ();
+                            }
+                        }
                     } else {
                         if (i < end){ // payoff to sell limit order
                             p1 = (discountFactorB.get(i)[Math.abs(BookSizes[LL + i])] *
@@ -562,8 +570,8 @@ System.out.println("problem");
         } else if (infoSize == 7){
             long Bt = BookInfo[0]; // Best Bid position
             long At = BookInfo[1]; // Best Ask position
-            long lBt = BookInfo[2] / 3; // depth at best Bid
-            long lAt = BookInfo[3] / 3; // depth at best Ask
+            long lBt = BookInfo[2] / 2; // depth at best Bid
+            long lAt = BookInfo[3] / 2; // depth at best Ask
             long dBt = (BookInfo[4] / maxDepth); // depth at buy
             int dSt = (BookInfo[5] / maxDepth); // depth at sell
             int Pt = BookInfo[6]; // last transaction pricePosition position
@@ -583,7 +591,7 @@ System.out.println("problem");
             long lBt = BookInfo[2]; // depth at best Bid
             long lAt = BookInfo[3]; // depth at best Ask
             long dBt = BookInfo[4]; // depth at buy
-            int dSt = BookInfo[5]; // depth at sell
+            long dSt = BookInfo[5]; // depth at sell
             int Pt = BookInfo[6]; // last transaction pricePosition position
             int b = BookInfo[7]; // 1 if last transaction buy, 0 if sell
             int a = pv; // private value zero(0), negative (1), positive (2)
@@ -591,8 +599,8 @@ System.out.println("problem");
             //System.out.println(Bt + " : " + lBt + " ; " + At + " : " + lAt);
             /*Long code = (Bt<<50) + (At<<44) + (lBt<<40) + (lAt<<36) + (dBt<<29) + (dSt<<22) + (Pt<<16) + (b<<15) +
 + (P<<9) + (q<<5) + (x<<3) + (a<<1) + l;*/
-            code = (Bt<<42) + (At<<37) + (lBt<<34) + (lAt<<31) + (dBt<<25) + (dSt<<19) + (Pt<<14) + (b<<13) +
-                    + (P<<8) + (q<<5) + (x<<3) + (a<<1) + l;
+            code = (Bt<<39) + (At<<35) + (lBt<<31) + (lAt<<27) + (dBt<<23) + (dSt<<19) + (Pt<<15) + (b<<14) +
+                    + (P<<10) + (q<<6) + (x<<4) + (a<<1) + l;
         }
 
         return code;
@@ -742,8 +750,8 @@ System.out.println("all: " + all + " deleted: " + deleted);*/
                             } else if (convergenceType == "convergence.csv" && (currentBelief.getN() > t2)){
                                 qDiff = Math.abs(currentBelief.getQ() - previousBelief.getQ());
                                 kDiff = currentBelief.getN() - previousBelief.getN();
-                                writer.write(qDiff + ";" + kDiff + ";");
-                                writer.write("\r");
+                                //writer.write(qDiff + ";" + kDiff + ";");
+                                //writer.write("\r");
                                 if (kDiff > 0){
                                     sumDiff += (qDiff / kDiff);  // weighted difference
                                     nSum++;                      // number of beliefs in sumDiff
