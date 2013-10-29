@@ -97,14 +97,11 @@ public class SingleRun {
         purge = p;
         nReset = n;
 
-        if (purge){
-            trader.purge();
-        }
-        if (nReset){
-            trader.nReset((byte)1, (short) 1);
-        }
 
         if (model == "returning"){
+            if (nReset){
+                trader.nReset((byte)3, (short) 100, purge);
+            }
             double prob1, prob2, prob3, prob4, prob5;
             double x1, x2, x3, x4, x5;
             for (int i = 0; i < nEvents; i ++){
@@ -329,7 +326,7 @@ public class SingleRun {
                     System.out.println(i + " events");
                 }
 
-                if (i % 10000 == 0) {
+                if (i % 1000000 == 0) {
                     writePrint(i);
                 }
             }
@@ -360,9 +357,7 @@ public class SingleRun {
         if (purge){
         trader.purge();
         }*/
-         if (nReset){
-            trader.nReset((byte)3, (short) 100);
-        }
+
     }
 
 }

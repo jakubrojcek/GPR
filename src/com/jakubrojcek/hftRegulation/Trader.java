@@ -588,10 +588,10 @@ System.out.println("problem");
         else if (infoSize == 8){
             long Bt = BookInfo[0]; // Best Bid position
             long At = BookInfo[1]; // Best Ask position
-            long lBt = BookInfo[2]; // depth at best Bid
-            long lAt = BookInfo[3]; // depth at best Ask
-            long dBt = BookInfo[4]; // depth at buy
-            long dSt = BookInfo[5]; // depth at sell
+            long lBt = BookInfo[2] / 2; // depth at best Bid
+            long lAt = BookInfo[3] / 2; // depth at best Ask
+            long dBt = BookInfo[4] / 2; // depth at buy
+            long dSt = BookInfo[5] / 2; // depth at sell
             int Pt = BookInfo[6]; // last transaction pricePosition position
             int b = BookInfo[7]; // 1 if last transaction buy, 0 if sell
             int a = pv; // private value zero(0), negative (1), positive (2)
@@ -652,37 +652,51 @@ System.out.println("problem");
     // deletes the com.jakubrojcek.gpr2005a.Payoff of a state which has fromPreviousRound set to true
     public void purge(){
         /*double rn;
-Iterator it = Payoffs.keySet().iterator();
-ArrayList<Long> toDelete = new ArrayList<Long>();
-int all = 0;
-int deleted = 0;
-Long code;
-while (it.hasNext()){
-all++;
-code = (Long) it.next();
-rn = Math.random();
-if (rn < 0.25){ // portion of cancelled payoffs
-toDelete.add(code);
-deleted++;
-}
-}
-for (Long L : toDelete){
-Payoffs.remove(L);
-}
-System.out.println("all: " + all + " deleted: " + deleted);*/
-    }
-
-    // resets n in Payoffs, sets purge indicator to true-> true until next time the state is hit
-    public void nReset(byte n, short m){
+        Iterator<Long> iterator = states.keySet().iterator();
+        Iterator<Integer> iterator2;
+        ArrayList<Long> codes2remove = new ArrayList<Long>();
+        ArrayList<Integer> actions2remove = new ArrayList<Integer>();
+        rn = Math.random();
+        if (rn < 0.25){ // portion of cancelled payoffs
+        toDelete.add(code);
+        deleted++;
+        }
         Collection<BeliefQ> beliefQs;
         Collection<HashMap<Integer, BeliefQ>> collHM = states.values();
-        int NN;
         for (HashMap<Integer, BeliefQ> hm : collHM){
             beliefQs = hm.values();
             for (BeliefQ b : beliefQs){
                 NN = Math.max(n, b.getN());
                 b.setN((Math.min(NN, m)));
             }
+        }*/
+    }
+
+    // resets n in Payoffs, sets purge indicator to true-> true until next time the state is hit
+    public void nReset(byte n, short m, boolean purge){
+        Collection<BeliefQ> beliefQs;
+        Iterator<Long> iterator = states.keySet().iterator();
+        ArrayList<Long> codes2remove = new ArrayList<Long>();
+        Long code;
+        boolean deleteState = true;
+        int NN;
+        while (iterator.hasNext()){
+            code = iterator.next();
+            beliefQs = states.get(code).values();
+            for (BeliefQ b : beliefQs){
+                if (purge){
+                    deleteState = deleteState && (b.getN() <= n);
+                }
+                NN = Math.max(n, b.getN());
+                NN = Math.min(NN, m);
+                b.setN(NN);
+            }
+            if (purge && deleteState){
+                codes2remove.add(code);
+            }
+        }
+        for (Long code2delete: codes2remove){
+            states.remove(code2delete);
         }
     }
 

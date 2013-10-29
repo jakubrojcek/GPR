@@ -16,7 +16,14 @@ import java.util.*;
  */
 public class Test_various {
     public static void main(String[] args) {
-        TreeMap<Double, Integer> waitingTraders = new TreeMap<Double, Integer>();
+        boolean b1 = true;
+        int i1 = 1, i2 = 2, i3 = 1;
+        b1 = b1 && (i1 <= 3);
+        b1 = b1 && (i2 <= 3);
+        b1 = b1 && (i2 <= 3);
+        System.out.println(b1);
+
+        /*TreeMap<Double, Integer> waitingTraders = new TreeMap<Double, Integer>();
         waitingTraders.put(1.0, 1);
         waitingTraders.put(1.1, 2);
         waitingTraders.put(0.9, 3);
@@ -24,7 +31,7 @@ public class Test_various {
         waitingTraders.put(0.8,4);
         waitingTraders.put(1.05,5);
         waitingTraders.put(1.2,6);
-        waitingTraders.remove(waitingTraders.firstKey());
+        waitingTraders.remove(waitingTraders.firstKey());*/
 
         /*HashMap<Long, Payoff> Payoffs = new HashMap<Long, Payoff>();
         GPR2005Payoff_test3 pay1 = new GPR2005Payoff_test3();

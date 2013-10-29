@@ -38,7 +38,7 @@ public class ThirdLobTest {
         double lambdaFV = 0.125;                // frequency of FV changes
         double ReturnFrequencyHFT = 10;          // returning frequency of HFT
         double ReturnFrequencyNonHFT = 1;     // returning frequency of NonHFT
-        int maxDepth = 15;                      // 0 to 7 which matter
+        int maxDepth = 11;                      // 0 to 7 which matter
         int FVpos = nP/2;                          // position of the fundamental value
         int HL = FVpos + 3; //                  // Lowest  allowed limit order price.  LL + HL = nP-1 for allowed orders centered around E(v)
         int LL = FVpos - 3; //                  // Highest allowed limit order price
