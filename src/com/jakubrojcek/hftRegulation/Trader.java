@@ -39,7 +39,7 @@ public class Trader {
     static int statesCount = 0; // counting number of unique states
     static HashMap<Long, HashMap<Integer, BeliefQ>> states;/* Beliefs about payoffs for different actions
 + max + maxIndex in state=code */
-    static HashMap<Long, HashMap<Integer, BeliefQ>> previousStates; // used to compute convergences
+    static HashMap<Long, HashMap<Integer, BeliefQ>> previousStates; // used to compute convergence type 1
     static previousStates statesConstructor;    // copy constructor for previous states
     static HashMap<Integer, BeliefQ> tempQs;
     static LOB_LinkedHashMap book;              // reference to the book
@@ -235,10 +235,14 @@ public class Trader {
                         if (i < end){
                             if (BookSizes[i + LL] > -maxDepth){
                                 p1 = tempQs.get(i).getQ();
+                            } else {
+                                System.out.println("too low priority");
                             }
                         } else if (i < a){
                             if (BookSizes[i + LL - end] < maxDepth){
                                 p1 = tempQs.get(i).getQ();
+                            } else {
+                                System.out.println("too low priority");
                             }
                         }
                     } else {
@@ -696,6 +700,8 @@ System.out.println("problem");
             }
         }
         for (Long code2delete: codes2remove){
+            NN = states.get(code2delete).size();
+            statesCount -= NN;
             states.remove(code2delete);
         }
     }
@@ -725,7 +731,7 @@ System.out.println("problem");
     }
 
     public void printConvergence(int t2, String convergenceType){
-        previousStates = statesConstructor.getTempStates();     // TODO: is this passing trick working?
+        previousStates = statesConstructor.getTempStates();
         long code;
         Iterator keys2;
         HashMap<Integer, BeliefQ> currentBeliefs;

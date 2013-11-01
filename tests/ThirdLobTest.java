@@ -19,7 +19,7 @@ public class ThirdLobTest {
     public static void main(String[] args) {
         double timeStamp1 = System.nanoTime();
         String model = "returning";
-        String folder = "D:\\_paper1 HFT, MM, rebates and market quality\\Matlab Analysis\\";
+        String folder = "D:\\_paper1 HFT, MM, rebates and market quality\\Matlab Analysis\\ProfilingHFT4\\";
         String outputNameTransactions = "Transactions8.csv";  // output file name
         String outputNameBookData = "effSpread.csv";   // output file name
         String outputNameStatsData = "stats8.csv";   // output file name
@@ -27,8 +27,8 @@ public class ThirdLobTest {
         int hti = 5000000;                      // initial capacity for Payoffs HashTable
         int infoSize = 8;                       // 2-bid, ask, 5- GPR 2005, 6-depth at bid,ask, 8-depth off bid,ask
         double prTremble = 0.0;                 // probability of trembling
-        byte nP = 15;                            // number of prices tracked by the book, 8 in the base case, 6/11 in tick size experiment
-        int nHFT = 0;                           // # of HFT's fast traders, fixed
+        byte nP = 11;                            // number of prices tracked by the book, 8 in the base case, 6/11 in tick size experiment
+        int nHFT = 4;                           // # of HFT's fast traders, fixed
         int nPositiveNonHFT = 1;                // # of positive PV slow traders
         int nZeroNonHFT = 2;                    // # of zero PV slow traders
         int nNegativeNonHFT = 1;                // # of negative PV slow traders
@@ -38,7 +38,7 @@ public class ThirdLobTest {
         double lambdaFV = 0.125;                // frequency of FV changes
         double ReturnFrequencyHFT = 10;          // returning frequency of HFT
         double ReturnFrequencyNonHFT = 1;     // returning frequency of NonHFT
-        int maxDepth = 11;                      // 0 to 7 which matter
+        int maxDepth = 15;                      // 0 to 7 which matter
         int FVpos = nP/2;                          // position of the fundamental value
         int HL = FVpos + 3; //                  // Lowest  allowed limit order price.  LL + HL = nP-1 for allowed orders centered around E(v)
         int LL = FVpos - 3; //                  // Highest allowed limit order price
@@ -113,7 +113,7 @@ public class ThirdLobTest {
                 FprivateValues, PVdistrb, sigma, tickSize, FVplus, header, book, traders, h, trader, outputNameStatsData,
                 outputNameTransactions, outputNameBookData);
 
-        int nEvents = 10000000;         // number of events
+        int nEvents = 50000000;         // number of events
         int ReturningHFT = 0;           // # of returning HFT traders in the book
         int ReturningNonHFT = 0;        // # of returning nonHFT traders in the book
         boolean write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
@@ -136,7 +136,7 @@ public class ThirdLobTest {
         ReturningHFT = (int) RunOutcome[2];
         ReturningNonHFT = (int) RunOutcome[3];
 
-        nEvents = 300000000;         // number of events
+        nEvents = 60000000;         // number of events
         write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
         writeDiagnostics = true;// write diagnostics controls diagnostics
         writeHistogram = false; // write histogram
@@ -154,8 +154,26 @@ public class ThirdLobTest {
         ReturningHFT = (int) RunOutcome[2];
         ReturningNonHFT = (int) RunOutcome[3];
 
-        for (int i = 0; i < 10; i++){
-            nEvents = 200000000;         // number of events
+        nEvents = 60000000;         // number of events
+        write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
+        writeDiagnostics = true;// write diagnostics controls diagnostics
+        writeHistogram = false; // write histogram
+        purge = false;          // purge in this com.jakubrojcek.gpr2005a.SingleRun?
+        nReset = true;         // reset n in this com.jakubrojcek.gpr2005a.SingleRun?
+        trader.setPrTremble(0.05);
+        //trader.setWriteDec(false);
+        trader.setWriteDiag(writeDiagnostics);
+        //trader.setWriteHist(writeHistogram);
+        RunOutcome =
+                sr.run(nEvents, nHFT, NewNonHFT, ReturningHFT, ReturningNonHFT, EventTime, FV,
+                        write, purge, nReset, writeDiagnostics, writeHistogram);
+        EventTime = RunOutcome[0];
+        FV = RunOutcome[1];
+        ReturningHFT = (int) RunOutcome[2];
+        ReturningNonHFT = (int) RunOutcome[3];
+
+        for (int i = 0; i < 2; i++){
+            nEvents = 60000000;         // number of events
             write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
             writeDiagnostics = true;// write diagnostics controls diagnostics
             writeHistogram = false; // write histogram
@@ -175,7 +193,7 @@ public class ThirdLobTest {
             ReturningNonHFT = (int) RunOutcome[3];
         }
 
-        nEvents = 100000000;         // number of events
+        nEvents = 50000000;         // number of events
         write = true;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
         writeDiagnostics = true;// write diagnostics controls diagnostics
         writeHistogram = true; // write histogram
@@ -194,7 +212,7 @@ public class ThirdLobTest {
         FV = RunOutcome[1];
         ReturningHFT = (int) RunOutcome[2];
         ReturningNonHFT = (int) RunOutcome[3];
-         // occurrences Beliefs
+        // occurrences Beliefs
         trader.printStatesDensity(EventTime);
         /* categories of traders: fast, slow, private value: negative, zero, positive
   that means 4 categories of traders. Fast have zero PV */

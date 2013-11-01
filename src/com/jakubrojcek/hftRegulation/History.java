@@ -73,6 +73,7 @@ public class History {
             double lo;                               // payoff from limit order
             int moHFT;                               // is the MO submitter HFT
             int loHFT;                               // is the LO submitter HFT
+            int buyMO;
             for (int i = 0; i < sz; i++){
                 Trade t = history.get(i);
                 if (t.getTimeBuyer() < t.getTimeSeller()){           // distinguishing if seller initiated
@@ -80,15 +81,18 @@ public class History {
                     moHFT = t.isSellerIsHFT() ? 1 : 0;
                     lo = t.getFV() + t.getBuyerPV() - t.getPrice();
                     loHFT = t.isBuyerIsHFT() ? 1 : 0;
+                    buyMO = 0;                                      // seller initiated order
                 } else {
                     mo = t.getFV() + t.getBuyerPV() - t.getPrice();
                     moHFT = t.isBuyerIsHFT() ? 1 : 0;
                     lo = t.getPrice() - t.getSellerPV() - t.getFV();
                     loHFT = t.isSellerIsHFT() ? 1 : 0;
+                    buyMO = 1;                                      // buyer initiated order
                 }
                 //writer.writeDecisions(history.get(i).printTrade());
                 writer.write(moHFT + ";" + mo + ";" + loHFT + ";" + lo + ";"  + t.getTimeTrade() +  ";"
-                        + t.getFV() + ";" + t.getPrice() + ";" + "\r");
+                        + t.getFV() + ";" + t.getPrice() + ";" + t.getBuyerPV() + ";" +
+                        t.getSellerPV() + ";" + buyMO + ";" + "\r");
             }
             writer.close();
         }

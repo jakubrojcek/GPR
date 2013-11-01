@@ -109,6 +109,9 @@ public class SingleRun {
                 Lambda = (nHFT + NewNonHFT) * lambdaArrival + ReturningHFT * ReturnFrequencyHFT +
                         + ReturningNonHFT * ReturnFrequencyNonHFT + lambdaFVchange;
                 EventTime += - Math.log(1.0 - Math.random()) / Lambda; // random exponential time
+                if (EventTime < 0.0){
+                    System.out.println("negative event time, debug");
+                }
                 // number of all agents to trade
                 if (!waitingTraders.isEmpty() && (EventTime > waitingTraders.firstKey())){
                     Integer ID;
@@ -316,13 +319,8 @@ public class SingleRun {
                 if (ReturningHFT != traderIDsHFT.size() || ReturningNonHFT != traderIDsNonHFT.size()){
                     System.out.println("error");
                 }
-
                 if (i % 10000000 == 0) {
-                    if (write){
-                        trader.printConvergence(3, "convergenceSecond.csv");
-                    } else {
-                        trader.printConvergence(3, "convergence.csv");
-                    }
+
                     System.out.println(i + " events");
                 }
 
@@ -330,6 +328,11 @@ public class SingleRun {
                     writePrint(i);
                 }
             }
+        }
+        if (write){
+            trader.printConvergence(15, "convergenceSecond.csv");
+        } else {
+            trader.printConvergence(15, "convergence.csv");
         }
         return new double[]{EventTime, FV, ReturningHFT, ReturningNonHFT};
     }
