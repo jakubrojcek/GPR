@@ -113,7 +113,7 @@ public class ThirdLobTest {
                 FprivateValues, PVdistrb, sigma, tickSize, FVplus, header, book, traders, h, trader, outputNameStatsData,
                 outputNameTransactions, outputNameBookData);
 
-        int nEvents = 50000000;         // number of events
+        int nEvents = 500000000;         // number of events
         int ReturningHFT = 0;           // # of returning HFT traders in the book
         int ReturningNonHFT = 0;        // # of returning nonHFT traders in the book
         boolean write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
@@ -136,7 +136,7 @@ public class ThirdLobTest {
         ReturningHFT = (int) RunOutcome[2];
         ReturningNonHFT = (int) RunOutcome[3];
 
-        nEvents = 60000000;         // number of events
+        nEvents = 600000000;         // number of events
         write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
         writeDiagnostics = true;// write diagnostics controls diagnostics
         writeHistogram = false; // write histogram
@@ -154,7 +154,7 @@ public class ThirdLobTest {
         ReturningHFT = (int) RunOutcome[2];
         ReturningNonHFT = (int) RunOutcome[3];
 
-        nEvents = 60000000;         // number of events
+        nEvents = 600000000;         // number of events
         write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
         writeDiagnostics = true;// write diagnostics controls diagnostics
         writeHistogram = false; // write histogram
@@ -172,8 +172,8 @@ public class ThirdLobTest {
         ReturningHFT = (int) RunOutcome[2];
         ReturningNonHFT = (int) RunOutcome[3];
 
-        for (int i = 0; i < 2; i++){
-            nEvents = 60000000;         // number of events
+        for (int i = 0; i < 20; i++){
+            nEvents = 600000000;         // number of events
             write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
             writeDiagnostics = true;// write diagnostics controls diagnostics
             writeHistogram = false; // write histogram
@@ -193,17 +193,17 @@ public class ThirdLobTest {
             ReturningNonHFT = (int) RunOutcome[3];
         }
 
-        nEvents = 50000000;         // number of events
-        write = true;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
+        nEvents = 500000000;         // number of events
+        write = true;          // writeDecisions output in this SingleRun?
         writeDiagnostics = true;// write diagnostics controls diagnostics
         writeHistogram = true; // write histogram
-        purge = false;          // purge in this com.jakubrojcek.gpr2005a.SingleRun?
-        nReset = false;         // reset n in this com.jakubrojcek.gpr2005a.SingleRun?
+        purge = false;          // purge in this SingleRun?
+        nReset = false;         // reset n in this SingleRun?
         trader.setPrTremble(0.0);
         trader.setWriteDec(true);
         trader.setWriteDiag(writeDiagnostics);
         trader.setWriteHist(writeHistogram);
-        trader.setOnline(false);
+        trader.setOnline(true);
         trader.setFixedBeliefs(true);
         RunOutcome =
                 sr.run(nEvents, nHFT, NewNonHFT, ReturningHFT, ReturningNonHFT, EventTime, FV,

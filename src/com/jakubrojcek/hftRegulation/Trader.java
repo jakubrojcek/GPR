@@ -39,7 +39,8 @@ public class Trader {
     static int statesCount = 0; // counting number of unique states
     static HashMap<Long, HashMap<Integer, BeliefQ>> states;/* Beliefs about payoffs for different actions
 + max + maxIndex in state=code */
-    static HashMap<Long, HashMap<Integer, BeliefQ>> previousStates; // used to compute convergence type 1
+    static HashMap<Long, HashMap<Integer, BeliefQ>> previousStates;    // used to compute convergence type 1
+    static HashMap<Long, HashMap<Integer, BeliefQ>> convergenceStates; // used to compute convergence type 2
     static previousStates statesConstructor;    // copy constructor for previous states
     static HashMap<Integer, BeliefQ> tempQs;
     static LOB_LinkedHashMap book;              // reference to the book
@@ -67,7 +68,7 @@ public class Trader {
     static String folder;
     static Decision decision;
     static Diagnostics diag;
-    static int [] bookSizesHistory;
+    static int[] bookSizesHistory;
     static int[] previousTraderAction;
     static ArrayList<Order> orders;             // result of decision, passed to LOB.transactionRule
     static HashMap<Short, Float> ps;
@@ -136,7 +137,7 @@ public class Trader {
         orders = new ArrayList<Order>();
         PriceFV = priceFV; // get price of the fundamental value = fundamental value
         int pricePosition; // pricePosition at which to submit
-        int forbiddenMarketOrder = 0; // if 2 * end, SMO forbidden, 2 * end + 1 BMO forbidden, to not execute against himself
+        int forbiddenMarketOrder = -1; // if 2 * end, SMO forbidden, 2 * end + 1 BMO forbidden, to not execute against himself
         boolean buyOrder = false; // buy order?
         long Bt = BookInfo[0]; // Best Bid position
         long At = BookInfo[1]; // Best Ask position
@@ -231,14 +232,16 @@ public class Trader {
             for(int i = b; i < nPayoffs; i++){ // searching for best payoff
                 p1 = -1.0f;
                 if (i != oldAction && i != forbiddenMarketOrder){
-                    if (tempQs.containsKey(i)){
+                    if (tempQs.containsKey(i)){           // TODO: what do I do if beliefs are fixed?
                         if (i < end){
+                            //p1 = tempQs.get(i).getQ();
                             if (BookSizes[i + LL] > -maxDepth){
                                 p1 = tempQs.get(i).getQ();
                             } else {
                                 System.out.println("too low priority");
                             }
                         } else if (i < a){
+                            //p1 = tempQs.get(i).getQ();
                             if (BookSizes[i + LL - end] < maxDepth){
                                 p1 = tempQs.get(i).getQ();
                             } else {
@@ -276,15 +279,21 @@ public class Trader {
                 if(belief.getN() < nResetMax) {
                     belief.increaseN();
                 }
-                double alpha = (1.0/(1.0 + (belief.getN()))); // updating factor
-                double previousQ = belief.getQ();
-                belief.setQ((1.0 - alpha) * previousQ +
-                        alpha * Math.exp( - rho * (et - EventTime)) * max);
+                if (fixedBeliefs){
+                    // TODO: capture the one-step ahead belief for convergence here
+                    // TODO: should be only for one period ahead, not more
+                } else {
+                    double alpha = (1.0/(1.0 + (belief.getN()))); // updating factor
+                    double previousQ = belief.getQ();
+                    belief.setQ((1.0 - alpha) * previousQ +
+                            alpha * Math.exp( - rho * (et - EventTime)) * max);
+                }
             }
         }
-
+        // TODO: for fixed, create new beliefs and new hashMaps
         if (tempQs.containsKey(action)){
             belief = tempQs.get(action); // obtaining the belief-> store as private value
+            // TODO: if fixed, create new belief here
         } else {
             statesCount++;
             belief = new BeliefQ((short) 1, max);
@@ -365,6 +374,7 @@ public class Trader {
                     alpha * Math.exp( - rho * (et - EventTime)) * payoff);
             if (writeDiagnostics){writeDiagnostics(belief.getQ() - previousQ);}
         } else {
+            // TODO: update realized and one-step-ahead belief here
             if (belief.getN() == 1){           // completely new belief, falls here until end
                 if(belief.getNe() < nResetMax) {
                     belief.increaseNe();
@@ -393,6 +403,7 @@ public class Trader {
     // use to cancel limit order in normal setting
     public void cancel(double et){
         order = null;
+        // TODO: if fixed, update one-step-ahead belief here
     }
 
     // writing decisions
