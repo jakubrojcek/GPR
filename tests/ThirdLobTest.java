@@ -19,7 +19,7 @@ public class ThirdLobTest {
     public static void main(String[] args) {
         double timeStamp1 = System.nanoTime();
         String model = "returning";
-        String folder = "D:\\_paper1 HFT, MM, rebates and market quality\\Matlab Analysis\\ProfilingHFT4\\";
+        String folder = "D:\\_paper1 HFT, MM, rebates and market quality\\Matlab Analysis\\Profiling\\";
         String outputNameTransactions = "Transactions8.csv";  // output file name
         String outputNameBookData = "effSpread.csv";   // output file name
         String outputNameStatsData = "stats8.csv";   // output file name
@@ -28,7 +28,7 @@ public class ThirdLobTest {
         int infoSize = 8;                       // 2-bid, ask, 5- GPR 2005, 6-depth at bid,ask, 8-depth off bid,ask
         double prTremble = 0.0;                 // probability of trembling
         byte nP = 11;                            // number of prices tracked by the book, 8 in the base case, 6/11 in tick size experiment
-        int nHFT = 4;                           // # of HFT's fast traders, fixed
+        int nHFT = 0;                           // # of HFT's fast traders, fixed
         int nPositiveNonHFT = 1;                // # of positive PV slow traders
         int nZeroNonHFT = 2;                    // # of zero PV slow traders
         int nNegativeNonHFT = 1;                // # of negative PV slow traders
@@ -113,7 +113,7 @@ public class ThirdLobTest {
                 FprivateValues, PVdistrb, sigma, tickSize, FVplus, header, book, traders, h, trader, outputNameStatsData,
                 outputNameTransactions, outputNameBookData);
 
-        int nEvents = 500000000;         // number of events
+        int nEvents = 5000000;         // number of events
         int ReturningHFT = 0;           // # of returning HFT traders in the book
         int ReturningNonHFT = 0;        // # of returning nonHFT traders in the book
         boolean write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
@@ -136,7 +136,7 @@ public class ThirdLobTest {
         ReturningHFT = (int) RunOutcome[2];
         ReturningNonHFT = (int) RunOutcome[3];
 
-        nEvents = 600000000;         // number of events
+        nEvents = 6000000;         // number of events
         write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
         writeDiagnostics = true;// write diagnostics controls diagnostics
         writeHistogram = false; // write histogram
@@ -154,7 +154,7 @@ public class ThirdLobTest {
         ReturningHFT = (int) RunOutcome[2];
         ReturningNonHFT = (int) RunOutcome[3];
 
-        nEvents = 600000000;         // number of events
+        nEvents = 6000000;         // number of events
         write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
         writeDiagnostics = true;// write diagnostics controls diagnostics
         writeHistogram = false; // write histogram
@@ -172,8 +172,8 @@ public class ThirdLobTest {
         ReturningHFT = (int) RunOutcome[2];
         ReturningNonHFT = (int) RunOutcome[3];
 
-        for (int i = 0; i < 20; i++){
-            nEvents = 600000000;         // number of events
+        for (int i = 0; i < 2; i++){
+            nEvents = 6000000;         // number of events
             write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
             writeDiagnostics = true;// write diagnostics controls diagnostics
             writeHistogram = false; // write histogram
@@ -193,7 +193,7 @@ public class ThirdLobTest {
             ReturningNonHFT = (int) RunOutcome[3];
         }
 
-        nEvents = 500000000;         // number of events
+        nEvents = 5000000;         // number of events
         write = true;          // writeDecisions output in this SingleRun?
         writeDiagnostics = true;// write diagnostics controls diagnostics
         writeHistogram = true; // write histogram

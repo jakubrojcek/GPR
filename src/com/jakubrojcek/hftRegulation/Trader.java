@@ -40,7 +40,9 @@ public class Trader {
     static HashMap<Long, HashMap<Integer, BeliefQ>> states;/* Beliefs about payoffs for different actions
 + max + maxIndex in state=code */
     static HashMap<Long, HashMap<Integer, BeliefQ>> previousStates;    // used to compute convergence type 1
-    static HashMap<Long, HashMap<Integer, BeliefQ>> convergenceStates; // used to compute convergence type 2
+    static HashMap<Long, HashMap<Integer, BeliefQ>> convergenceStates = new HashMap<Long, HashMap<Integer, BeliefQ>>();
+    // used to compute convergence type 2
+    static ArrayList<Integer> updatedTraders = new ArrayList<Integer>();// list of traders already updated their one-step-ahead beliefs
     static previousStates statesConstructor;    // copy constructor for previous states
     static HashMap<Integer, BeliefQ> tempQs;
     static LOB_LinkedHashMap book;              // reference to the book
@@ -134,6 +136,7 @@ public class Trader {
     // decision about the price is made here, so far random
     public ArrayList<Order> decision(int[] BookSizes, int[] BookInfo,
                                      double et, double priceFV){
+        boolean trembled, noAction = false;   //TODO: delete after debugging
         orders = new ArrayList<Order>();
         PriceFV = priceFV; // get price of the fundamental value = fundamental value
         int pricePosition; // pricePosition at which to submit
@@ -159,7 +162,7 @@ public class Trader {
                 }
             }
         }
-        // TODO: how to specify hashCode for a new trader in terms of oldPos, q, x?
+
         Long code = HashCode(oldPos, q, x, BookInfo, BookSizes);
         tempQs = states.containsKey(code) ? states.get(code)
                 : new HashMap<Integer, BeliefQ>();
@@ -178,8 +181,7 @@ public class Trader {
                 if (action >= end && action < a){ // still in the range for LO, else is cancelled for sure
                     p1 = (discountFactorS.get(action - end)[Math.abs(q)] * ((breakPoint - action + end) * tickSize + privateValue));
                     max = tempQs.containsKey(action) ? tempQs.get(action).getQ()
-                            : -1.0;
-                    max = Math.max(max, p1); // max, because priority should have improved
+                                                     : p1;
                     oldAction = action;
                 } else {
                     action = -1; // otherwise could have action == 2 * end and the SMO would not be computed later
@@ -189,8 +191,7 @@ public class Trader {
                 if (action >= 0 && action < end){ // still in the range for LO, else is cancelled for sure
                     p1 = (discountFactorB.get(action)[Math.abs(q)] * ((action - breakPoint) * tickSize - privateValue));
                     max = tempQs.containsKey(action) ? tempQs.get(action).getQ()
-                            : -1.0;
-                    max = Math.max(max, p1); // max, because priority should have improved
+                                                     : p1;
                     oldAction = action;
                 } else {
                     action = -1; // otherwise could have action == 2 * end and the SMO would not be computed later
@@ -198,37 +199,53 @@ public class Trader {
             }
         }
         if (prTremble > 0.0 && Math.random() < prTremble){
+            trembled = true;
             HashMap<Integer, Double> p = new HashMap<Integer, Double>();
             if (action != -1){
                 p.put(action, max);
             }
             for(int i = b; i < nPayoffs; i++){ // searching for best payoff
+                p1 = -1.0;
                 if (i != oldAction && i != forbiddenMarketOrder){ // TODO: doesn't work if we have oldAction
                     if (tempQs.containsKey(i)){
-                        p.put(i,tempQs.get(i).getQ());
+                        p1 = tempQs.get(i).getQ();
+                        p.put(i, p1);
                     } else {
                         if (i < end){ // payoff to sell limit order
-                            p.put(i,(discountFactorB.get(i)[Math.abs(BookSizes[LL + i])] *
-                                    ((i - breakPoint) * tickSize - privateValue)));
+                            p1 = (discountFactorB.get(i)[Math.abs(BookSizes[LL + i])] *
+                                    ((i - breakPoint) * tickSize - privateValue));
+                            p.put(i, p1);
                         } else if (i < a) { // payoff to buy limit order
-                            p.put(i, (discountFactorS.get(i - end)[Math.abs(BookSizes[LL + i - end])] *
-                                    ((breakPoint - i + end) * tickSize + privateValue)));
+                            p1 = (discountFactorS.get(i - end)[Math.abs(BookSizes[LL + i - end])] *
+                                    ((breakPoint - i + end) * tickSize + privateValue));
+                            p.put(i, p1);
                         } else if (i == (2 * end)){
-                            p.put(i, ((Bt - fvPos) * tickSize - privateValue)); // payoff to sell market order
+                            p1 = ((Bt - fvPos) * tickSize - privateValue);
+                            p.put(i, p1); // payoff to sell market order
                         } else if (i == (2 * end + 1)){
-                            p.put(i, ((fvPos - At) * tickSize + privateValue)); // payoff to buy market order
+                            p1 = ((fvPos - At) * tickSize + privateValue);
+                            p.put(i, p1); // payoff to buy market order
                         } else if (i == (2 * end + 2)){
                             double Rt = (isHFT) ? 1.0 / ReturnFrequencyHFT // TODO: can I integrate over future differently?
                                     : 1.0 / ReturnFrequencyNonHFT; // expected return time
-                            p.put(i, (Math.exp(-rho * Rt) * (sum / Math.max(1, nLO)))); // 2 for averaging over 14
+                            p1 = Math.exp(-rho * Rt) * (sum / Math.max(1, nLO));
+                            p.put(i, p1); // 2 for averaging over 14
                         }
+                    }
+                    if (p1 >= 0){
+                        nLO++;
+                        sum += p1;
                     }
                 }
             }
             List<Integer> actions = new ArrayList <Integer>(p.keySet());
             action = actions.get(random.nextInt(actions.size()));
             max = p.get(action);
+            if (action == -1){
+                System.out.print("action - 1");
+            }
         } else {
+            trembled = false;
             for(int i = b; i < nPayoffs; i++){ // searching for best payoff
                 p1 = -1.0f;
                 if (i != oldAction && i != forbiddenMarketOrder){
@@ -260,29 +277,47 @@ public class Trader {
                         } else if (i == (2 * end + 1)){
                             p1 = ((fvPos - At) * tickSize + privateValue); // payoff to buy market order
                         } else if (i == (2 * end + 2)){
+                            noAction = true;
                             double Rt = (isHFT) ? 1.0 / ReturnFrequencyHFT
                                     : 1.0 / ReturnFrequencyNonHFT; // expected return time
-                            p1 = (Math.exp(-rho * Rt) * (sum / Math.max(1, nLO))); // 2 for averaging over 14
+                            p1 = Math.exp(-rho * Rt) * (sum / Math.max(1, nLO)); // 2 for averaging over 14
+                            if (p1 < 0.0){
+                                System.out.println("negative no action belief, can't be");
+                            }
                         }
                     }
-                    if (p1 >= 0){
+                    if (p1 >= 0.0){
                         nLO++;
                         sum += p1;
                         if (p1 >= max){
                             max = p1;
                             action = i;
+                            if (action == -1){
+                                System.out.print("action - 1");
+                            }
                         }
                     }
                 }
             }
+            if (action == -1){
+                System.out.print("action - 1");
+            }
             if (isReturning && online){ // updating old belief if trader is returning
-                if(belief.getN() < nResetMax) {
-                    belief.increaseN();
-                }
                 if (fixedBeliefs){
-                    // TODO: capture the one-step ahead belief for convergence here
-                    // TODO: should be only for one period ahead, not more
+                    if (!updatedTraders.contains(traderID)){
+                        if(belief.getNe() < nResetMax) {
+                            belief.increaseNe();
+                        }
+                        double alpha = (1.0/(1.0 + (belief.getNe()))); // updating factor
+                        double previousDiff = belief.getDiff();
+                        belief.setDiff((1.0 - alpha) * previousDiff +
+                                alpha * Math.exp( - rho * (et - EventTime)) * max);
+                        updatedTraders.add(traderID);
+                    }
                 } else {
+                    if(belief.getN() < nResetMax) {
+                        belief.increaseN();
+                    }
                     double alpha = (1.0/(1.0 + (belief.getN()))); // updating factor
                     double previousQ = belief.getQ();
                     belief.setQ((1.0 - alpha) * previousQ +
@@ -290,18 +325,34 @@ public class Trader {
                 }
             }
         }
-        // TODO: for fixed, create new beliefs and new hashMaps
-        if (tempQs.containsKey(action)){
-            belief = tempQs.get(action); // obtaining the belief-> store as private value
-            // TODO: if fixed, create new belief here
-        } else {
-            statesCount++;
-            belief = new BeliefQ((short) 1, max);
-            tempQs.put(action, belief); // obtaining the belief-> store as private value
+        if (fixedBeliefs){                            // just save the realized beliefs for comparison
+            if (convergenceStates.containsKey(code)){
+                tempQs = convergenceStates.get(code);
+                if (tempQs.containsKey(action)){
+                    belief = tempQs.get(action);
+                } else {
+                    belief = new BeliefQ(1, 1, max, max);
+                    tempQs.put(action, belief);
+                }
+            } else {
+                tempQs = new HashMap<Integer, BeliefQ>();
+                belief = new BeliefQ(1, 1, max, max);
+                tempQs.put(action, belief);
+                convergenceStates.put(code, tempQs);
+            }
+        } else {                                      // beliefs saved to states HashMap
+            if (tempQs.containsKey(action)){
+                belief = tempQs.get(action); // obtaining the belief-> store as private value
+            } else {
+                statesCount++;
+                belief = new BeliefQ((short) 1, max);
+                tempQs.put(action, belief); // obtaining the belief-> store as private value
+            }
+            if (!states.containsKey(code)){
+                states.put(code, tempQs);
+            }
         }
-        if (!states.containsKey(code)){
-            states.put(code, tempQs);
-        }
+
 
 
         // creating an order
@@ -309,7 +360,7 @@ public class Trader {
             buyOrder = true;
         }
         pricePosition = (action < end) ? action + LL
-                : action + LL - end;
+                                       : action + LL - end;
         if (action == 2 * end){ // position is Bid
             pricePosition = BookInfo[0];
             buyOrder = false;
@@ -364,6 +415,48 @@ public class Trader {
             payoff = (pos - LL - breakPoint) * tickSize - privateValue
                     - (fundamentalValue - PriceFV);
         }
+        if (fixedBeliefs){
+            if(belief.getN() < nResetMax) {
+                belief.increaseN();
+            }
+            double alpha = (1.0/(1.0 + (belief.getN()))); // updating factor
+            double previousQ = belief.getQ();
+            belief.setQ((1.0 - alpha) * previousQ +
+                    alpha * Math.exp( - rho * (et - EventTime)) * payoff);
+            if (!updatedTraders.contains(traderID)){
+                if(belief.getNe() < nResetMax) {
+                    belief.increaseNe();
+                }
+                alpha = (1.0/(1.0 + (belief.getNe()))); // updating factor
+                previousQ = belief.getDiff();
+                belief.setDiff((float)((1.0 - alpha) * previousQ +
+                        alpha * Math.exp( - rho * (et - EventTime)) * payoff));
+            }
+        } else {
+            if(belief.getN() < nResetMax) {
+                belief.increaseN();
+            }
+            double alpha = (1.0/(1.0 + (belief.getN()))); // updating factor
+            double previousQ = belief.getQ();
+            belief.setQ((1.0 - alpha) * previousQ +
+                    alpha * Math.exp( - rho * (et - EventTime)) * payoff);
+            if (writeDiagnostics){writeDiagnostics(belief.getQ() - previousQ);}
+        }
+        isTraded = true;
+        order = null;
+    }
+
+    /*public void execution(double fundamentalValue, double et){
+        int pos = order.getPosition() - book.getPositionShift();
+        double payoff;
+        tradeCount++;
+        if (order.isBuyOrder()){ // buy LO executed
+            payoff = (breakPoint - (pos - LL)) * tickSize + privateValue
+                    + (fundamentalValue - PriceFV); // TODO: check this updating again, is the second part needed?
+        } else { // sell LO executed
+            payoff = (pos - LL - breakPoint) * tickSize - privateValue
+                    - (fundamentalValue - PriceFV);
+        }
         if (!fixedBeliefs){
             if(belief.getN() < nResetMax) {
                 belief.increaseN();
@@ -375,7 +468,7 @@ public class Trader {
             if (writeDiagnostics){writeDiagnostics(belief.getQ() - previousQ);}
         } else {
             // TODO: update realized and one-step-ahead belief here
-            if (belief.getN() == 1){           // completely new belief, falls here until end
+            if (belief.getN() == 1){ // completely new belief, falls here until end
                 if(belief.getNe() < nResetMax) {
                     belief.increaseNe();
                 }
@@ -383,13 +476,13 @@ public class Trader {
                 double previousQ = belief.getQ();
                 belief.setQ((1.0 - alpha) * previousQ +
                         alpha * Math.exp( - rho * (et - EventTime)) * payoff);
-            } else {                           // old belief, can be taken into consideration for convergence
-                if (belief.getNe() == 0){      // first time updated
+            } else { // old belief, can be taken into consideration for convergence
+                if (belief.getNe() == 0){ // first time updated
                     belief.increaseNe();
                     belief.setDiff(belief.getQ());
                 } else if(belief.getNe() < nResetMax) {
                     belief.increaseNe();
-                }                          // continue with normal update
+                } // continue with normal update
                 double alpha = (1.0/(1.0 + (belief.getNe()))); // updating factor
                 double previousQ = belief.getDiff();
                 belief.setDiff((float)((1.0 - alpha) * previousQ +
@@ -398,7 +491,7 @@ public class Trader {
         }
         isTraded = true;
         order = null;
-    }
+    }*/
 
     // use to cancel limit order in normal setting
     public void cancel(double et){

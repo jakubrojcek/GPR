@@ -18,6 +18,13 @@ public class BeliefQ {
         this.q = q;
     }
 
+    public BeliefQ(int n, int ne, double q, double diff) {
+        this.n = n;
+        this.ne = ne;
+        this.q = q;
+        this.diff = diff;
+    }
+
     public int getN() {
         return n;
     }
