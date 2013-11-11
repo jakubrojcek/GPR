@@ -329,7 +329,7 @@ public class SingleRun {
                 }
             }
         }
-        if (write){
+        if (write){                                          // TODO: distinguish with separate boolean about second type convergence
             trader.printConvergence(15, "convergenceSecond.csv");
         } else {
             trader.printConvergence(15, "convergence.csv");

@@ -136,7 +136,6 @@ public class Trader {
     // decision about the price is made here, so far random
     public ArrayList<Order> decision(int[] BookSizes, int[] BookInfo,
                                      double et, double priceFV){
-        boolean trembled, noAction = false;   //TODO: delete after debugging
         orders = new ArrayList<Order>();
         PriceFV = priceFV; // get price of the fundamental value = fundamental value
         int pricePosition; // pricePosition at which to submit
@@ -199,7 +198,6 @@ public class Trader {
             }
         }
         if (prTremble > 0.0 && Math.random() < prTremble){
-            trembled = true;
             HashMap<Integer, Double> p = new HashMap<Integer, Double>();
             if (action != -1){
                 p.put(action, max);
@@ -241,11 +239,7 @@ public class Trader {
             List<Integer> actions = new ArrayList <Integer>(p.keySet());
             action = actions.get(random.nextInt(actions.size()));
             max = p.get(action);
-            if (action == -1){
-                System.out.print("action - 1");
-            }
         } else {
-            trembled = false;
             for(int i = b; i < nPayoffs; i++){ // searching for best payoff
                 p1 = -1.0f;
                 if (i != oldAction && i != forbiddenMarketOrder){
@@ -264,6 +258,8 @@ public class Trader {
                             } else {
                                 System.out.println("too low priority");
                             }
+                        } else {
+                            p1 = tempQs.get(i).getQ();
                         }
                     } else {
                         if (i < end){ // payoff to sell limit order
@@ -277,13 +273,9 @@ public class Trader {
                         } else if (i == (2 * end + 1)){
                             p1 = ((fvPos - At) * tickSize + privateValue); // payoff to buy market order
                         } else if (i == (2 * end + 2)){
-                            noAction = true;
                             double Rt = (isHFT) ? 1.0 / ReturnFrequencyHFT
                                     : 1.0 / ReturnFrequencyNonHFT; // expected return time
                             p1 = Math.exp(-rho * Rt) * (sum / Math.max(1, nLO)); // 2 for averaging over 14
-                            if (p1 < 0.0){
-                                System.out.println("negative no action belief, can't be");
-                            }
                         }
                     }
                     if (p1 >= 0.0){
@@ -292,19 +284,13 @@ public class Trader {
                         if (p1 >= max){
                             max = p1;
                             action = i;
-                            if (action == -1){
-                                System.out.print("action - 1");
-                            }
                         }
                     }
                 }
             }
-            if (action == -1){
-                System.out.print("action - 1");
-            }
             if (isReturning && online){ // updating old belief if trader is returning
                 if (fixedBeliefs){
-                    if (!updatedTraders.contains(traderID)){
+                    if (!updatedTraders.contains(traderID) && (belief.getNe() > 0)){
                         if(belief.getNe() < nResetMax) {
                             belief.increaseNe();
                         }
@@ -416,21 +402,23 @@ public class Trader {
                     - (fundamentalValue - PriceFV);
         }
         if (fixedBeliefs){
-            if(belief.getN() < nResetMax) {
-                belief.increaseN();
-            }
-            double alpha = (1.0/(1.0 + (belief.getN()))); // updating factor
-            double previousQ = belief.getQ();
-            belief.setQ((1.0 - alpha) * previousQ +
-                    alpha * Math.exp( - rho * (et - EventTime)) * payoff);
-            if (!updatedTraders.contains(traderID)){
-                if(belief.getNe() < nResetMax) {
-                    belief.increaseNe();
+            if (belief.getNe() > 0){
+                if(belief.getN() < nResetMax) {
+                    belief.increaseN();
                 }
-                alpha = (1.0/(1.0 + (belief.getNe()))); // updating factor
-                previousQ = belief.getDiff();
-                belief.setDiff((float)((1.0 - alpha) * previousQ +
-                        alpha * Math.exp( - rho * (et - EventTime)) * payoff));
+                double alpha = (1.0/(1.0 + (belief.getN()))); // updating factor
+                double previousQ = belief.getQ();
+                belief.setQ((1.0 - alpha) * previousQ +
+                        alpha * Math.exp( - rho * (et - EventTime)) * payoff);
+                if (!updatedTraders.contains(traderID)){
+                    if(belief.getNe() < nResetMax) {
+                        belief.increaseNe();
+                    }
+                    alpha = (1.0/(1.0 + (belief.getNe()))); // updating factor
+                    previousQ = belief.getDiff();
+                    belief.setDiff((float)((1.0 - alpha) * previousQ +
+                            alpha * Math.exp( - rho * (et - EventTime)) * payoff));
+                }
             }
         } else {
             if(belief.getN() < nResetMax) {
@@ -841,10 +829,14 @@ System.out.println("problem");
         HashMap<Integer, BeliefQ> currentBeliefs;
         HashMap<Integer, BeliefQ> previousBeliefs;
         int acKey;
-        int kDiff = 0;          // difference in occurences over SingleRun
+        int kqDiff = 0;          // difference in occurences of realized payoff over SingleRun
+        int kdDiff = 0;          // difference in occurences of one-step-ahead payoff over SingleRun
         int nSum = 0;
-        double qDiff = 0.0;     // difference in beliefs
+        int nSum2 = 0;
+        double qDiff = 0.0;     // difference in realized beliefs
+        double dDiff = 0.0;     // difference in one-step-ahead beliefs
         double sumDiff = 0.0;   // average difference in beliefs
+        double sumDiff2 = 0.0;   // average difference in beliefs
         BeliefQ currentBelief;
         BeliefQ previousBelief;
         Iterator keys = states.keySet().iterator();
@@ -862,22 +854,31 @@ System.out.println("problem");
                         if (previousBeliefs.containsKey(acKey)){
                             currentBelief = currentBeliefs.get(acKey);
                             previousBelief = previousBeliefs.get(acKey);
-                            if (convergenceType == "convergenceSecond.csv" && (currentBelief.getNe() > t2)){
-                                qDiff = Math.abs(currentBelief.getDiff() - previousBelief.getQ());
-                                kDiff = currentBelief.getNe();     // no minus, because it starts from 0
-                                writer.write(qDiff + ";" + kDiff + ";" + currentBelief.getDiff() + ";" +  previousBelief.getQ() + ";");
-                                writer.write("\r");
-                                if (kDiff > 0){
-                                    sumDiff += (qDiff / kDiff);
-                                    nSum++;
+                            if (convergenceType == "convergenceSecond.csv"){
+                                if (currentBelief.getNe() > t2 && currentBelief.getN() > t2){
+                                    qDiff = Math.abs(currentBelief.getQ() - previousBelief.getQ());
+                                    dDiff = Math.abs(currentBelief.getDiff() - previousBelief.getQ());
+                                    kqDiff = currentBelief.getN();     // no minus, because it starts from 0
+                                    kdDiff = currentBelief.getNe();     // no minus, because it starts from 0
+                                    writer.write(qDiff + ";" + kqDiff + ";" + dDiff + ";" + kdDiff + ";"
+                                            + currentBelief.getQ() + ";" + currentBelief.getDiff() + ";" +  previousBelief.getQ() + ";");
+                                    writer.write("\r");
+                                    if (kqDiff > 0){
+                                        sumDiff += (qDiff / kqDiff);
+                                        nSum++;
+                                    }
+                                    if (kdDiff > 0){
+                                        sumDiff2 += (dDiff / kdDiff);
+                                        nSum2++;
+                                    }
                                 }
                             } else if (convergenceType == "convergence.csv" && (currentBelief.getN() > t2)){
                                 qDiff = Math.abs(currentBelief.getQ() - previousBelief.getQ());
-                                kDiff = currentBelief.getN() - previousBelief.getN();
+                                kqDiff = currentBelief.getN() - previousBelief.getN();
                                 //writer.write(qDiff + ";" + kDiff + ";");
                                 //writer.write("\r");
-                                if (kDiff > 0){
-                                    sumDiff += (qDiff / kDiff);  // weighted difference
+                                if (kqDiff > 0){
+                                    sumDiff += (qDiff / kqDiff);  // weighted difference
                                     nSum++;                      // number of beliefs in sumDiff
                                 }
                             }
@@ -885,7 +886,8 @@ System.out.println("problem");
                     }
                 }
             }
-            System.out.println("convergence? " + (double) sumDiff / Math.max(1, nSum)); // average weighted difference
+            System.out.println("convergence? " + (double) sumDiff / Math.max(1, nSum)
+                    + " one-step-ahead: " + (double) sumDiff2 / Math.max(1, nSum2)); // average weighted difference
             writer.close();
         }
         catch (Exception ex){
