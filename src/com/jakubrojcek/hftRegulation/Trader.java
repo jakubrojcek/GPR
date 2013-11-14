@@ -150,7 +150,7 @@ public class Trader {
             oldPos = order.getPosition() - book.getPositionShift(); //
             q = Math.min(maxDepth, order.getQ());
             if(order.isBuyOrder()){
-                x = 2; // TODO: test this
+                x = 2;
                 if (oldPos == Bt){
                     forbiddenMarketOrder = 2 * end;
                 }
@@ -204,7 +204,7 @@ public class Trader {
             }
             for(int i = b; i < nPayoffs; i++){ // searching for best payoff
                 p1 = -1.0;
-                if (i != oldAction && i != forbiddenMarketOrder){ // TODO: doesn't work if we have oldAction
+                if (i != oldAction && i != forbiddenMarketOrder){
                     if (tempQs.containsKey(i)){
                         p1 = tempQs.get(i).getQ();
                         p.put(i, p1);
@@ -224,7 +224,7 @@ public class Trader {
                             p1 = ((fvPos - At) * tickSize + privateValue);
                             p.put(i, p1); // payoff to buy market order
                         } else if (i == (2 * end + 2)){
-                            double Rt = (isHFT) ? 1.0 / ReturnFrequencyHFT // TODO: can I integrate over future differently?
+                            double Rt = (isHFT) ? 1.0 / ReturnFrequencyHFT
                                     : 1.0 / ReturnFrequencyNonHFT; // expected return time
                             p1 = Math.exp(-rho * Rt) * (sum / Math.max(1, nLO));
                             p.put(i, p1); // 2 for averaging over 14
@@ -243,7 +243,7 @@ public class Trader {
             for(int i = b; i < nPayoffs; i++){ // searching for best payoff
                 p1 = -1.0f;
                 if (i != oldAction && i != forbiddenMarketOrder){
-                    if (tempQs.containsKey(i)){           // TODO: what do I do if beliefs are fixed?
+                    if (tempQs.containsKey(i)){           // TODO: what do I do if beliefs are fixed? look for similar?
                         if (i < end){
                             //p1 = tempQs.get(i).getQ();
                             if (BookSizes[i + LL] > -maxDepth){
@@ -440,7 +440,7 @@ public class Trader {
         tradeCount++;
         if (order.isBuyOrder()){ // buy LO executed
             payoff = (breakPoint - (pos - LL)) * tickSize + privateValue
-                    + (fundamentalValue - PriceFV); // TODO: check this updating again, is the second part needed?
+                    + (fundamentalValue - PriceFV);
         } else { // sell LO executed
             payoff = (pos - LL - breakPoint) * tickSize - privateValue
                     - (fundamentalValue - PriceFV);
@@ -455,7 +455,6 @@ public class Trader {
                     alpha * Math.exp( - rho * (et - EventTime)) * payoff);
             if (writeDiagnostics){writeDiagnostics(belief.getQ() - previousQ);}
         } else {
-            // TODO: update realized and one-step-ahead belief here
             if (belief.getN() == 1){ // completely new belief, falls here until end
                 if(belief.getNe() < nResetMax) {
                     belief.increaseNe();
@@ -483,8 +482,20 @@ public class Trader {
 
     // use to cancel limit order in normal setting
     public void cancel(double et){
+        if (fixedBeliefs){
+            if (belief.getNe() > 0){
+                if (!updatedTraders.contains(traderID)){
+                    if(belief.getNe() < nResetMax) {
+                        belief.increaseNe();
+                    }
+                    double alpha = (1.0/(1.0 + (belief.getNe())));          // updating factor
+                    double previousQ = belief.getDiff();
+                    belief.setDiff((float)((1.0 - alpha) * previousQ));     // payoff is 0.0, so the second part is dropped
+                }
+            }
+        }
+
         order = null;
-        // TODO: if fixed, update one-step-ahead belief here
     }
 
     // writing decisions

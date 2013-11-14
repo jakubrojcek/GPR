@@ -237,7 +237,6 @@ public class SingleRun {
                             ReturningNonHFT++;
                         }
                     } else if (rn < x3){ // Returning HFT
-                        // TODO: this array is full of nulls
                         ID = traderIDsHFT.get((int) (Math.random() * traderIDsHFT.size()));
                         if (traders.get(ID).getOrder() != null &&
                                 ((EventTime - traders.get(ID).getOrder().getTimeStamp()) < tif)){
@@ -330,9 +329,9 @@ public class SingleRun {
             }
         }
         if (write){                                          // TODO: distinguish with separate boolean about second type convergence
-            trader.printConvergence(15, "convergenceSecond.csv");
+            trader.printConvergence(5, "convergenceSecond.csv");
         } else {
-            trader.printConvergence(15, "convergence.csv");
+            trader.printConvergence(5, "convergence.csv");
         }
         return new double[]{EventTime, FV, ReturningHFT, ReturningNonHFT};
     }

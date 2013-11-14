@@ -179,23 +179,23 @@ public class LOB_LinkedHashMap {
             Db += BookSizes[j];
             j++;
         }
-        Db = Math.min(Db, maxDepth); // limited to 90
+        Db = Math.min(Db, maxDepth);    // limited to 90
 
         j = nPoints - 1;
         while (j > At){
             Ds += BookSizes[j];
             j--;
         }
-        Ds = Math.max(Ds, - maxDepth); // limited to half of the LO grid at maxDepth
+        Ds = Math.max(Ds, - maxDepth);  // limited to half of the LO grid at maxDepth
 
-        BookInfo[0] = Bt; // best bid position
-        BookInfo[1] = At; // best ask position
-        BookInfo[2] = BookSizes[Bt]; // depth at best bid
-        BookInfo[3] = - BookSizes[At]; // depth at best ask
-        BookInfo[4] = Db; // depth buys
-        BookInfo[5] = - Ds; // depth sells
-        BookInfo[6] = Pt; // last transaction position
-        BookInfo[7] = b; // 1 if last transaction buy, 0 if sell
+        BookInfo[0] = Bt;               // best bid position
+        BookInfo[1] = At;               // best ask position
+        BookInfo[2] = BookSizes[Bt];    // depth at best bid
+        BookInfo[3] = - BookSizes[At];  // depth at best ask
+        BookInfo[4] = Db;               // depth buys
+        BookInfo[5] = - Ds;             // depth sells
+        BookInfo[6] = Pt;               // last transaction position
+        BookInfo[7] = b;                // 1 if last transaction buy, 0 if sell
 
         return BookInfo;
     }
@@ -205,7 +205,7 @@ public class LOB_LinkedHashMap {
         int pos, size;
         for (Order o : orders){
             size = o.getSize();
-            if (o.isCancelled()){ // TODO: test if this works
+            if (o.isCancelled()){
                 oID = null;
                 int Q = o.getQ();
                 pos = o.getPosition() - positionShift;
