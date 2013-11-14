@@ -19,7 +19,7 @@ public class ThirdLobTest {
     public static void main(String[] args) {
         double timeStamp1 = System.nanoTime();
         String model = "returning";
-        String folder = "D:\\_paper1 HFT, MM, rebates and market quality\\Matlab Analysis\\Profiling13112013\\";
+        String folder = "D:\\_paper1 HFT, MM, rebates and market quality\\Matlab Analysis\\Profiling14112013\\";
         String outputNameTransactions = "Transactions8.csv";  // output file name
         String outputNameBookData = "effSpread.csv";   // output file name
         String outputNameStatsData = "stats8.csv";   // output file name
@@ -172,7 +172,7 @@ public class ThirdLobTest {
         ReturningHFT = (int) RunOutcome[2];
         ReturningNonHFT = (int) RunOutcome[3];
 
-        for (int i = 0; i < 100; i++){
+        for (int i = 0; i < 25; i++){
             nEvents = 600000000;         // number of events
             write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
             writeDiagnostics = true;// write diagnostics controls diagnostics

@@ -850,14 +850,23 @@ System.out.println("problem");
         double sumDiff2 = 0.0;   // average difference in beliefs
         BeliefQ currentBelief;
         BeliefQ previousBelief;
-        Iterator keys = states.keySet().iterator();
+        Iterator keys;
+        if (convergenceType == "convergenceSecond.csv"){
+            keys = convergenceStates.keySet().iterator();
+        } else {
+            keys = states.keySet().iterator();
+        }
         try{
             String outputFileName = folder + convergenceType;
             FileWriter writer = new FileWriter(outputFileName, true);
             while (keys.hasNext()){
                 code = (Long) keys.next();
                 if (previousStates.containsKey(code)){
-                    currentBeliefs = states.get(code);
+                    if (convergenceType == "convergenceSecond.csv"){
+                        currentBeliefs = convergenceStates.get(code);
+                    } else {
+                        currentBeliefs = states.get(code);
+                    }
                     previousBeliefs = previousStates.get(code);
                     keys2 = currentBeliefs.keySet().iterator();
                     while (keys2.hasNext()){
