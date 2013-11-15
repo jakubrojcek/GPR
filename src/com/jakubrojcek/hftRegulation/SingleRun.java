@@ -329,9 +329,9 @@ public class SingleRun {
             }
         }
         if (write){                                          // TODO: distinguish with separate boolean about second type convergence
-            trader.printConvergence(5, "convergenceSecond.csv");
+            trader.printConvergence(10, "convergenceSecond.csv");
         } else {
-            trader.printConvergence(5, "convergence.csv");
+            trader.printConvergence(10, "convergence.csv");
         }
         return new double[]{EventTime, FV, ReturningHFT, ReturningNonHFT};
     }

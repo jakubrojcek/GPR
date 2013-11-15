@@ -277,6 +277,8 @@ public class Trader {
                                     : 1.0 / ReturnFrequencyNonHFT; // expected return time
                             p1 = Math.exp(-rho * Rt) * (sum / Math.max(1, nLO)); // 2 for averaging over 14
                         }
+
+                        // TODO: if fixed beliefs, find a similar here?
                     }
                     if (p1 >= 0.0){
                         nLO++;
@@ -693,16 +695,16 @@ System.out.println("problem");
 
         }
         else if (infoSize == 8){
-            long Bt = BookInfo[0]; // Best Bid position
-            long At = BookInfo[1]; // Best Ask position
+            long Bt = BookInfo[0];      // Best Bid position
+            long At = BookInfo[1];      // Best Ask position
             long lBt = BookInfo[2] / 2; // depth at best Bid
             long lAt = BookInfo[3] / 2; // depth at best Ask
             long dBt = BookInfo[4] / 2; // depth at buy
             long dSt = BookInfo[5] / 2; // depth at sell
-            int Pt = BookInfo[6]; // last transaction pricePosition position
-            int b = BookInfo[7]; // 1 if last transaction buy, 0 if sell
-            int a = pv; // private value zero(0), negative (1), positive (2)
-            int l = (isHFT) ? 1 : 0; // arrival frequency slow (0), fast (1)
+            int Pt = BookInfo[6];       // last transaction pricePosition position
+            int b = BookInfo[7];        // 1 if last transaction buy, 0 if sell
+            int a = pv;                 // private value zero(0), negative (1), positive (2)
+            int l = (isHFT) ? 1 : 0;    // arrival frequency slow (0), fast (1)
             //System.out.println(Bt + " : " + lBt + " ; " + At + " : " + lAt);
             /*Long code = (Bt<<50) + (At<<44) + (lBt<<40) + (lAt<<36) + (dBt<<29) + (dSt<<22) + (Pt<<16) + (b<<15) +
 + (P<<9) + (q<<5) + (x<<3) + (a<<1) + l;*/
