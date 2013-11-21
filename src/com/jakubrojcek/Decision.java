@@ -16,6 +16,7 @@ public class Decision {
     private int e;
     private int breakPoint;
     private int[] counts;           // holds counts of decisions. [0] overall count
+    private int[] countsLiquidity;  // holds counts of LOs vs MOs vs NOs
         /*
         Table V, DA = depth at ask
         DA 1-2, spread 1,   [41] count, [1] SBMOs, [86] LBO, [2] AggBLO [94] AtBLO [95] BelowBLO
@@ -59,6 +60,7 @@ public class Decision {
         this.breakPoint = bp;
         this.LL = ll;
         counts = new int[134];
+        countsLiquidity = new int[6];   //  MO nonHFT, LO nonHFT, NO nonHFT; MO HFT, LO HFT, NO HFT
     }
 
     // adds information to the decision
@@ -456,9 +458,39 @@ public class Decision {
         return ac[t];
     }
 
+    public void addDecisionLiquidity(int ac, boolean hft){
+        if (hft){
+            if (ac < (2 * e)){
+                countsLiquidity[4]++;
+            } else if (ac == (2 * e + 2)){
+                countsLiquidity[5]++;
+            } else {
+                countsLiquidity[3]++;
+            }
+        } else {
+            if (ac < (2 * e)){
+                countsLiquidity[1]++;
+            } else if (ac == (2 * e + 2)){
+                countsLiquidity[2]++;
+            } else {
+                countsLiquidity[0]++;
+            }
+        }
+    }
+
     // printing decisions here
     public String printDecision(){
         int sz = counts.length;
+        String s = new String();
+        for (int i = 0; i < sz; i++){
+            s = s + counts[i] + ";";
+        }
+        s = s + "\r";
+        return s;
+    }
+
+    public String printDecisionLiquidity(){
+        int sz = countsLiquidity.length;
         String s = new String();
         for (int i = 0; i < sz; i++){
             s = s + counts[i] + ";";

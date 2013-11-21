@@ -36,6 +36,7 @@ public class SingleRun {
     double FVplus;
     int ReturningHFT = 0;
     int ReturningNonHFT = 0;
+    double convergenceStat = 0.0;
     ArrayList<Integer> traderIDsHFT;            // holder for IDs of HFT traders
     ArrayList<Integer> traderIDsNonHFT;         // holder for IDs of nonHFT traders
     TreeMap<Double, Integer> waitingTraders;    // waiting traders, key is time, value is trader's ID
@@ -329,11 +330,11 @@ public class SingleRun {
             }
         }
         if (write){                                          // TODO: distinguish with separate boolean about second type convergence
-            trader.printConvergence(10, "convergenceSecond.csv");
+            convergenceStat = trader.printConvergence(10, "convergenceSecond.csv");
         } else {
-            trader.printConvergence(10, "convergence.csv");
+            convergenceStat = trader.printConvergence(10, "convergence.csv");
         }
-        return new double[]{EventTime, FV, ReturningHFT, ReturningNonHFT};
+        return new double[]{EventTime, FV, ReturningHFT, ReturningNonHFT, convergenceStat};
     }
 
     private void writePrint (int i){

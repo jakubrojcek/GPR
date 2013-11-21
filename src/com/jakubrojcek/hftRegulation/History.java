@@ -23,6 +23,7 @@ public class History {
     ArrayList<Integer> States;
     ArrayList<Double> EffSpread;
     ArrayList<Integer> QuotedSpread;
+    int[] depths;                       // count, lBt, lAt, dBt, dSt
     Vector<Trade> history;
     String folder;
 
@@ -32,6 +33,7 @@ public class History {
         Bids = new ArrayList<Integer>();
         EffSpread = new ArrayList<Double>();
         QuotedSpread = new ArrayList<Integer>();
+        depths = new int[5];
         Events = new ArrayList<Integer>();
         States = new ArrayList<Integer>();
         history = new Vector<Trade>();
@@ -53,6 +55,14 @@ public class History {
 
     public void addQuotedSpread(Integer qspread){
         QuotedSpread.add(qspread);
+    }
+
+    public void addDepth(int[] bi){
+        depths[0]++;
+        depths[1] += bi[2];             // lBt
+        depths[2] += bi[3];             // lAt
+        depths[3] += bi[4];             // dBt
+        depths[4] += bi[5];             // dSt
     }
 
     public void addStatisticsData(int eventNum, int statesNum){
@@ -126,9 +136,27 @@ public class History {
                 writer.write("QuotedSpread;");
             }
             int sz = QuotedSpread.size();
+            double sum = 0.0;
             for (int i = 0; i < sz; i++){
-                writer.write(QuotedSpread.get(i) + ";" + "\r");
+                sum += QuotedSpread.get(i);
             }
+            writer.write((double) (sum / sz) + ";" + "\r");
+            writer.close();
+        }
+        catch (Exception e){
+            e.printStackTrace();
+            System.exit(1);
+        }
+        try{
+            String outputFileName = folder + "depth.csv";
+            FileWriter writer = new FileWriter(outputFileName, true);
+            if (writeHeader){
+                writer.write("depth;");
+            }
+            writer.write((double) (depths[1] / depths[0]) + ";" +
+                    (double) (depths[2] / depths[0]) + ";" +
+                    (double) (depths[3] / depths[0]) + ";" +
+                    (double) (depths[4] / depths[0]) + ";" + "\r");
             writer.close();
         }
         catch (Exception e){
@@ -169,6 +197,7 @@ public class History {
         States = new ArrayList<Integer>();
         EffSpread = new ArrayList<Double>();
         QuotedSpread = new ArrayList<Integer>();
+        depths = new int[5];
         history = new Vector<Trade>();
     }
 

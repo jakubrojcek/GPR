@@ -178,9 +178,13 @@ public class Trader {
             if (buy){
                 action = oldPos - LL + end;
                 if (action >= end && action < a){ // still in the range for LO, else is cancelled for sure
-                    p1 = (discountFactorS.get(action - end)[Math.abs(q)] * ((breakPoint - action + end) * tickSize + privateValue));
-                    max = tempQs.containsKey(action) ? tempQs.get(action).getQ()
-                                                     : p1;
+                    if (tempQs.containsKey(action)){
+                        max = tempQs.get(action).getQ();
+                    } else if (similar){
+                        max = getSimilarBelief(code, action, BookInfo, q, oldPos);
+                    } else {
+                        max = (discountFactorS.get(action - end)[Math.abs(q)] * ((breakPoint - action + end) * tickSize + privateValue));
+                    }
                     oldAction = action;
                 } else {
                     action = -1; // otherwise could have action == 2 * end and the SMO would not be computed later
@@ -188,9 +192,13 @@ public class Trader {
             } else {
                 action = oldPos - LL;
                 if (action >= 0 && action < end){ // still in the range for LO, else is cancelled for sure
-                    p1 = (discountFactorB.get(action)[Math.abs(q)] * ((action - breakPoint) * tickSize - privateValue));
-                    max = tempQs.containsKey(action) ? tempQs.get(action).getQ()
-                                                     : p1;
+                    if (tempQs.containsKey(action)){
+                        max = tempQs.get(action).getQ();
+                    } else if (similar){
+                        max = getSimilarBelief(code, action, BookInfo, q, oldPos);
+                    } else {
+                        max = (discountFactorB.get(action)[Math.abs(q)] * ((action - breakPoint) * tickSize - privateValue));
+                    }
                     oldAction = action;
                 } else {
                     action = -1; // otherwise could have action == 2 * end and the SMO would not be computed later
@@ -261,6 +269,8 @@ public class Trader {
                         } else {
                             p1 = tempQs.get(i).getQ();
                         }
+                    } else if (similar){
+                        p1 = getSimilarBelief(code, i, BookInfo, q, oldPos);
                     } else {
                         if (i < end){ // payoff to sell limit order
                             p1 = (discountFactorB.get(i)[Math.abs(BookSizes[LL + i])] *
@@ -274,11 +284,9 @@ public class Trader {
                             p1 = ((fvPos - At) * tickSize + privateValue); // payoff to buy market order
                         } else if (i == (2 * end + 2)){
                             double Rt = (isHFT) ? 1.0 / ReturnFrequencyHFT
-                                    : 1.0 / ReturnFrequencyNonHFT; // expected return time
+                                                : 1.0 / ReturnFrequencyNonHFT; // expected return time
                             p1 = Math.exp(-rho * Rt) * (sum / Math.max(1, nLO)); // 2 for averaging over 14
                         }
-
-                        // TODO: if fixed beliefs, find a similar here?
                     }
                     if (p1 >= 0.0){
                         nLO++;
@@ -385,9 +393,10 @@ public class Trader {
         }
         isReturning = true;
         if (writeDecisions){writeDecision(BookInfo, BookSizes, (short)action);} // printing data for output tables
-        EventTime = et;
         if (writeHistogram){writeHistogram(BookSizes);}
         if (writeDiagnostics){writeDiagnostics((short)action);}
+
+        EventTime = et;
         return orders;
     }
 
@@ -500,6 +509,40 @@ public class Trader {
         order = null;
     }
 
+    // get belief at similar state AND or OR similar action
+    private double getSimilarBelief(long code1b, int ac, int[] bi, int priority, int ownPrice){
+        long code2 = 0;                                 // modified code trying to find similar action-state belief
+        HashMap<Integer, BeliefQ> similarQs;        // HashMap of similar beliefs
+        double similarBelief = -1.0;                // similar belief, initialized to equal standard -1 in the max choosing for loop
+        int i = 7;                                  // number of possible
+        while (i > 0 && similarBelief == -1.0){    // TODO: test this condition
+            if (i == 7 && bi[5] >= 2){
+                code2 = code1b - (1<<19);
+            } else if (i == 6 && bi[4] >= 2){
+                code2 = code1b - (1<<23);
+            } else if (i == 5 && priority >= 1){
+                code2 = code1b - (1<<6);
+            } else if (i == 4 && bi[6] >= 3){
+                code2 = code1b - (1<<15);
+            } else if (i == 3 && ownPrice >= 3){
+                code2 = code1b - (1<<10);
+            } else if (i == 2 && bi[6] <= 8){
+                code2 = code1b + (1<<15);
+            } else if (i == 1 && ownPrice <= 8){
+                code2 = code1b + (1<<10);
+            }
+            if (states.containsKey(code2)){
+                similarQs = states.get(code2);
+                if (similarQs.containsKey(ac)){
+                    similarBelief = similarQs.get(ac).getQ();
+                }
+            }
+            i--;
+        }
+
+        return similarBelief;
+    }
+
     // writing decisions
     private void writeDecision(int[] BookInfo, int[] BookSizes, Short[] action){
         // tables I, V
@@ -515,6 +558,7 @@ public class Trader {
         previousTraderAction[0] = decision.addDecision(BookInfo, ac, previousTraderAction);
         previousTraderAction[1] = BookInfo[0];
         previousTraderAction[2] = BookInfo[1];
+        decision.addDecisionLiquidity(action, isHFT);
     }
 
     public void writeHistogram(int[] BookSizes){
@@ -835,21 +879,22 @@ System.out.println("problem");
         }
     }
 
-    public void printConvergence(int t2, String convergenceType){
+    public double printConvergence(int t2, String convergenceType){
         previousStates = statesConstructor.getTempStates();
         long code;
         Iterator keys2;
         HashMap<Integer, BeliefQ> currentBeliefs;
         HashMap<Integer, BeliefQ> previousBeliefs;
         int acKey;
-        int kqDiff = 0;          // difference in occurences of realized payoff over SingleRun
-        int kdDiff = 0;          // difference in occurences of one-step-ahead payoff over SingleRun
+        int kqDiff = 0;             // difference in occurences of realized payoff over SingleRun
+        int kdDiff = 0;             // difference in occurences of one-step-ahead payoff over SingleRun
         int nSum = 0;
         int nSum2 = 0;
-        double qDiff = 0.0;     // difference in realized beliefs
-        double dDiff = 0.0;     // difference in one-step-ahead beliefs
-        double sumDiff = 0.0;   // average difference in beliefs
-        double sumDiff2 = 0.0;   // average difference in beliefs
+        double qDiff = 0.0;         // difference in realized beliefs
+        double dDiff = 0.0;         // difference in one-step-ahead beliefs
+        double sumDiff = 0.0;       // average difference in beliefs
+        double sumDiff2 = 0.0;      // average difference in beliefs
+        double absError = 0.0;      // this goes out to see if converged
         BeliefQ currentBelief;
         BeliefQ previousBelief;
         Iterator keys;
@@ -910,13 +955,21 @@ System.out.println("problem");
             }
             System.out.println("convergence? " + (double) sumDiff / Math.max(1, nSum)
                     + " one-step-ahead: " + (double) sumDiff2 / Math.max(1, nSum2)); // average weighted difference
+            writer.write("\r");      // TODO: check if this produces new line
             writer.close();
         }
         catch (Exception ex){
             ex.printStackTrace();
             System.exit(1);
         }
+        if (convergenceType == "convergenceSecond.csv"){
+            absError = (double) sumDiff2 / Math.max(1, nSum2);
+        } else {
+            absError = (double) sumDiff / Math.max(1, nSum);
+        }
+        convergenceStates = new HashMap<Long, HashMap<Integer, BeliefQ>>();
         statesConstructor.storeStates(states);
+        return absError;
     }
 
 
@@ -927,6 +980,11 @@ System.out.println("problem");
             FileWriter writer = new FileWriter(outputFileName, true);
             writer.write(decision.printDecision());
             writer.close();
+
+            String outputFileName2 = folder + "decisionsLiquidity.csv";
+            FileWriter writer2 = new FileWriter(outputFileName2, true);
+            writer2.write(decision.printDecisionLiquidity());
+            writer2.close();
         }
         catch (Exception e){
             e.printStackTrace();
@@ -980,6 +1038,10 @@ System.out.println("problem");
 
     public Order getOrder() {
         return order;
+    }
+
+    public int getTraderCount() {
+        return TraderCount;
     }
 
     // setters

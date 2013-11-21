@@ -19,7 +19,7 @@ public class ThirdLobTest {
     public static void main(String[] args) {
         double timeStamp1 = System.nanoTime();
         String model = "returning";
-        String folder = "D:\\_paper1 HFT, MM, rebates and market quality\\Matlab Analysis\\Profiling14112013\\";
+        String folder = "D:\\_paper1 HFT, MM, rebates and market quality\\Matlab Analysis\\Profiling21112013\\";
         String outputNameTransactions = "Transactions8.csv";  // output file name
         String outputNameBookData = "effSpread.csv";   // output file name
         String outputNameStatsData = "stats8.csv";   // output file name
@@ -127,6 +127,7 @@ public class ThirdLobTest {
         trader.setWriteHist(writeHistogram);
         trader.setOnline(true);         // controls updating for returning trader
         trader.setFixedBeliefs(false);  // controls updating. if fixed beliefs => no updating
+        trader.setSimilar(false);       // controls if beliefs for a state not present, looks for similar state belief
         double EventTime = 0.0;                 // captures time
         double[] RunOutcome =
                 sr.run(nEvents, nHFT, NewNonHFT, ReturningHFT, ReturningNonHFT, EventTime, FV,
@@ -193,7 +194,58 @@ public class ThirdLobTest {
             ReturningNonHFT = (int) RunOutcome[3];
         }
 
-        nEvents = 500000000;         // number of events
+
+        for (int i = 0; i < 10; i++){    // outer loop for convergence type 1
+            nEvents = 600000000;         // number of events
+            write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
+            writeDiagnostics = true;// write diagnostics controls diagnostics
+            writeHistogram = false; // write histogram
+            purge = false;          // purge in this com.jakubrojcek.gpr2005a.SingleRun?
+            nReset = false;         // reset n in this com.jakubrojcek.gpr2005a.SingleRun?
+            trader.setPrTremble(0.01);
+            //trader.setWriteDec(false);
+            trader.setWriteDiag(writeDiagnostics);
+            //trader.setWriteHist(writeHistogram);
+            trader.setOnline(true);         // controls updating for returning trader
+            trader.setFixedBeliefs(false);  // controls updating. if fixed beliefs => no updating
+            trader.setSimilar(false);
+            RunOutcome =
+                    sr.run(nEvents, nHFT, NewNonHFT, ReturningHFT, ReturningNonHFT, EventTime, FV,
+                            write, purge, nReset, writeDiagnostics, writeHistogram);
+            EventTime = RunOutcome[0];
+            FV = RunOutcome[1];
+            ReturningHFT = (int) RunOutcome[2];
+            ReturningNonHFT = (int) RunOutcome[3];
+            if (RunOutcome[4] < 0.01){          // type 1 converged, check for type 2
+                nEvents = 1000000000;         // number of events
+                write = false;          // writeDecisions output in this SingleRun?
+                writeDiagnostics = true;// write diagnostics controls diagnostics
+                writeHistogram = false; // write histogram
+                purge = false;          // purge in this SingleRun?
+                nReset = false;         // reset n in this SingleRun?
+                trader.setPrTremble(0.0);
+                //trader.setWriteDec(true);
+                //trader.setWriteDiag(writeDiagnostics);
+                //trader.setWriteHist(writeHistogram);
+                trader.setOnline(true);
+                trader.setFixedBeliefs(true);
+                trader.setSimilar(true);       // controls if beliefs for a state not present, looks for similar state belief
+
+                RunOutcome =
+                        sr.run(nEvents, nHFT, NewNonHFT, ReturningHFT, ReturningNonHFT, EventTime, FV,
+                                write, purge, nReset, writeDiagnostics, writeHistogram);
+                EventTime = RunOutcome[0];
+                FV = RunOutcome[1];
+                ReturningHFT = (int) RunOutcome[2];
+                ReturningNonHFT = (int) RunOutcome[3];
+                if (RunOutcome[4] < 0.01){
+                    break;
+                }
+            }
+        }
+
+        int traderCountStart = trader.getTraderCount();
+        nEvents = 1000000000;         // number of events
         write = true;          // writeDecisions output in this SingleRun?
         writeDiagnostics = true;// write diagnostics controls diagnostics
         writeHistogram = true; // write histogram
@@ -205,6 +257,8 @@ public class ThirdLobTest {
         trader.setWriteHist(writeHistogram);
         trader.setOnline(true);
         trader.setFixedBeliefs(true);
+        trader.setSimilar(true);       // controls if beliefs for a state not present, looks for similar state belief
+
         RunOutcome =
                 sr.run(nEvents, nHFT, NewNonHFT, ReturningHFT, ReturningNonHFT, EventTime, FV,
                         write, purge, nReset, writeDiagnostics, writeHistogram);
@@ -214,10 +268,13 @@ public class ThirdLobTest {
         ReturningNonHFT = (int) RunOutcome[3];
         // occurrences Beliefs
         trader.printStatesDensity(EventTime);
+        int traderCountEnd = trader.getTraderCount();
         /* categories of traders: fast, slow, private value: negative, zero, positive
   that means 4 categories of traders. Fast have zero PV */
         double timeStamp2 = System.nanoTime();
         System.out.println(timeStamp2 - timeStamp1);
+        System.out.println(traderCountEnd - traderCountStart);
+        System.out.println(folder);
         // market parameters
 
     }

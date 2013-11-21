@@ -16,12 +16,63 @@ import java.util.*;
  */
 public class Test_various {
     public static void main(String[] args) {
-        boolean b1 = true;
-        int i1 = 1, i2 = 2, i3 = 1;
-        b1 = b1 && (i1 <= 3);
-        b1 = b1 && (i2 <= 3);
-        b1 = b1 && (i2 <= 3);
-        System.out.println(b1);
+        int P = 0;
+        int q = 0;
+        int x = 0;
+        long Bt = 2;      // Best Bid position
+        long At = 4;      // Best Ask position
+        long lBt = 5; // depth at best Bid
+        long lAt = 2; // depth at best Ask
+        long dBt = 7; // depth at buy
+        long dSt = 2; // depth at sell
+        int Pt = 4;       // last transaction pricePosition position
+        int b = 1;        // 1 if last transaction buy, 0 if sell
+        int a = 0;                 // private value zero(0), negative (1), positive (2)
+        int l = 0;    // arrival frequency slow (0), fast (1)
+        long code = (Bt<<39) + (At<<35) + (lBt<<31) + (lAt<<27) + (dBt<<23) + (dSt<<19) + (Pt<<15) + (b<<14) +
+                + (P<<10) + (q<<6) + (x<<4) + (a<<1) + l;
+        code = code - (1<<19);
+        long code2 = code;
+        System.out.println((code2 >> 39) == Bt);
+        code2 = code2 - (Bt<<39);
+        System.out.println((code2 >> 35) == At);
+
+        code2 = code2 - (At<<35);
+        System.out.println((code2 >> 31) == lBt);
+
+        code2 = code2 - (lBt<<31);
+        System.out.println((code2 >> 27) == lAt);
+
+        code2 = code2 - (lAt<<27);
+        System.out.println((code2 >> 23) == dBt);
+
+        code2 = code2 - (dBt<<23);
+        System.out.println((code2 >> 19) == 1);
+
+        code2 = code2 - (1<<19);
+        System.out.println((code2 >> 15) == Pt);
+
+        code2 = code2 - (Pt<<15);
+        System.out.println((code2 >> 14) == b);
+
+        code2 = code2 - (b<<14);
+        System.out.println((code2 >> 10) == P);
+
+        code2 = code2 - (P<<10);
+        System.out.println((code2 >> 6) == q);
+
+        code2 = code2 - (q<<6);
+        System.out.println((code2 >> 4) == x);
+
+        code2 = code2 - (x<<4);
+        System.out.println((code2 >> 1) == a);
+
+        code2 = code2 - (a<<1);
+        System.out.println(code2 == l);
+
+        code2 = code2 - l;
+        System.out.println(code2 == 0);
+
 
         /*TreeMap<Double, Integer> waitingTraders = new TreeMap<Double, Integer>();
         waitingTraders.put(1.0, 1);
