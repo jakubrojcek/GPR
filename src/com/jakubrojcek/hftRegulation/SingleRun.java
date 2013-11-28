@@ -31,7 +31,7 @@ public class SingleRun {
     double tif;                                 // time in force
     double sigma;
     float tickSize;
-    float[] FprivateValues;
+    double[] FprivateValues;
     double[] DistributionPV;
     double FVplus;
     int ReturningHFT = 0;
@@ -60,7 +60,7 @@ public class SingleRun {
 
 
     public SingleRun(String m, double t,double lambdaArrival, double lambdaFV, double ReturnFrequencyHFT, double ReturnFrequencyNonHFT,
-                     float[] FprivateValues, double[] PVdist, double sigma, float tickSize, double FVplus, boolean head,
+                     double [] FprivateValues, double[] PVdist, double sigma, float tickSize, double FVplus, boolean head,
                      LOB_LinkedHashMap b, HashMap<Integer, Trader> ts, History his, Trader TR, String stats,
                      String trans, String bookd){
         this.model = m;
@@ -100,6 +100,9 @@ public class SingleRun {
 
 
         if (model == "returning"){
+            if (EventTime < 0.0){
+                System.out.println("negative event time, debug");
+            }
             if (nReset){
                 trader.nReset((byte)3, (short) 100, purge);
             }
@@ -110,9 +113,7 @@ public class SingleRun {
                 Lambda = (nHFT + NewNonHFT) * lambdaArrival + ReturningHFT * ReturnFrequencyHFT +
                         + ReturningNonHFT * ReturnFrequencyNonHFT + lambdaFVchange;
                 EventTime += - Math.log(1.0 - Math.random()) / Lambda; // random exponential time
-                if (EventTime < 0.0){
-                    System.out.println("negative event time, debug");
-                }
+
                 // number of all agents to trade
                 if (!waitingTraders.isEmpty() && (EventTime > waitingTraders.firstKey())){
                     Integer ID;
@@ -173,7 +174,7 @@ public class SingleRun {
                     double rn = Math.random(); // to determine event
                     Trader tr;
                     Integer ID;
-                    float FVrealization;
+                    double FVrealization;
                     boolean removed = true;
                     if (rn < x1){ // New arrival HFT
                         tr = new Trader(true, 0.0f);
@@ -204,13 +205,19 @@ public class SingleRun {
                         }
                     } else if (rn < x2){ // New arrival nonHFT
                         double rn2 = Math.random();
-                        if (rn2 < DistributionPV[0]){
+                        /*if (rn2 < DistributionPV[0]){
                             FVrealization = FprivateValues[0];
                         } else if (rn2 < DistributionPV[1]){
                             FVrealization = FprivateValues[1];
                         } else {
                             FVrealization = FprivateValues[2];
-                        }
+                        }*/
+                        if (rn2 < DistributionPV[0]){FVrealization = FprivateValues[0];}
+                        else if (rn2 < DistributionPV[1]){FVrealization = FprivateValues[1];}
+                        else if (rn2 < DistributionPV[2]){FVrealization = FprivateValues[2];}
+                        else if (rn2 < DistributionPV[3]){FVrealization = FprivateValues[3];}
+                        else {FVrealization = FprivateValues[4];}
+
                         tr = new Trader(false, FVrealization);
                         ID = tr.getTraderID();
                         traders.put(ID, tr);
@@ -293,7 +300,7 @@ public class SingleRun {
                                 }
                             }
                         }
-                    } else{ // Change in FV
+                    } else { // Change in FV
                         double rn3 = Math.random();
                         ArrayList<Integer> tradersExecuted = new ArrayList<Integer>();
                         if (rn3 < FVplus){

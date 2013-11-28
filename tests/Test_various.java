@@ -16,7 +16,11 @@ import java.util.*;
  */
 public class Test_various {
     public static void main(String[] args) {
-        int P = 0;
+        int a = 3;
+        int b = 2;
+        System.out.println((double) (a / b));
+
+        /*int P = 0;
         int q = 0;
         int x = 0;
         long Bt = 2;      // Best Bid position
@@ -71,7 +75,7 @@ public class Test_various {
         System.out.println(code2 == l);
 
         code2 = code2 - l;
-        System.out.println(code2 == 0);
+        System.out.println(code2 == 0);*/
 
 
         /*TreeMap<Double, Integer> waitingTraders = new TreeMap<Double, Integer>();

@@ -179,14 +179,14 @@ public class LOB_LinkedHashMap {
             Db += BookSizes[j];
             j++;
         }
-        Db = Math.min(Db, maxDepth);    // limited to 90
+        Db = Math.min(Db, 2 * maxDepth);    // limited to 90
 
         j = nPoints - 1;
         while (j > At){
             Ds += BookSizes[j];
             j--;
         }
-        Ds = Math.max(Ds, - maxDepth);  // limited to half of the LO grid at maxDepth
+        Ds = Math.max(Ds, - 2 * maxDepth);  // limited to half of the LO grid at maxDepth
 
         BookInfo[0] = Bt;               // best bid position
         BookInfo[1] = At;               // best ask position

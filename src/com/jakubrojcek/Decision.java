@@ -493,7 +493,7 @@ public class Decision {
         int sz = countsLiquidity.length;
         String s = new String();
         for (int i = 0; i < sz; i++){
-            s = s + counts[i] + ";";
+            s = s + countsLiquidity[i] + ";";
         }
         s = s + "\r";
         return s;

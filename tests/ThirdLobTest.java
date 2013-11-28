@@ -19,7 +19,7 @@ public class ThirdLobTest {
     public static void main(String[] args) {
         double timeStamp1 = System.nanoTime();
         String model = "returning";
-        String folder = "D:\\_paper1 HFT, MM, rebates and market quality\\Matlab Analysis\\Profiling21112013\\";
+        String folder = "D:\\_paper1 HFT, MM, rebates and market quality\\Matlab Analysis\\";
         String outputNameTransactions = "Transactions8.csv";  // output file name
         String outputNameBookData = "effSpread.csv";   // output file name
         String outputNameStatsData = "stats8.csv";   // output file name
@@ -27,17 +27,17 @@ public class ThirdLobTest {
         int hti = 5000000;                      // initial capacity for Payoffs HashTable
         int infoSize = 8;                       // 2-bid, ask, 5- GPR 2005, 6-depth at bid,ask, 8-depth off bid,ask
         double prTremble = 0.0;                 // probability of trembling
-        byte nP = 11;                            // number of prices tracked by the book, 8 in the base case, 6/11 in tick size experiment
-        int nHFT = 0;                           // # of HFT's fast traders, fixed
+        byte nP = 15;                            // number of prices tracked by the book, 8 in the base case, 6/11 in tick size experiment
+        int nHFT = 1;                           // # of HFT's fast traders, fixed
         int nPositiveNonHFT = 1;                // # of positive PV slow traders
         int nZeroNonHFT = 2;                    // # of zero PV slow traders
         int nNegativeNonHFT = 1;                // # of negative PV slow traders
         double tif = 0.0;                       // time if force
         int NewNonHFT = nNegativeNonHFT + nPositiveNonHFT + nZeroNonHFT;
-        double lambdaArrival = 0.1;               // arrival frequency, same for all
+        double lambdaArrival = 1;               // arrival frequency, same for all
         double lambdaFV = 0.125;                // frequency of FV changes
-        double ReturnFrequencyHFT = 10;          // returning frequency of HFT
-        double ReturnFrequencyNonHFT = 1;     // returning frequency of NonHFT
+        double ReturnFrequencyHFT = 5;          // returning frequency of HFT
+        double ReturnFrequencyNonHFT = 0.25;     // returning frequency of NonHFT
         int maxDepth = 15;                      // 0 to 7 which matter
         int FVpos = nP/2;                          // position of the fundamental value
         int HL = FVpos + 3; //                  // Lowest  allowed limit order price.  LL + HL = nP-1 for allowed orders centered around E(v)
@@ -55,11 +55,14 @@ public class ThirdLobTest {
         FV = Prices[FVpos];        // TODO: have also FV when lying not on a tick
         double FVplus = 0.5;                    // probability f FV going up
         float PVmean = 0.0f;//-0.0625f;
-        float [] FprivateValues = {- PVsigma * tickSize, 0, PVsigma * tickSize};// distribution over private values
-        double [] PVdistrb = new double[3];
+        //float [] FprivateValues = {- PVsigma * tickSize, 0, PVsigma * tickSize};// distribution over private values
+        double  [] FprivateValues = {- 2 * PVsigma * tickSize, - PVsigma * tickSize, 0,
+                PVsigma * tickSize, 2 * PVsigma * tickSize};// distribution over private values
+        double [] PVdistrb = {.15, .35, .65, .85, 1.0};
+        /*double [] PVdistrb = new double[3];
         PVdistrb[0] = (double)nNegativeNonHFT / NewNonHFT;
         PVdistrb[1] = PVdistrb[0] + (double) nZeroNonHFT / NewNonHFT;
-        PVdistrb[2] = PVdistrb[1] + (double) nPositiveNonHFT / NewNonHFT;
+        PVdistrb[2] = PVdistrb[1] + (double) nPositiveNonHFT / NewNonHFT;*/
         double[] tauB = new double[end];
         /* expected time until the arrival of a new buyer for whom trading on
         the LO yields non-negative payoff */
@@ -107,7 +110,7 @@ public class ThirdLobTest {
         History h = new History(traders, folder); // create history
         LOB_LinkedHashMap book = new LOB_LinkedHashMap(model, FV, FVpos, maxDepth, end, tickSize, nP, h, traders);
         Trader trader = new Trader(infoSize, tauB, tauS, nP, FVpos, tickSize, ReturnFrequencyHFT,
-                ReturnFrequencyNonHFT, LL, HL, end, maxDepth, breakPoint, hti, prTremble, folder, book);
+                ReturnFrequencyNonHFT, LL, HL, end, maxDepth, breakPoint, hti, prTremble, folder, book, FprivateValues);
         book.makeBook(Prices);
         SingleRun sr = new SingleRun(model, tif, lambdaArrival, lambdaFV, ReturnFrequencyHFT, ReturnFrequencyNonHFT,
                 FprivateValues, PVdistrb, sigma, tickSize, FVplus, header, book, traders, h, trader, outputNameStatsData,
@@ -121,7 +124,7 @@ public class ThirdLobTest {
         boolean writeHistogram = false; // write histogram
         boolean purge = false;          // purge in this SingleRun?
         boolean nReset = false;         // reset n in this SingleRun?
-        trader.setPrTremble(0.02);
+        trader.setPrTremble(0.05);
         trader.setWriteDec(false);
         trader.setWriteDiag(writeDiagnostics);
         trader.setWriteHist(writeHistogram);
@@ -143,7 +146,7 @@ public class ThirdLobTest {
         writeHistogram = false; // write histogram
         purge = false;          // purge in this com.jakubrojcek.gpr2005a.SingleRun?
         nReset = false;         // reset n in this com.jakubrojcek.gpr2005a.SingleRun?
-        trader.setPrTremble(0.1);
+        trader.setPrTremble(0.05);
         //trader.setWriteDec(false);
         trader.setWriteDiag(writeDiagnostics);
         //trader.setWriteHist(writeHistogram);
@@ -245,7 +248,7 @@ public class ThirdLobTest {
         }
 
         int traderCountStart = trader.getTraderCount();
-        nEvents = 1000000000;         // number of events
+        nEvents = 2000000000;         // number of events
         write = true;          // writeDecisions output in this SingleRun?
         writeDiagnostics = true;// write diagnostics controls diagnostics
         writeHistogram = true; // write histogram

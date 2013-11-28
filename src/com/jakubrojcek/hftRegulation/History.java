@@ -153,10 +153,10 @@ public class History {
             if (writeHeader){
                 writer.write("depth;");
             }
-            writer.write((double) (depths[1] / depths[0]) + ";" +
-                    (double) (depths[2] / depths[0]) + ";" +
-                    (double) (depths[3] / depths[0]) + ";" +
-                    (double) (depths[4] / depths[0]) + ";" + "\r");
+            writer.write(((double) depths[1] / depths[0]) + ";" +
+                     ((double) depths[2] / depths[0]) + ";" +
+                     ((double) depths[3] / depths[0]) + ";" +
+                     ((double) depths[4] / depths[0]) + ";" + "\r");
             writer.close();
         }
         catch (Exception e){

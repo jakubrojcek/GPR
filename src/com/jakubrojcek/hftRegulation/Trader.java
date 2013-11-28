@@ -37,6 +37,7 @@ public class Trader {
     static int TraderCount = 0; // counting number of traders, gives traderID as well
     static int tradeCount = 0; // counting number of trader
     static int statesCount = 0; // counting number of unique states
+    static double [] FprivateValues;
     static HashMap<Long, HashMap<Integer, BeliefQ>> states;/* Beliefs about payoffs for different actions
 + max + maxIndex in state=code */
     static HashMap<Long, HashMap<Integer, BeliefQ>> previousStates;    // used to compute convergence type 1
@@ -81,19 +82,25 @@ public class Trader {
 
 
     // constructor bool, bool, float, int
-    public Trader(boolean HFT, float privateValue) {
+    public Trader(boolean HFT, double privateValue) {
         this.isHFT = HFT;
         TraderCount++;
         this.traderID = TraderCount;
-        if (privateValue > 0){pv = 2;}
+        /*if (privateValue > 0){pv = 2;}
         else if (privateValue < 0){pv = 1;}
+        else {pv = 0;}*/
+        if (privateValue == FprivateValues[4]){pv = 4;}
+        else if (privateValue == FprivateValues[3]){pv = 3;}
+        else if (privateValue == FprivateValues[2]){pv = 2;}
+        else if (privateValue == FprivateValues[1]){pv = 1;}
         else {pv = 0;}
-        this.privateValue = privateValue;// - 0.0625f;
+        this.privateValue = (float) privateValue;// - 0.0625f;
     }
 
     // constructor of the main trader- loads parameters from main
     public Trader(int is, double[] tb, double[] ts, byte numberPrices, int FVpos, double tickS, double rFast, double rSlow,
-                  int ll, int hl, int e, int md, int bp, int hti, double pt, String f, LOB_LinkedHashMap b){
+                  int ll, int hl, int e, int md, int bp, int hti, double pt, String f, LOB_LinkedHashMap b,
+                  double [] PVs){
         states = new HashMap<Long, HashMap<Integer, BeliefQ>>(hti);
         previousStates = new HashMap<Long, HashMap<Integer, BeliefQ>>();
         statesConstructor = new previousStates();
@@ -131,6 +138,7 @@ public class Trader {
         bookSizesHistory = new int[2 * nP + 1];
         bookSizesHistory[0] = 0;
         previousTraderAction = new int[3];
+        FprivateValues = PVs;
     }
 
     // decision about the price is made here, so far random
@@ -256,36 +264,39 @@ public class Trader {
                             //p1 = tempQs.get(i).getQ();
                             if (BookSizes[i + LL] > -maxDepth){
                                 p1 = tempQs.get(i).getQ();
-                            } else {
+                            } /*else {
                                 System.out.println("too low priority");
-                            }
+                            }*/
                         } else if (i < a){
                             //p1 = tempQs.get(i).getQ();
                             if (BookSizes[i + LL - end] < maxDepth){
                                 p1 = tempQs.get(i).getQ();
-                            } else {
+                            } /*else {
                                 System.out.println("too low priority");
-                            }
+                            }*/
                         } else {
                             p1 = tempQs.get(i).getQ();
                         }
-                    } else if (similar){
-                        p1 = getSimilarBelief(code, i, BookInfo, q, oldPos);
                     } else {
-                        if (i < end){ // payoff to sell limit order
-                            p1 = (discountFactorB.get(i)[Math.abs(BookSizes[LL + i])] *
-                                    ((i - breakPoint) * tickSize - privateValue));
-                        } else if (i < a) { // payoff to buy limit order
-                            p1 = (discountFactorS.get(i - end)[Math.abs(BookSizes[LL + i - end])] *
-                                    ((breakPoint - i + end) * tickSize + privateValue));
-                        } else if (i == (2 * end)){
-                            p1 = ((Bt - fvPos) * tickSize - privateValue); // payoff to sell market order
-                        } else if (i == (2 * end + 1)){
-                            p1 = ((fvPos - At) * tickSize + privateValue); // payoff to buy market order
-                        } else if (i == (2 * end + 2)){
-                            double Rt = (isHFT) ? 1.0 / ReturnFrequencyHFT
-                                                : 1.0 / ReturnFrequencyNonHFT; // expected return time
-                            p1 = Math.exp(-rho * Rt) * (sum / Math.max(1, nLO)); // 2 for averaging over 14
+                        if (similar){
+                            p1 = getSimilarBelief(code, i, BookInfo, q, oldPos);
+                        }
+                        if (p1 == -1.0){
+                            if (i < end){ // payoff to sell limit order
+                                p1 = (discountFactorB.get(i)[Math.abs(BookSizes[LL + i])] *
+                                        ((i - breakPoint) * tickSize - privateValue));
+                            } else if (i < a) { // payoff to buy limit order
+                                p1 = (discountFactorS.get(i - end)[Math.abs(BookSizes[LL + i - end])] *
+                                        ((breakPoint - i + end) * tickSize + privateValue));
+                            } else if (i == (2 * end)){
+                                p1 = ((Bt - fvPos) * tickSize - privateValue); // payoff to sell market order
+                            } else if (i == (2 * end + 1)){
+                                p1 = ((fvPos - At) * tickSize + privateValue); // payoff to buy market order
+                            } else if (i == (2 * end + 2)){
+                                double Rt = (isHFT) ? 1.0 / ReturnFrequencyHFT
+                                        : 1.0 / ReturnFrequencyNonHFT; // expected return time
+                                p1 = Math.exp(-rho * Rt) * (sum / Math.max(1, nLO)); // 2 for averaging over 14
+                            }
                         }
                     }
                     if (p1 >= 0.0){
@@ -512,24 +523,39 @@ public class Trader {
     // get belief at similar state AND or OR similar action
     private double getSimilarBelief(long code1b, int ac, int[] bi, int priority, int ownPrice){
         long code2 = 0;                                 // modified code trying to find similar action-state belief
-        HashMap<Integer, BeliefQ> similarQs;        // HashMap of similar beliefs
-        double similarBelief = -1.0;                // similar belief, initialized to equal standard -1 in the max choosing for loop
-        int i = 7;                                  // number of possible
-        while (i > 0 && similarBelief == -1.0){    // TODO: test this condition
-            if (i == 7 && bi[5] >= 2){
+        HashMap<Integer, BeliefQ> similarQs;            // HashMap of similar beliefs
+        double similarBelief = -1.0;                    // similar belief, initialized to equal standard -1 in the max choosing for loop
+        int i = 13;                                     // number of possible
+        if (isHFT){
+            System.out.println("HFT trader and SIMILAR belief");
+        }
+        while (similarBelief == -1.0 && i > 0) {
+            if (i == 13 && bi[5] < 2 * maxDepth - 1){       // depth of ask
+                code2 = code1b + (1<<19);
+            } else if (i == 12 && bi[4] < 2 * maxDepth - 1){ // depth off bid is bigger than 1
+                code2 = code1b + (1<<23);
+            } else if (i == 11 && bi[5] >= 2){           // depth off ask is bigger than 1
                 code2 = code1b - (1<<19);
-            } else if (i == 6 && bi[4] >= 2){
+            } else if (i == 10 && bi[4] >= 2){      // depth off bid is bigger than 1
                 code2 = code1b - (1<<23);
-            } else if (i == 5 && priority >= 1){
+            } else if (i == 9 && priority >= 1){    // priority of past own action is higher than 0
                 code2 = code1b - (1<<6);
-            } else if (i == 4 && bi[6] >= 3){
+            } else if (i == 8 && bi[6] >= 3){       // past price is higher than 3
                 code2 = code1b - (1<<15);
-            } else if (i == 3 && ownPrice >= 3){
+            } else if (i == 7 && ownPrice >= 3){
                 code2 = code1b - (1<<10);
-            } else if (i == 2 && bi[6] <= 8){
+            } else if (i == 6 && bi[6] <= 11){      // past price is below 11
                 code2 = code1b + (1<<15);
-            } else if (i == 1 && ownPrice <= 8){
+            } else if (i == 5 && ownPrice <= 11){
                 code2 = code1b + (1<<10);
+            } else if (i == 4 && bi[6] >= 4){       // past price is higher than 4
+                code2 = code1b - (2<<15);
+            } else if (i == 3 && ownPrice >= 4){
+                code2 = code1b - (2<<10);
+            } else if (i == 2 && bi[6] <= 10){      // past price is below 10
+                code2 = code1b + (2<<15);
+            } else if (i == 1 && ownPrice <= 10){
+                code2 = code1b + (2<<10);
             }
             if (states.containsKey(code2)){
                 similarQs = states.get(code2);
@@ -741,8 +767,8 @@ System.out.println("problem");
         else if (infoSize == 8){
             long Bt = BookInfo[0];      // Best Bid position
             long At = BookInfo[1];      // Best Ask position
-            long lBt = BookInfo[2] / 2; // depth at best Bid
-            long lAt = BookInfo[3] / 2; // depth at best Ask
+            long lBt = BookInfo[2];     // depth at best Bid
+            long lAt = BookInfo[3];     // depth at best Ask
             long dBt = BookInfo[4] / 2; // depth at buy
             long dSt = BookInfo[5] / 2; // depth at sell
             int Pt = BookInfo[6];       // last transaction pricePosition position
@@ -754,6 +780,54 @@ System.out.println("problem");
 + (P<<9) + (q<<5) + (x<<3) + (a<<1) + l;*/
             code = (Bt<<39) + (At<<35) + (lBt<<31) + (lAt<<27) + (dBt<<23) + (dSt<<19) + (Pt<<15) + (b<<14) +
                     + (P<<10) + (q<<6) + (x<<4) + (a<<1) + l;
+
+            /*long code2 = code;
+            boolean [] test = new boolean[14];
+            test[0] = ((code2 >> 39) == Bt);
+            code2 = code2 - (Bt<<39);
+
+            test[1] = ((code2 >> 35) == At);
+            code2 = code2 - (At<<35);
+
+            test[2] = ((code2 >> 31) == lBt);
+            code2 = code2 - (lBt<<31);
+
+            test[3] = ((code2 >> 27) == lAt);
+            code2 = code2 - (lAt<<27);
+
+            test[4] =((code2 >> 23) == dBt);
+            code2 = code2 - (dBt<<23);
+
+            test[5] = ((code2 >> 19) == dSt);
+            code2 = code2 - (dSt<<19);
+
+            test[6] = ((code2 >> 15) == Pt);
+            code2 = code2 - (Pt<<15);
+
+            test[7] = ((code2 >> 14) == b);
+            code2 = code2 - (b<<14);
+
+            test[8] = ((code2 >> 10) == P);
+            code2 = code2 - (P<<10);
+
+            test[9] = ((code2 >> 6) == q);
+            code2 = code2 - (q<<6);
+
+            test[10] = ((code2 >> 4) == x);
+            code2 = code2 - (x<<4);
+
+            test[11] = ((code2 >> 1) == a);
+            code2 = code2 - (a<<1);
+
+            test[12] = (code2 == l);
+            code2 = code2 - l;
+
+            test[13] = (code2 == 0);
+            for (int i = 0; i < 14; i++){
+                if (test[i] == false){
+                    System.out.println("testing hash code failed");
+                }
+            }*/         // tests
         }
 
         return code;
@@ -980,7 +1054,13 @@ System.out.println("problem");
             FileWriter writer = new FileWriter(outputFileName, true);
             writer.write(decision.printDecision());
             writer.close();
+        }
+        catch (Exception e){
+            e.printStackTrace();
+            System.exit(1);
+        }
 
+        try{
             String outputFileName2 = folder + "decisionsLiquidity.csv";
             FileWriter writer2 = new FileWriter(outputFileName2, true);
             writer2.write(decision.printDecisionLiquidity());
