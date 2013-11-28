@@ -259,7 +259,7 @@ public class Trader {
             for(int i = b; i < nPayoffs; i++){ // searching for best payoff
                 p1 = -1.0f;
                 if (i != oldAction && i != forbiddenMarketOrder){
-                    if (tempQs.containsKey(i)){           // TODO: what do I do if beliefs are fixed? look for similar?
+                    if (tempQs.containsKey(i)){
                         if (i < end){
                             //p1 = tempQs.get(i).getQ();
                             if (BookSizes[i + LL] > -maxDepth){
@@ -294,7 +294,7 @@ public class Trader {
                                 p1 = ((fvPos - At) * tickSize + privateValue); // payoff to buy market order
                             } else if (i == (2 * end + 2)){
                                 double Rt = (isHFT) ? 1.0 / ReturnFrequencyHFT
-                                        : 1.0 / ReturnFrequencyNonHFT; // expected return time
+                                                    : 1.0 / ReturnFrequencyNonHFT; // expected return time
                                 p1 = Math.exp(-rho * Rt) * (sum / Math.max(1, nLO)); // 2 for averaging over 14
                             }
                         }
@@ -315,7 +315,7 @@ public class Trader {
                         if(belief.getNe() < nResetMax) {
                             belief.increaseNe();
                         }
-                        double alpha = (1.0/(1.0 + (belief.getNe()))); // updating factor
+                        double alpha = (1.0 / (1.0 + (belief.getNe()))); // updating factor
                         double previousDiff = belief.getDiff();
                         belief.setDiff((1.0 - alpha) * previousDiff +
                                 alpha * Math.exp( - rho * (et - EventTime)) * max);
@@ -325,7 +325,7 @@ public class Trader {
                     if(belief.getN() < nResetMax) {
                         belief.increaseN();
                     }
-                    double alpha = (1.0/(1.0 + (belief.getN()))); // updating factor
+                    double alpha = (1.0 / (1.0 + (belief.getN()))); // updating factor
                     double previousQ = belief.getQ();
                     belief.setQ((1.0 - alpha) * previousQ +
                             alpha * Math.exp( - rho * (et - EventTime)) * max);
@@ -417,11 +417,11 @@ public class Trader {
         double payoff;
         tradeCount++;
         if (order.isBuyOrder()){ // buy LO executed
-            payoff = (breakPoint - (pos - LL)) * tickSize + privateValue
-                    + (fundamentalValue - PriceFV); // TODO: check this updating again, is the second part needed?
+            payoff = (breakPoint - (pos - LL)) * tickSize + privateValue;
+                    //+ (fundamentalValue - PriceFV); // TODO: check this updating again, is the second part needed?
         } else { // sell LO executed
-            payoff = (pos - LL - breakPoint) * tickSize - privateValue
-                    - (fundamentalValue - PriceFV);
+            payoff = (pos - LL - breakPoint) * tickSize - privateValue;
+                    //- (fundamentalValue - PriceFV);
         }
         if (fixedBeliefs){
             if (belief.getNe() > 0){
@@ -1029,7 +1029,7 @@ System.out.println("problem");
             }
             System.out.println("convergence? " + (double) sumDiff / Math.max(1, nSum)
                     + " one-step-ahead: " + (double) sumDiff2 / Math.max(1, nSum2)); // average weighted difference
-            writer.write("\r");      // TODO: check if this produces new line
+            writer.write("\r");
             writer.close();
         }
         catch (Exception ex){
