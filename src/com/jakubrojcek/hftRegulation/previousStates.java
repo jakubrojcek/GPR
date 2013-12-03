@@ -13,7 +13,7 @@ import java.util.Iterator;
  * Time: 19:00
  * To change this template use File | Settings | File Templates.
  */
-public class previousStates {
+public class previousStates implements java.io.Serializable {
     private HashMap<Long, HashMap<Integer, BeliefQ>> tempStates;
 
     public void storeStates(HashMap<Long, HashMap<Integer, BeliefQ>> states){

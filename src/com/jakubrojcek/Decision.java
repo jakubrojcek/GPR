@@ -60,7 +60,7 @@ public class Decision {
         this.breakPoint = bp;
         this.LL = ll;
         counts = new int[134];
-        countsLiquidity = new int[6];   //  MO nonHFT, LO nonHFT, NO nonHFT; MO HFT, LO HFT, NO HFT
+        countsLiquidity = new int[8];   //  MO nonHFT, LO nonHFT, NO nonHFT; MO HFT, LO HFT, NO HFT
     }
 
     // adds information to the decision
@@ -458,7 +458,7 @@ public class Decision {
         return ac[t];
     }
 
-    public void addDecisionLiquidity(int ac, boolean hft){
+    public void addDecisionLiquidity(int ac, boolean hft, boolean cancelled){
         if (hft){
             if (ac < (2 * e)){
                 countsLiquidity[4]++;
@@ -467,6 +467,9 @@ public class Decision {
             } else {
                 countsLiquidity[3]++;
             }
+            if (cancelled){
+                countsLiquidity[7]++;
+            }
         } else {
             if (ac < (2 * e)){
                 countsLiquidity[1]++;
@@ -474,6 +477,9 @@ public class Decision {
                 countsLiquidity[2]++;
             } else {
                 countsLiquidity[0]++;
+            }
+            if (cancelled){
+                countsLiquidity[6]++;
             }
         }
     }

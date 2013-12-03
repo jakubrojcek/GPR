@@ -2,7 +2,7 @@ package com.jakubrojcek.hftRegulation;
 
 import com.jakubrojcek.*;
 
-import java.io.FileWriter;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -172,7 +172,7 @@ public class Trader {
 
         Long code = HashCode(oldPos, q, x, BookInfo, BookSizes);
         tempQs = states.containsKey(code) ? states.get(code)
-                : new HashMap<Integer, BeliefQ>();
+                                          : new HashMap<Integer, BeliefQ>();
         int action = -1, nLO = 0;
         double max = -1.0, p1 = -1.0, sum = 0.0;
 
@@ -375,6 +375,7 @@ public class Trader {
         if (action == (2 * end + 1)){pricePosition = BookInfo[1];} // position is Ask
         Order currentOrder = new Order(traderID, et, buyOrder, 1, 0, pricePosition);
 
+        boolean cancelled = false;                                   // used to count cancellations
         if (isReturning){
             if (order != null){
                 oldPos = order.getPosition() - book.getPositionShift();
@@ -383,12 +384,14 @@ public class Trader {
                     Order orderCancelled = order;
                     orders.add(orderCancelled);
                     order = null;
+                    cancelled = true;
                 } else if ((oldPos != pricePosition) || (order.isBuyOrder() != buyOrder)){   // different position or different direction
                     order.setCancelled(true);
                     Order orderCancelled = order;
                     orders.add(orderCancelled);
                     orders.add(currentOrder);
                     order = currentOrder;
+                    cancelled = true;
                 }
             } else if (action != (2 * end + 2)){
                 order = currentOrder;
@@ -403,7 +406,7 @@ public class Trader {
             isTraded = true; // isTraded set to true if submitting MOs
         }
         isReturning = true;
-        if (writeDecisions){writeDecision(BookInfo, BookSizes, (short)action);} // printing data for output tables
+        if (writeDecisions){writeDecision(BookInfo, BookSizes, (short)action, cancelled);} // printing data for output tables
         if (writeHistogram){writeHistogram(BookSizes);}
         if (writeDiagnostics){writeDiagnostics((short)action);}
 
@@ -522,51 +525,51 @@ public class Trader {
 
     // get belief at similar state AND or OR similar action
     private double getSimilarBelief(long code1b, int ac, int[] bi, int priority, int ownPrice){
-        long code2 = 0;                                 // modified code trying to find similar action-state belief
-        HashMap<Integer, BeliefQ> similarQs;            // HashMap of similar beliefs
-        double similarBelief = -1.0;                    // similar belief, initialized to equal standard -1 in the max choosing for loop
+        long code2 = code1b;                                 // modified code trying to find similar action-state belief
+        //HashMap<Integer, BeliefQ> similarQs;            // HashMap of similar beliefs
+        //double similarBelief = -1.0;                    // similar belief, initialized to equal standard -1 in the max choosing for loop
         int i = 13;                                     // number of possible
-        if (isHFT){
-            System.out.println("HFT trader and SIMILAR belief");
-        }
-        while (similarBelief == -1.0 && i > 0) {
-            if (i == 13 && bi[5] < 2 * maxDepth - 1){       // depth of ask
+        //while (similarBelief == -1.0 && i > 0) {
+        while ((states.get(code2) == null || states.get(code2).get(ac) == null) && i > 0) { // TODO: test
+            if (i == 13 && bi[5] < 2 * maxDepth - 1){       // depth off ask
                 code2 = code1b + (1<<19);
             } else if (i == 12 && bi[4] < 2 * maxDepth - 1){ // depth off bid is bigger than 1
                 code2 = code1b + (1<<23);
-            } else if (i == 11 && bi[5] >= 2){           // depth off ask is bigger than 1
+            } else if (i == 11 && bi[5] >= 3){              // depth off ask is bigger than 3
                 code2 = code1b - (1<<19);
-            } else if (i == 10 && bi[4] >= 2){      // depth off bid is bigger than 1
+            } else if (i == 10 && bi[4] >= 3){              // depth off bid is bigger than 3
                 code2 = code1b - (1<<23);
-            } else if (i == 9 && priority >= 1){    // priority of past own action is higher than 0
+            } else if (i == 9 && priority >= 1){            // priority of past own action is higher than 0
                 code2 = code1b - (1<<6);
-            } else if (i == 8 && bi[6] >= 3){       // past price is higher than 3
+            } else if (i == 8 && bi[6] >= 3){               // past price is higher than 3
                 code2 = code1b - (1<<15);
             } else if (i == 7 && ownPrice >= 3){
                 code2 = code1b - (1<<10);
-            } else if (i == 6 && bi[6] <= 11){      // past price is below 11
+            } else if (i == 6 && bi[6] <= 11){              // past price is below 11
                 code2 = code1b + (1<<15);
             } else if (i == 5 && ownPrice <= 11){
                 code2 = code1b + (1<<10);
-            } else if (i == 4 && bi[6] >= 4){       // past price is higher than 4
+            } else if (i == 4 && bi[6] >= 4){               // past price is higher than 4
                 code2 = code1b - (2<<15);
             } else if (i == 3 && ownPrice >= 4){
                 code2 = code1b - (2<<10);
-            } else if (i == 2 && bi[6] <= 10){      // past price is below 10
+            } else if (i == 2 && bi[6] <= 10){              // past price is below 10
                 code2 = code1b + (2<<15);
             } else if (i == 1 && ownPrice <= 10){
                 code2 = code1b + (2<<10);
             }
-            if (states.containsKey(code2)){
+            /*if (states.containsKey(code2)){
                 similarQs = states.get(code2);
                 if (similarQs.containsKey(ac)){
                     similarBelief = similarQs.get(ac).getQ();
                 }
-            }
+            }*/
             i--;
         }
 
-        return similarBelief;
+
+        return (states.get(code2) != null && states.get(code2).get(ac) != null) ? states.get(code2).get(ac).getQ()
+                                                                                : -1.0;//similarBelief;
     }
 
     // writing decisions
@@ -578,13 +581,13 @@ public class Trader {
         previousTraderAction[2] = BookInfo[1];
     }
 
-    private void writeDecision(int[] BookInfo, int[] BookSizes, Short action){
+    private void writeDecision(int[] BookInfo, int[] BookSizes, Short action, boolean cancelled){
         // tables I, V
         Short[] ac = {action, 127};
         previousTraderAction[0] = decision.addDecision(BookInfo, ac, previousTraderAction);
         previousTraderAction[1] = BookInfo[0];
         previousTraderAction[2] = BookInfo[1];
-        decision.addDecisionLiquidity(action, isHFT);
+        decision.addDecisionLiquidity(action, isHFT, cancelled);
     }
 
     public void writeHistogram(int[] BookSizes){
@@ -767,10 +770,10 @@ System.out.println("problem");
         else if (infoSize == 8){
             long Bt = BookInfo[0];      // Best Bid position
             long At = BookInfo[1];      // Best Ask position
-            long lBt = BookInfo[2];     // depth at best Bid
-            long lAt = BookInfo[3];     // depth at best Ask
-            long dBt = BookInfo[4] / 2; // depth at buy
-            long dSt = BookInfo[5] / 2; // depth at sell
+            long lBt = BookInfo[2] / 2;     // depth at best Bid
+            long lAt = BookInfo[3] / 2;     // depth at best Ask
+            long dBt = BookInfo[4] / 3; // depth off Bid
+            long dSt = BookInfo[5] / 3; // depth off Ask
             int Pt = BookInfo[6];       // last transaction pricePosition position
             int b = BookInfo[7];        // 1 if last transaction buy, 0 if sell
             int a = pv;                 // private value zero(0), negative (1), positive (2)
@@ -905,21 +908,19 @@ System.out.println("problem");
         Iterator<Long> iterator = states.keySet().iterator();
         ArrayList<Long> codes2remove = new ArrayList<Long>();
         Long code;
-        boolean deleteState = true;
         int NN;
         while (iterator.hasNext()){
             code = iterator.next();
             beliefQs = states.get(code).values();
             for (BeliefQ b : beliefQs){
                 if (purge){
-                    deleteState = deleteState && (b.getN() <= n);
+                    if (beliefQs.size() == 1 && b.getN() <= n){
+                        codes2remove.add(code);
+                    }
                 }
                 NN = Math.max(n, b.getN());
                 NN = Math.min(NN, m);
                 b.setN(NN);
-            }
-            if (purge && deleteState){
-                codes2remove.add(code);
             }
         }
         for (Long code2delete: codes2remove){
@@ -953,8 +954,7 @@ System.out.println("problem");
         }
     }
 
-    public double printConvergence(int t2, String convergenceType){
-        previousStates = statesConstructor.getTempStates();
+    public double printConvergence(int t2, String convergenceType, boolean write){
         long code;
         Iterator keys2;
         HashMap<Integer, BeliefQ> currentBeliefs;
@@ -974,8 +974,22 @@ System.out.println("problem");
         Iterator keys;
         if (convergenceType == "convergenceSecond.csv"){
             keys = convergenceStates.keySet().iterator();
+            previousStates = states;
         } else {
             keys = states.keySet().iterator();
+            /*try {
+                FileInputStream fileIn = new FileInputStream(folder + "previousStates.ser");
+                ObjectInputStream in = new ObjectInputStream(fileIn);
+                statesConstructor = (previousStates) in.readObject();
+                in.close();
+                fileIn.close();
+            } catch(IOException i) {
+                i.printStackTrace();
+            } catch(ClassNotFoundException c) {
+                System.out.println("states constructor not found");
+                c.printStackTrace();
+            }*/
+            previousStates = statesConstructor.getTempStates();
         }
         try{
             String outputFileName = folder + convergenceType;
@@ -991,7 +1005,7 @@ System.out.println("problem");
                     previousBeliefs = previousStates.get(code);
                     keys2 = currentBeliefs.keySet().iterator();
                     while (keys2.hasNext()){
-                        acKey = (Integer)keys2.next();
+                        acKey = (Integer) keys2.next();
                         if (previousBeliefs.containsKey(acKey)){
                             currentBelief = currentBeliefs.get(acKey);
                             previousBelief = previousBeliefs.get(acKey);
@@ -1001,9 +1015,11 @@ System.out.println("problem");
                                     dDiff = Math.abs(currentBelief.getDiff() - previousBelief.getQ());
                                     kqDiff = currentBelief.getN();     // no minus, because it starts from 0
                                     kdDiff = currentBelief.getNe();     // no minus, because it starts from 0
-                                    writer.write(qDiff + ";" + kqDiff + ";" + dDiff + ";" + kdDiff + ";"
-                                            + currentBelief.getQ() + ";" + currentBelief.getDiff() + ";" +  previousBelief.getQ() + ";");
-                                    writer.write("\r");
+                                    if (write){
+                                        writer.write(qDiff + ";" + kqDiff + ";" + dDiff + ";" + kdDiff + ";"
+                                                + currentBelief.getQ() + ";" + currentBelief.getDiff() + ";" +  previousBelief.getQ() + ";");
+                                        writer.write("\r");
+                                    }
                                     if (kqDiff > 0){
                                         sumDiff += (qDiff / kqDiff);
                                         nSum++;
@@ -1043,6 +1059,19 @@ System.out.println("problem");
         }
         convergenceStates = new HashMap<Long, HashMap<Integer, BeliefQ>>();
         statesConstructor.storeStates(states);
+
+        /*try {
+            FileOutputStream fileOut = new FileOutputStream(folder + "previousStates.ser");
+            ObjectOutputStream out = new ObjectOutputStream(fileOut);
+            out.writeObject(statesConstructor);
+            out.close();
+            fileOut.close();
+            statesConstructor = null;
+            previousStates = null;
+        } catch (Exception ex){
+            ex.printStackTrace();
+        }*/
+
         return absError;
     }
 

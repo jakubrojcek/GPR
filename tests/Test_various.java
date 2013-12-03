@@ -1,8 +1,11 @@
 import com.jakubrojcek.Belief;
+import com.jakubrojcek.BeliefQ;
 import com.jakubrojcek.gpr2005a.Payoff;
 import com.jakubrojcek.gpr2005a.GPR2005Payoff_test3;
 import com.jakubrojcek.gpr2005a.Trader;
 import com.jakubrojcek.Choices;
+import com.jakubrojcek.hftRegulation.previousStates;
+import java.io.*;
 
 
 import java.util.*;
@@ -16,9 +19,66 @@ import java.util.*;
  */
 public class Test_various {
     public static void main(String[] args) {
-        int a = 3;
-        int b = 2;
-        System.out.println((double) (a / b));
+        HashMap<Long, HashMap<Integer, BeliefQ>> states = new HashMap<Long, HashMap<Integer, BeliefQ>>();
+        HashMap<Integer, BeliefQ> beliefs = new HashMap<Integer, BeliefQ>();
+        beliefs.put(1, new BeliefQ(1, 0.5));
+        beliefs.put(2, new BeliefQ(2, 1.5));
+        long key = 100;
+        states.put(key, beliefs);
+        beliefs = new HashMap<Integer, BeliefQ>();
+        beliefs.put(1, new BeliefQ(1, 2.5));
+        key = 200;
+        states.put(key, beliefs);
+
+        previousStates statesConstructor = new previousStates();
+        statesConstructor.storeStates(states);
+
+
+        try {
+            /*File myFile = new File("D:\\_paper1 HFT, MM, rebates and market quality\\Matlab Analysis\\aapl.csv");
+            FileReader fileReader = new FileReader(myFile);
+
+            BufferedReader reader = new BufferedReader(fileReader);
+
+            String line = null;
+            String[] data = null;
+            while ((line = reader.readLine()) != null){
+                data = line.split(",");
+                for (String token : data){
+                    System.out.println(token);
+                }
+            }
+            reader.close();*/
+
+            FileOutputStream fileOut = new FileOutputStream("D:\\_paper1 HFT, MM, rebates and market quality\\Matlab Analysis\\previousStates.ser");
+            ObjectOutputStream out = new ObjectOutputStream(fileOut);
+            out.writeObject(statesConstructor);
+            out.close();
+            fileOut.close();
+        } catch (Exception ex){
+            ex.printStackTrace();
+        }
+
+        previousStates statesConstructor2 = null;
+
+        try {
+            FileInputStream fileIn = new FileInputStream("D:\\_paper1 HFT, MM, rebates and market quality\\Matlab Analysis\\previousStates.ser");
+            ObjectInputStream in = new ObjectInputStream(fileIn);
+            statesConstructor2 = (previousStates) in.readObject();
+            in.close();
+            fileIn.close();
+        } catch(IOException i) {
+            i.printStackTrace();
+            return;
+        } catch(ClassNotFoundException c)
+        {
+            System.out.println("Employee class not found");
+            c.printStackTrace();
+            return;
+        }
+
+
+
 
         /*int P = 0;
         int q = 0;

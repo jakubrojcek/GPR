@@ -19,7 +19,7 @@ public class ThirdLobTest {
     public static void main(String[] args) {
         double timeStamp1 = System.nanoTime();
         String model = "returning";
-        String folder = "D:\\_paper1 HFT, MM, rebates and market quality\\Matlab Analysis\\";
+        String folder = "D:\\_paper1 HFT, MM, rebates and market quality\\Matlab Analysis\\ProfilingHFT03122013\\";
         String outputNameTransactions = "Transactions8.csv";  // output file name
         String outputNameBookData = "effSpread.csv";   // output file name
         String outputNameStatsData = "stats8.csv";   // output file name
@@ -116,6 +116,7 @@ public class ThirdLobTest {
                 FprivateValues, PVdistrb, sigma, tickSize, FVplus, header, book, traders, h, trader, outputNameStatsData,
                 outputNameTransactions, outputNameBookData);
 
+        // phase 1a) initialization
         int nEvents = 500000000;         // number of events
         int ReturningHFT = 0;           // # of returning HFT traders in the book
         int ReturningNonHFT = 0;        // # of returning nonHFT traders in the book
@@ -124,6 +125,7 @@ public class ThirdLobTest {
         boolean writeHistogram = false; // write histogram
         boolean purge = false;          // purge in this SingleRun?
         boolean nReset = false;         // reset n in this SingleRun?
+        String convergence = "none";    // computing convergence, "none", "convergenceSecond.csv", "convergence.csv"?
         trader.setPrTremble(0.05);
         trader.setWriteDec(false);
         trader.setWriteDiag(writeDiagnostics);
@@ -134,7 +136,7 @@ public class ThirdLobTest {
         double EventTime = 0.0;                 // captures time
         double[] RunOutcome =
                 sr.run(nEvents, nHFT, NewNonHFT, ReturningHFT, ReturningNonHFT, EventTime, FV,
-                        write, purge, nReset, writeDiagnostics, writeHistogram);
+                        write, purge, nReset, writeDiagnostics, writeHistogram, convergence);
         EventTime = RunOutcome[0];
         FV = RunOutcome[1];
         ReturningHFT = (int) RunOutcome[2];
@@ -152,7 +154,7 @@ public class ThirdLobTest {
         //trader.setWriteHist(writeHistogram);
         RunOutcome =
                 sr.run(nEvents, nHFT, NewNonHFT, ReturningHFT, ReturningNonHFT, EventTime, FV,
-                        write, purge, nReset, writeDiagnostics, writeHistogram);
+                        write, purge, nReset, writeDiagnostics, writeHistogram, convergence);
         EventTime = RunOutcome[0];
         FV = RunOutcome[1];
         ReturningHFT = (int) RunOutcome[2];
@@ -170,18 +172,23 @@ public class ThirdLobTest {
         //trader.setWriteHist(writeHistogram);
         RunOutcome =
                 sr.run(nEvents, nHFT, NewNonHFT, ReturningHFT, ReturningNonHFT, EventTime, FV,
-                        write, purge, nReset, writeDiagnostics, writeHistogram);
+                        write, purge, nReset, writeDiagnostics, writeHistogram, convergence);
         EventTime = RunOutcome[0];
         FV = RunOutcome[1];
         ReturningHFT = (int) RunOutcome[2];
         ReturningNonHFT = (int) RunOutcome[3];
 
+        // phase 1b) extensive simulation and learning
         for (int i = 0; i < 25; i++){
             nEvents = 600000000;         // number of events
             write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
             writeDiagnostics = true;// write diagnostics controls diagnostics
             writeHistogram = false; // write histogram
-            purge = false;          // purge in this com.jakubrojcek.gpr2005a.SingleRun?
+            if (i % 5 == 0) {
+                purge = true;      // purge occasionally in this phase
+            } else {
+                purge = false;
+            }
             nReset = true;         // reset n in this com.jakubrojcek.gpr2005a.SingleRun?
             trader.setPrTremble(0.02);
             //trader.setWriteDec(false);
@@ -190,14 +197,14 @@ public class ThirdLobTest {
             //trader.setOnline(true);
             RunOutcome =
                     sr.run(nEvents, nHFT, NewNonHFT, ReturningHFT, ReturningNonHFT, EventTime, FV,
-                            write, purge, nReset, writeDiagnostics, writeHistogram);
+                            write, purge, nReset, writeDiagnostics, writeHistogram, convergence);
             EventTime = RunOutcome[0];
             FV = RunOutcome[1];
             ReturningHFT = (int) RunOutcome[2];
             ReturningNonHFT = (int) RunOutcome[3];
         }
 
-
+        // phase 2a) less extensive simulation, checking for convergence of type 1
         for (int i = 0; i < 10; i++){    // outer loop for convergence type 1
             nEvents = 600000000;         // number of events
             write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
@@ -205,6 +212,7 @@ public class ThirdLobTest {
             writeHistogram = false; // write histogram
             purge = false;          // purge in this com.jakubrojcek.gpr2005a.SingleRun?
             nReset = false;         // reset n in this com.jakubrojcek.gpr2005a.SingleRun?
+            convergence = "convergence.csv";    // computing convergence, "none", "convergenceSecond.csv", "convergence.csv"?
             trader.setPrTremble(0.01);
             //trader.setWriteDec(false);
             trader.setWriteDiag(writeDiagnostics);
@@ -214,11 +222,13 @@ public class ThirdLobTest {
             trader.setSimilar(false);
             RunOutcome =
                     sr.run(nEvents, nHFT, NewNonHFT, ReturningHFT, ReturningNonHFT, EventTime, FV,
-                            write, purge, nReset, writeDiagnostics, writeHistogram);
+                            write, purge, nReset, writeDiagnostics, writeHistogram, convergence);
             EventTime = RunOutcome[0];
             FV = RunOutcome[1];
             ReturningHFT = (int) RunOutcome[2];
             ReturningNonHFT = (int) RunOutcome[3];
+
+            // phase 2b) checking for convergence of type 2
             if (RunOutcome[4] < 0.01){          // type 1 converged, check for type 2
                 nEvents = 1000000000;         // number of events
                 write = false;          // writeDecisions output in this SingleRun?
@@ -226,6 +236,7 @@ public class ThirdLobTest {
                 writeHistogram = false; // write histogram
                 purge = false;          // purge in this SingleRun?
                 nReset = false;         // reset n in this SingleRun?
+                convergence = "convergenceSecond.csv";    // computing convergence, "none", "convergenceSecond.csv", "convergence.csv"?
                 trader.setPrTremble(0.0);
                 //trader.setWriteDec(true);
                 //trader.setWriteDiag(writeDiagnostics);
@@ -236,7 +247,7 @@ public class ThirdLobTest {
 
                 RunOutcome =
                         sr.run(nEvents, nHFT, NewNonHFT, ReturningHFT, ReturningNonHFT, EventTime, FV,
-                                write, purge, nReset, writeDiagnostics, writeHistogram);
+                                write, purge, nReset, writeDiagnostics, writeHistogram, convergence);
                 EventTime = RunOutcome[0];
                 FV = RunOutcome[1];
                 ReturningHFT = (int) RunOutcome[2];
@@ -247,6 +258,7 @@ public class ThirdLobTest {
             }
         }
 
+        // phase 3) simulating from the equilibrium
         int traderCountStart = trader.getTraderCount();
         nEvents = 2000000000;         // number of events
         write = true;          // writeDecisions output in this SingleRun?
@@ -254,6 +266,7 @@ public class ThirdLobTest {
         writeHistogram = true; // write histogram
         purge = false;          // purge in this SingleRun?
         nReset = false;         // reset n in this SingleRun?
+        convergence = "convergenceSecond.csv";    // computing convergence, "none", "convergenceSecond.csv", "convergence.csv"?
         trader.setPrTremble(0.0);
         trader.setWriteDec(true);
         trader.setWriteDiag(writeDiagnostics);
@@ -264,7 +277,7 @@ public class ThirdLobTest {
 
         RunOutcome =
                 sr.run(nEvents, nHFT, NewNonHFT, ReturningHFT, ReturningNonHFT, EventTime, FV,
-                        write, purge, nReset, writeDiagnostics, writeHistogram);
+                        write, purge, nReset, writeDiagnostics, writeHistogram, convergence);
         EventTime = RunOutcome[0];
         FV = RunOutcome[1];
         ReturningHFT = (int) RunOutcome[2];

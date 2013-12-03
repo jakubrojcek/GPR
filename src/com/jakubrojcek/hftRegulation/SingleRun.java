@@ -87,9 +87,9 @@ public class SingleRun {
         waitingTraders = new TreeMap<Double, Integer>();
     }
 
-    public double[] run(int nEvents, int nHFT, int NewNonHFT,
-                        int rHFT, int rNonHFT, double EventTime, double FV,
-                        boolean w, boolean p, boolean n, boolean wd, boolean wh){
+    public double[] run(int nEvents, int nHFT, int NewNonHFT, int rHFT,
+                        int rNonHFT, double EventTime, double FV, boolean w,
+                        boolean p, boolean n, boolean wd, boolean wh, String convergence){
         ReturningHFT = rHFT;
         ReturningNonHFT = rNonHFT;
         write = w;
@@ -324,10 +324,9 @@ public class SingleRun {
                 }
 
                 if (ReturningHFT != traderIDsHFT.size() || ReturningNonHFT != traderIDsNonHFT.size()){
-                    System.out.println("error");
+                    System.out.println("error, number of traders not equal");
                 }
                 if (i % 10000000 == 0) {
-
                     System.out.println(i + " events");
                 }
 
@@ -336,10 +335,8 @@ public class SingleRun {
                 }
             }
         }
-        if (write){                                          // TODO: distinguish with separate boolean about second type convergence
-            convergenceStat = trader.printConvergence(10, "convergenceSecond.csv");
-        } else {
-            convergenceStat = trader.printConvergence(10, "convergence.csv");
+        if (convergence != "none"){                                          // TODO: distinguish with separate boolean about second type convergence
+            convergenceStat = trader.printConvergence(15, convergence, write);
         }
         return new double[]{EventTime, FV, ReturningHFT, ReturningNonHFT, convergenceStat};
     }
