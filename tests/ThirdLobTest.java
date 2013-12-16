@@ -6,6 +6,7 @@ import com.jakubrojcek.hftRegulation.*;
 import com.jakubrojcek.hftRegulation.SingleRun;
 import com.jakubrojcek.hftRegulation.Trader;
 
+import java.io.FileWriter;
 import java.util.*;
 
 /**
@@ -20,7 +21,7 @@ public class ThirdLobTest {
         // TODO: include printing params at the end
         double timeStamp1 = System.nanoTime();
         String model = "returning";
-        String folder = "D:\\_paper1 HFT, MM, rebates and market quality\\Matlab Analysis\\TIF2\\";
+        String folder = "D:\\_paper1 HFT, MM, rebates and market quality\\Matlab Analysis\\ProfilingHFT16122013\\";
         String outputNameTransactions = "Transactions8.csv";  // output file name
         String outputNameBookData = "effSpread.csv";   // output file name
         String outputNameStatsData = "stats8.csv";   // output file name
@@ -144,7 +145,7 @@ public class ThirdLobTest {
         ReturningHFT = (int) RunOutcome[2];
         ReturningNonHFT = (int) RunOutcome[3];
 
-        nEvents = 700000000;         // number of events
+        nEvents = 600000000;         // number of events
         write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
         writeDiagnostics = true;// write diagnostics controls diagnostics
         writeHistogram = false; // write histogram
@@ -162,7 +163,7 @@ public class ThirdLobTest {
         ReturningHFT = (int) RunOutcome[2];
         ReturningNonHFT = (int) RunOutcome[3];
 
-        nEvents = 700000000;         // number of events
+        nEvents = 600000000;         // number of events
         write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
         writeDiagnostics = true;// write diagnostics controls diagnostics
         writeHistogram = false; // write histogram
@@ -208,7 +209,7 @@ public class ThirdLobTest {
 
         // phase 2a) less extensive simulation, checking for convergence of type 1
         for (int i = 0; i < 2; i++){    // outer loop for convergence type 1
-            nEvents = 600000000;         // number of events
+            nEvents = 500000000;         // number of events
             write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
             writeDiagnostics = true;// write diagnostics controls diagnostics
             writeHistogram = false; // write histogram
@@ -232,7 +233,7 @@ public class ThirdLobTest {
 
             // phase 2b) checking for convergence of type 2
             if (RunOutcome[4] < 0.01){          // type 1 converged, check for type 2
-                nEvents = 300000000;         // number of events
+                nEvents = 200000000;         // number of events
                 write = false;          // writeDecisions output in this SingleRun?
                 writeDiagnostics = true;// write diagnostics controls diagnostics
                 writeHistogram = false; // write histogram
@@ -262,6 +263,8 @@ public class ThirdLobTest {
 
         // phase 3) simulating from the equilibrium
         int traderCountStart = trader.getTraderCount();
+        int traderCountHFTstart = trader.getTraderCountHFT();
+        int traderCountNonHFTstart = trader.getTraderCountNonHFT();
         nEvents = 500000000;         // number of events
         write = true;          // writeDecisions output in this SingleRun?
         writeDiagnostics = true;// write diagnostics controls diagnostics
@@ -287,6 +290,8 @@ public class ThirdLobTest {
         // occurrences Beliefs
         trader.printStatesDensity(EventTime);
         int traderCountEnd = trader.getTraderCount();
+        int traderCountHFTend = trader.getTraderCountHFT();
+        int traderCountNonHFTend = trader.getTraderCountNonHFT();
         /* categories of traders: fast, slow, private value: negative, zero, positive
   that means 4 categories of traders. Fast have zero PV */
         double timeStamp2 = System.nanoTime();
@@ -294,6 +299,31 @@ public class ThirdLobTest {
         System.out.println(traderCountEnd - traderCountStart);
         System.out.println(folder);
         // market parameters
+        try{
+            String outputFileName = folder + "_params.csv";
+            FileWriter writer = new FileWriter(outputFileName, true);
+            writer.write("infoSize:" + ";" + infoSize + ";" + "\r");
+            writer.write("nP:" + ";" + nP + ";" + "\r");
+            writer.write("gridN:" + ";" + end + ";" + "\r");
+            writer.write("nHFT:" + ";" + nHFT + ";" + "\r");
+            writer.write("nALL:" + ";" + NewNonHFT + ";" + "\r");
+            writer.write("lambdaArrival:" + ";" + lambdaArrival + ";" + "\r");
+            writer.write("lambdaFV:" + ";" + lambdaFV + ";" + "\r");
+            writer.write("ReturnFrequencyHFT:" + ";" + ReturnFrequencyHFT + ";" + "\r");
+            writer.write("ReturnFrequencyNonHFT:" + ";" + ReturnFrequencyNonHFT + ";" + "\r");
+            writer.write("TIF:" + ";" + tif + ";" + "\r");
+            writer.write("tickSize:" + ";" + tickSize + ";" + "\r");
+            writer.write("sigma:" + ";" + sigma + ";" + "\r");
+            writer.write("newTraders:" + ";" + (traderCountEnd - traderCountStart) + ";" + "\r");
+            writer.write("newHFTtrades:" + ";" + (traderCountHFTstart - traderCountHFTend) + ";" + "\r");
+            writer.write("newNonHFTtrades:" + ";" + (traderCountNonHFTstart - traderCountNonHFTend) + ";" + "\r");
+            writer.write("timeElapsed:" + ";" + (timeStamp2 - timeStamp1) + ";" + "\r");
+            writer.close();
+        }
+        catch (Exception e){
+            e.printStackTrace();
+            System.exit(1);
+        }
 
     }
 }

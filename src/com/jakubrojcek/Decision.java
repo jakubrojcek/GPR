@@ -64,7 +64,7 @@ public class Decision {
     }
     // TODO: make decisions also separately for HFT
     // adds information to the decision
-    public int addDecision(int[] bi, Short [] ac , int[] prevTrAc){
+    public int addDecision(int[] bi, Short [] ac , int[] prevTrAc, boolean isHFT){
         byte t = 0;                                         // designates which action matters
         if (ac[1] == 2 * e + 3){
             t = 1;}                     // large sell order
@@ -84,6 +84,9 @@ public class Decision {
         }
         if ((ac[0] == (2 * e + 2)) && (ac[1] != 127)){t = 1;}   // no order, take second action
 
+        if (isHFT){
+            return ac[t];
+        }
         counts[0]++;
         // table III & V
         int spread = bi[1] - bi[0];

@@ -584,7 +584,7 @@ public class Trader {
     private void writeDecision(int[] BookInfo, int[] BookSizes, Short[] action){
         // tables I, V
 
-        previousTraderAction[0] = decision.addDecision(BookInfo, action, previousTraderAction);
+        previousTraderAction[0] = decision.addDecision(BookInfo, action, previousTraderAction, isHFT);
         previousTraderAction[1] = BookInfo[0];
         previousTraderAction[2] = BookInfo[1];
     }
@@ -592,7 +592,7 @@ public class Trader {
     private void writeDecision(int[] BookInfo, int[] BookSizes, Short action, boolean cancelled){
         // tables I, V
         Short[] ac = {action, 127};
-        previousTraderAction[0] = decision.addDecision(BookInfo, ac, previousTraderAction);
+        previousTraderAction[0] = decision.addDecision(BookInfo, ac, previousTraderAction, isHFT);
         previousTraderAction[1] = BookInfo[0];
         previousTraderAction[2] = BookInfo[1];
         decision.addDecisionLiquidity(action, isHFT, cancelled);
@@ -1164,11 +1164,11 @@ System.out.println("problem");
         return TraderCount;
     }
 
-    public static int getTraderCountNonHFT() {
+    public int getTraderCountNonHFT() {
         return TraderCountNonHFT;
     }
 
-    public static int getTraderCountHFT() {
+    public int getTraderCountHFT() {
         return TraderCountHFT;
     }
 
