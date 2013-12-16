@@ -17,9 +17,10 @@ import java.util.*;
  */
 public class ThirdLobTest {
     public static void main(String[] args) {
+        // TODO: include printing params at the end
         double timeStamp1 = System.nanoTime();
         String model = "returning";
-        String folder = "D:\\_paper1 HFT, MM, rebates and market quality\\Matlab Analysis\\ProfilingHFT03122013\\";
+        String folder = "D:\\_paper1 HFT, MM, rebates and market quality\\Matlab Analysis\\TIF2\\";
         String outputNameTransactions = "Transactions8.csv";  // output file name
         String outputNameBookData = "effSpread.csv";   // output file name
         String outputNameStatsData = "stats8.csv";   // output file name
@@ -29,12 +30,13 @@ public class ThirdLobTest {
         double prTremble = 0.0;                 // probability of trembling
         byte nP = 15;                            // number of prices tracked by the book, 8 in the base case, 6/11 in tick size experiment
         int nHFT = 1;                           // # of HFT's fast traders, fixed
-        int nPositiveNonHFT = 1;                // # of positive PV slow traders
-        int nZeroNonHFT = 2;                    // # of zero PV slow traders
-        int nNegativeNonHFT = 1;                // # of negative PV slow traders
+        int nPositiveNonHFT = 2;                // # of positive PV slow traders
+        int nZeroNonHFT = 4;                    // # of zero PV slow traders
+        int nNegativeNonHFT = 2;                // # of negative PV slow traders
         double tif = 0.0;                       // time if force
+        float rho = 0.15f;                      // impatience parameter
         int NewNonHFT = nNegativeNonHFT + nPositiveNonHFT + nZeroNonHFT;
-        double lambdaArrival = 1;               // arrival frequency, same for all
+        double lambdaArrival = 0.5;               // arrival frequency, same for all
         double lambdaFV = 0.125;                // frequency of FV changes
         double ReturnFrequencyHFT = 5;          // returning frequency of HFT
         double ReturnFrequencyNonHFT = 0.25;     // returning frequency of NonHFT
@@ -52,7 +54,7 @@ public class ThirdLobTest {
         for (int i = 0 ; i < nP ; i++){
             Prices[i] = i * tickSize;
         }
-        FV = Prices[FVpos];        // TODO: have also FV when lying not on a tick
+        FV = Prices[FVpos];
         double FVplus = 0.5;                    // probability f FV going up
         float PVmean = 0.0f;//-0.0625f;
         //float [] FprivateValues = {- PVsigma * tickSize, 0, PVsigma * tickSize};// distribution over private values
@@ -110,7 +112,7 @@ public class ThirdLobTest {
         History h = new History(traders, folder); // create history
         LOB_LinkedHashMap book = new LOB_LinkedHashMap(model, FV, FVpos, maxDepth, end, tickSize, nP, h, traders);
         Trader trader = new Trader(infoSize, tauB, tauS, nP, FVpos, tickSize, ReturnFrequencyHFT,
-                ReturnFrequencyNonHFT, LL, HL, end, maxDepth, breakPoint, hti, prTremble, folder, book, FprivateValues);
+                ReturnFrequencyNonHFT, LL, HL, end, maxDepth, breakPoint, hti, prTremble, folder, book, FprivateValues, rho);
         book.makeBook(Prices);
         SingleRun sr = new SingleRun(model, tif, lambdaArrival, lambdaFV, ReturnFrequencyHFT, ReturnFrequencyNonHFT,
                 FprivateValues, PVdistrb, sigma, tickSize, FVplus, header, book, traders, h, trader, outputNameStatsData,
@@ -142,7 +144,7 @@ public class ThirdLobTest {
         ReturningHFT = (int) RunOutcome[2];
         ReturningNonHFT = (int) RunOutcome[3];
 
-        nEvents = 600000000;         // number of events
+        nEvents = 700000000;         // number of events
         write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
         writeDiagnostics = true;// write diagnostics controls diagnostics
         writeHistogram = false; // write histogram
@@ -160,7 +162,7 @@ public class ThirdLobTest {
         ReturningHFT = (int) RunOutcome[2];
         ReturningNonHFT = (int) RunOutcome[3];
 
-        nEvents = 600000000;         // number of events
+        nEvents = 700000000;         // number of events
         write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
         writeDiagnostics = true;// write diagnostics controls diagnostics
         writeHistogram = false; // write histogram
@@ -179,7 +181,7 @@ public class ThirdLobTest {
         ReturningNonHFT = (int) RunOutcome[3];
 
         // phase 1b) extensive simulation and learning
-        for (int i = 0; i < 25; i++){
+        for (int i = 0; i < 1; i++){
             nEvents = 600000000;         // number of events
             write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
             writeDiagnostics = true;// write diagnostics controls diagnostics
@@ -205,7 +207,7 @@ public class ThirdLobTest {
         }
 
         // phase 2a) less extensive simulation, checking for convergence of type 1
-        for (int i = 0; i < 10; i++){    // outer loop for convergence type 1
+        for (int i = 0; i < 2; i++){    // outer loop for convergence type 1
             nEvents = 600000000;         // number of events
             write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
             writeDiagnostics = true;// write diagnostics controls diagnostics
@@ -230,7 +232,7 @@ public class ThirdLobTest {
 
             // phase 2b) checking for convergence of type 2
             if (RunOutcome[4] < 0.01){          // type 1 converged, check for type 2
-                nEvents = 1000000000;         // number of events
+                nEvents = 300000000;         // number of events
                 write = false;          // writeDecisions output in this SingleRun?
                 writeDiagnostics = true;// write diagnostics controls diagnostics
                 writeHistogram = false; // write histogram
@@ -252,15 +254,15 @@ public class ThirdLobTest {
                 FV = RunOutcome[1];
                 ReturningHFT = (int) RunOutcome[2];
                 ReturningNonHFT = (int) RunOutcome[3];
-                if (RunOutcome[4] < 0.01){
+                /*if (RunOutcome[4] < 0.01){       // TODO: uncomment, if you want to use this
                     break;
-                }
+                }*/
             }
         }
 
         // phase 3) simulating from the equilibrium
         int traderCountStart = trader.getTraderCount();
-        nEvents = 2000000000;         // number of events
+        nEvents = 500000000;         // number of events
         write = true;          // writeDecisions output in this SingleRun?
         writeDiagnostics = true;// write diagnostics controls diagnostics
         writeHistogram = true; // write histogram

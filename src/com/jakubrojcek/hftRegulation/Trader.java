@@ -28,15 +28,17 @@ public class Trader {
     private boolean isHFT; // initialized
     private boolean isTraded = false; // set by TransactionRule in book
     private boolean isReturning = false;// is he returning this time? info from priorities
-    private float rho = 0.05f; // trading "impatience" parameter
+    private float rho = 0.15f; // trading "impatience" parameter              // TODO: changing this currently
     private double PriceFV; // current fundamental value-> price at middle position
     private double EventTime = 0.0; // event time
     private BeliefQ belief; // reference to an old Belief, to be updated
     private Order order = null; // reference to an old Order, to update the old Belief
 
-    static int TraderCount = 0; // counting number of traders, gives traderID as well
-    static int tradeCount = 0; // counting number of trader
-    static int statesCount = 0; // counting number of unique states
+    static int TraderCount = 0;         // counting number of traders, gives traderID as well
+    static int TraderCountHFT = 0;      // counting HFT traders
+    static int TraderCountNonHFT = 0;   // counting nonHFT traders
+    static int tradeCount = 0;          // counting number of trader
+    static int statesCount = 0;         // counting number of unique states
     static double [] FprivateValues;
     static HashMap<Long, HashMap<Integer, BeliefQ>> states;/* Beliefs about payoffs for different actions
 + max + maxIndex in state=code */
@@ -86,6 +88,11 @@ public class Trader {
         this.isHFT = HFT;
         TraderCount++;
         this.traderID = TraderCount;
+        if (HFT){
+            TraderCountHFT++;
+        } else {
+            TraderCountNonHFT++;
+        }
         /*if (privateValue > 0){pv = 2;}
         else if (privateValue < 0){pv = 1;}
         else {pv = 0;}*/
@@ -100,7 +107,7 @@ public class Trader {
     // constructor of the main trader- loads parameters from main
     public Trader(int is, double[] tb, double[] ts, byte numberPrices, int FVpos, double tickS, double rFast, double rSlow,
                   int ll, int hl, int e, int md, int bp, int hti, double pt, String f, LOB_LinkedHashMap b,
-                  double [] PVs){
+                  double [] PVs, float r){
         states = new HashMap<Long, HashMap<Integer, BeliefQ>>(hti);
         previousStates = new HashMap<Long, HashMap<Integer, BeliefQ>>();
         statesConstructor = new previousStates();
@@ -139,6 +146,7 @@ public class Trader {
         bookSizesHistory[0] = 0;
         previousTraderAction = new int[3];
         FprivateValues = PVs;
+        rho = r;
     }
 
     // decision about the price is made here, so far random
@@ -433,7 +441,7 @@ public class Trader {
                 }
                 double alpha = (1.0/(1.0 + (belief.getN()))); // updating factor
                 double previousQ = belief.getQ();
-                belief.setQ((1.0 - alpha) * previousQ +
+                belief.setQ((1.0 - alpha) * previousQ +                                 // realized payoff
                         alpha * Math.exp( - rho * (et - EventTime)) * payoff);
                 if (!updatedTraders.contains(traderID)){
                     if(belief.getNe() < nResetMax) {
@@ -441,7 +449,7 @@ public class Trader {
                     }
                     alpha = (1.0/(1.0 + (belief.getNe()))); // updating factor
                     previousQ = belief.getDiff();
-                    belief.setDiff((float)((1.0 - alpha) * previousQ +
+                    belief.setDiff((float)((1.0 - alpha) * previousQ +                  // one-step ahead
                             alpha * Math.exp( - rho * (et - EventTime)) * payoff));
                 }
             }
@@ -955,6 +963,9 @@ System.out.println("problem");
     }
 
     public double printConvergence(int t2, String convergenceType, boolean write){
+        if (convergenceType != "convergenceSecond.csv"){
+            return 0.0;                                     // right now, I don't need first convergence
+        }
         long code;
         Iterator keys2;
         HashMap<Integer, BeliefQ> currentBeliefs;
@@ -1153,6 +1164,14 @@ System.out.println("problem");
         return TraderCount;
     }
 
+    public static int getTraderCountNonHFT() {
+        return TraderCountNonHFT;
+    }
+
+    public static int getTraderCountHFT() {
+        return TraderCountHFT;
+    }
+
     // setters
     public void setIsTraded(boolean traded){
         isTraded = traded;
@@ -1204,5 +1223,13 @@ System.out.println("problem");
 
     public void setStatesCount(int n){
         statesCount = n;
+    }
+
+    public static void setTraderCountHFT(int traderCountHFT) {
+        TraderCountHFT = traderCountHFT;
+    }
+
+    public static void setTraderCountNonHFT(int traderCountNonHFT) {
+        TraderCountNonHFT = traderCountNonHFT;
     }
 }

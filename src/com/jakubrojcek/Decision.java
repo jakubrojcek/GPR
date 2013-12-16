@@ -62,7 +62,7 @@ public class Decision {
         counts = new int[134];
         countsLiquidity = new int[8];   //  MO nonHFT, LO nonHFT, NO nonHFT; MO HFT, LO HFT, NO HFT
     }
-
+    // TODO: make decisions also separately for HFT
     // adds information to the decision
     public int addDecision(int[] bi, Short [] ac , int[] prevTrAc){
         byte t = 0;                                         // designates which action matters
