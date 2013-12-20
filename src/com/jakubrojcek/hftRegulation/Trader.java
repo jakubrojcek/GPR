@@ -72,7 +72,14 @@ public class Trader {
     static boolean writeHistogram = false;      // to writeHistogram in trader?
     static boolean online = false;              // updates beliefs also for returning trader
     static String folder;
-    static Decision decision;
+    static Decision decision;                   // decisions of all nonHFT and liquidity provision
+    static Decision decision_4;                 // decisions of PV -4
+    static Decision decision_2;                 // decisions of PV -2
+    static Decision decision0;                  // decisions of PV 0
+    static Decision decision2;                  // decisions of PV +2
+    static Decision decision4;                  // decisions of PV +4
+    static Decision decisionHFT;                // decisions of HFTs
+
     static Diagnostics diag;
     static int[] bookSizesHistory;
     static int[] previousTraderAction;
@@ -112,8 +119,10 @@ public class Trader {
                   double [] PVs, float r, float tt, float cf){
         states = new HashMap<Long, HashMap<Integer, BeliefQ>>(hti);
         previousStates = new HashMap<Long, HashMap<Integer, BeliefQ>>();
+        convergenceStates = new HashMap<Long, HashMap<Integer, BeliefQ>>();
         statesConstructor = new previousStates();
         statesConstructor.storeStates(states);
+        updatedTraders = new ArrayList<Integer>();
         book = b;
         infoSize = is;
         LL = ll;
@@ -143,6 +152,12 @@ public class Trader {
         prTremble = pt;
         folder = f;
         decision = new Decision(numberPrices, FVpos, e, bp, LL);
+        decision_4 = new Decision(numberPrices, FVpos, e, bp, LL);
+        decision_2 = new Decision(numberPrices, FVpos, e, bp, LL);
+        decision0 = new Decision(numberPrices, FVpos, e, bp, LL);
+        decision2 = new Decision(numberPrices, FVpos, e, bp, LL);
+        decision4 = new Decision(numberPrices, FVpos, e, bp, LL);
+        decisionHFT = new Decision(numberPrices, FVpos, e, bp, LL);
         diag = new Diagnostics(numberPrices, e);
         bookSizesHistory = new int[2 * nP + 1];
         bookSizesHistory[0] = 0;
@@ -151,6 +166,11 @@ public class Trader {
         rho = r;
         TTAX = tt;
         CFEE = cf;
+        TraderCount = 0;         // counting number of traders, gives traderID as well
+        TraderCountHFT = 0;      // counting HFT traders
+        TraderCountNonHFT = 0;   // counting nonHFT traders
+        tradeCount = 0;          // counting number of trader
+        statesCount = 0;
     }
 
     // decision about the price is made here, so far random
@@ -598,6 +618,19 @@ public class Trader {
     private void writeDecision(int[] BookInfo, int[] BookSizes, Short action, boolean cancelled){
         // tables I, V
         Short[] ac = {action, 127};
+        if (isHFT){
+            decisionHFT.addDecision(BookInfo, ac, previousTraderAction, !isHFT);
+        } else if (pv == 0) {
+            decision_4.addDecision(BookInfo, ac, previousTraderAction, isHFT);
+        } else if (pv == 1) {
+            decision_2.addDecision(BookInfo, ac, previousTraderAction, isHFT);
+        } else if (pv == 2) {
+            decision0.addDecision(BookInfo, ac, previousTraderAction, isHFT);
+        } else if (pv == 3) {
+            decision2.addDecision(BookInfo, ac, previousTraderAction, isHFT);
+        } else if (pv == 4) {
+            decision4.addDecision(BookInfo, ac, previousTraderAction, isHFT);
+        }
         previousTraderAction[0] = decision.addDecision(BookInfo, ac, previousTraderAction, isHFT);
         previousTraderAction[1] = BookInfo[0];
         previousTraderAction[2] = BookInfo[1];
@@ -1107,6 +1140,72 @@ System.out.println("problem");
         }
 
         try{
+            String outputFileName = folder + "decisionsHFT.csv";
+            FileWriter writer = new FileWriter(outputFileName, true);
+            writer.write(decisionHFT.printDecision());
+            writer.close();
+        }
+        catch (Exception e){
+            e.printStackTrace();
+            System.exit(1);
+        }
+
+        try{
+            String outputFileName = folder + "decisions_4.csv";
+            FileWriter writer = new FileWriter(outputFileName, true);
+            writer.write(decision_4.printDecision());
+            writer.close();
+        }
+        catch (Exception e){
+            e.printStackTrace();
+            System.exit(1);
+        }
+
+        try{
+            String outputFileName = folder + "decisions_2.csv";
+            FileWriter writer = new FileWriter(outputFileName, true);
+            writer.write(decision_2.printDecision());
+            writer.close();
+        }
+        catch (Exception e){
+            e.printStackTrace();
+            System.exit(1);
+        }
+
+        try{
+            String outputFileName = folder + "decisions0.csv";
+            FileWriter writer = new FileWriter(outputFileName, true);
+            writer.write(decision0.printDecision());
+            writer.close();
+        }
+        catch (Exception e){
+            e.printStackTrace();
+            System.exit(1);
+        }
+
+        try{
+            String outputFileName = folder + "decisions2.csv";
+            FileWriter writer = new FileWriter(outputFileName, true);
+            writer.write(decision2.printDecision());
+            writer.close();
+        }
+        catch (Exception e){
+            e.printStackTrace();
+            System.exit(1);
+        }
+
+        try{
+            String outputFileName = folder + "decisions4.csv";
+            FileWriter writer = new FileWriter(outputFileName, true);
+            writer.write(decision4.printDecision());
+            writer.close();
+        }
+        catch (Exception e){
+            e.printStackTrace();
+            System.exit(1);
+        }
+
+        try{
             String outputFileName2 = folder + "decisionsLiquidity.csv";
             FileWriter writer2 = new FileWriter(outputFileName2, true);
             writer2.write(decision.printDecisionLiquidity());
@@ -1121,6 +1220,12 @@ System.out.println("problem");
     // resets com.jakubrojcek.Decision history, memory management
     public void resetDecisionHistory(){
         decision = new Decision(nP, fvPos, end, breakPoint, LL);
+        decision_4 = new Decision(nP, fvPos, end, breakPoint, LL);
+        decision_2 = new Decision(nP, fvPos, end, breakPoint, LL);
+        decision0 = new Decision(nP, fvPos, end, breakPoint, LL);
+        decision2 = new Decision(nP, fvPos, end, breakPoint, LL);
+        decision4 = new Decision(nP, fvPos, end, breakPoint, LL);
+        decisionHFT = new Decision(nP, fvPos, end, breakPoint, LL);
     }
 
     public void resetDiagnostics(){
