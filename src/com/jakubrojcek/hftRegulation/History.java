@@ -26,6 +26,8 @@ public class History {
     int[] depths;                       // count, lBt, lAt, dBt, dSt
     Vector<Trade> history;
     String folder;
+    float TTAX = 0.0f;
+    float CFEE = 0.0f;
 
     public History(HashMap<Integer, Trader> t, String f){
         traders = t;
@@ -39,14 +41,44 @@ public class History {
         history = new Vector<Trade>();
         folder = f;
     }
+
+    public History(HashMap<Integer, Trader> t, String f, float tt, float cf){
+        traders = t;
+        Asks = new ArrayList<Integer>();
+        Bids = new ArrayList<Integer>();
+        EffSpread = new ArrayList<Double>();
+        QuotedSpread = new ArrayList<Integer>();
+        depths = new int[5];
+        Events = new ArrayList<Integer>();
+        States = new ArrayList<Integer>();
+        history = new Vector<Trade>();
+        folder = f;
+        TTAX = tt;
+        CFEE = cf;
+    }
     
     public void addTrade(Order buy, Order sell, double timeTrade, double price, double fv){
         int bID = buy.getTraderID();
         int sID = sell.getTraderID();
-        history.add(new Trade(bID, traders.get(bID).getPrivateValue(), traders.get(bID).getIsHFT(),
-                sID, traders.get(sID).getPrivateValue(), traders.get(sID).getIsHFT(),
-                buy.getTimeStamp(), sell.getTimeStamp(),
-                traders.get(bID).getPriceFV(), traders.get(sID).getPriceFV(), timeTrade, price, fv));
+
+        if (TTAX != 0.0){
+            history.add(new Trade(bID, traders.get(bID).getPrivateValue(), traders.get(bID).getIsHFT(),
+                    sID, traders.get(sID).getPrivateValue(), traders.get(sID).getIsHFT(),
+                    buy.getTimeStamp(), sell.getTimeStamp(),
+                    traders.get(bID).getPriceFV(), traders.get(sID).getPriceFV(), timeTrade, price, fv,
+                    traders.get(bID).getTTAX(),  traders.get(sID).getTTAX()));
+        } else if (CFEE != 0.0){
+            history.add(new Trade(bID, traders.get(bID).getPrivateValue(), traders.get(bID).getIsHFT(),
+                    sID, traders.get(sID).getPrivateValue(), traders.get(sID).getIsHFT(),
+                    buy.getTimeStamp(), sell.getTimeStamp(),
+                    traders.get(bID).getPriceFV(), traders.get(sID).getPriceFV(), timeTrade, price, fv,
+                    traders.get(bID).getCancelCount() * CFEE, traders.get(sID).getCancelCount() * CFEE));
+        } else {
+            history.add(new Trade(bID, traders.get(bID).getPrivateValue(), traders.get(bID).getIsHFT(),
+                    sID, traders.get(sID).getPrivateValue(), traders.get(sID).getIsHFT(),
+                    buy.getTimeStamp(), sell.getTimeStamp(),
+                    traders.get(bID).getPriceFV(), traders.get(sID).getPriceFV(), timeTrade, price, fv));
+        }
     }
 
     public void addEffSpread(Double spread){
@@ -102,7 +134,8 @@ public class History {
                 //writer.writeDecisions(history.get(i).printTrade());
                 writer.write(moHFT + ";" + mo + ";" + loHFT + ";" + lo + ";"  + t.getTimeTrade() +  ";"
                         + t.getFV() + ";" + t.getPrice() + ";" + t.getBuyerPV() + ";" +
-                        t.getSellerPV() + ";" + buyMO + ";" + "\r");
+                        t.getSellerPV() + ";" + buyMO + ";"
+                        + t.getTrCostsBuyer() + ";" + t.getTrCostsSeller() + ";" +  "\r");
             }
             writer.close();
         }

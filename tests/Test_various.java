@@ -19,7 +19,11 @@ import java.util.*;
  */
 public class Test_various {
     public static void main(String[] args) {
-        HashMap<Long, HashMap<Integer, BeliefQ>> states = new HashMap<Long, HashMap<Integer, BeliefQ>>();
+
+
+
+
+        /*HashMap<Long, HashMap<Integer, BeliefQ>> states = new HashMap<Long, HashMap<Integer, BeliefQ>>();
         HashMap<Integer, BeliefQ> beliefs = new HashMap<Integer, BeliefQ>();
         beliefs.put(1, new BeliefQ(1, 0.5));
         beliefs.put(2, new BeliefQ(2, 1.5));
@@ -35,7 +39,7 @@ public class Test_various {
 
 
         try {
-            /*File myFile = new File("D:\\_paper1 HFT, MM, rebates and market quality\\Matlab Analysis\\aapl.csv");
+            *//*File myFile = new File("D:\\_paper1 HFT, MM, rebates and market quality\\Matlab Analysis\\aapl.csv");
             FileReader fileReader = new FileReader(myFile);
 
             BufferedReader reader = new BufferedReader(fileReader);
@@ -48,7 +52,7 @@ public class Test_various {
                     System.out.println(token);
                 }
             }
-            reader.close();*/
+            reader.close();*//*
 
             FileOutputStream fileOut = new FileOutputStream("D:\\_paper1 HFT, MM, rebates and market quality\\Matlab Analysis\\previousStates.ser");
             ObjectOutputStream out = new ObjectOutputStream(fileOut);
@@ -75,7 +79,7 @@ public class Test_various {
             System.out.println("Employee class not found");
             c.printStackTrace();
             return;
-        }
+        }*/
 
 
 

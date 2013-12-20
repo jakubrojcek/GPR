@@ -18,10 +18,9 @@ import java.util.*;
  */
 public class ThirdLobTest {
     public static void main(String[] args) {
-        // TODO: include printing params at the end
         double timeStamp1 = System.nanoTime();
         String model = "returning";
-        String folder = "D:\\_paper1 HFT, MM, rebates and market quality\\Matlab Analysis\\ProfilingHFT16122013\\";
+        String folder = "D:\\_paper1 HFT, MM, rebates and market quality\\Matlab Analysis\\";
         String outputNameTransactions = "Transactions8.csv";  // output file name
         String outputNameBookData = "effSpread.csv";   // output file name
         String outputNameStatsData = "stats8.csv";   // output file name
@@ -35,10 +34,12 @@ public class ThirdLobTest {
         int nZeroNonHFT = 4;                    // # of zero PV slow traders
         int nNegativeNonHFT = 2;                // # of negative PV slow traders
         double tif = 0.0;                       // time if force
-        float rho = 0.15f;                      // impatience parameter
+        float TTAX = 0.0f;                      // transaction tax
+        float CFEE = 0.0f;                      // cancellation fee
+        float rho = 0.25f;                      // impatience parameter
         int NewNonHFT = nNegativeNonHFT + nPositiveNonHFT + nZeroNonHFT;
         double lambdaArrival = 0.5;               // arrival frequency, same for all
-        double lambdaFV = 0.125;                // frequency of FV changes
+        double lambdaFV = 0.125;                // frequency of FV changes   // TODO: double this in high-vol
         double ReturnFrequencyHFT = 5;          // returning frequency of HFT
         double ReturnFrequencyNonHFT = 0.25;     // returning frequency of NonHFT
         int maxDepth = 15;                      // 0 to 7 which matter
@@ -110,17 +111,18 @@ public class ThirdLobTest {
             }      // computing taus
         }
         HashMap<Integer, Trader> traders = new HashMap<Integer, Trader>(); //trader ID, trader object
-        History h = new History(traders, folder); // create history
+        History h = new History(traders, folder, TTAX, CFEE); // create history
         LOB_LinkedHashMap book = new LOB_LinkedHashMap(model, FV, FVpos, maxDepth, end, tickSize, nP, h, traders);
         Trader trader = new Trader(infoSize, tauB, tauS, nP, FVpos, tickSize, ReturnFrequencyHFT,
-                ReturnFrequencyNonHFT, LL, HL, end, maxDepth, breakPoint, hti, prTremble, folder, book, FprivateValues, rho);
+                ReturnFrequencyNonHFT, LL, HL, end, maxDepth, breakPoint, hti, prTremble, folder, book, FprivateValues,
+                rho, TTAX, CFEE);
         book.makeBook(Prices);
         SingleRun sr = new SingleRun(model, tif, lambdaArrival, lambdaFV, ReturnFrequencyHFT, ReturnFrequencyNonHFT,
                 FprivateValues, PVdistrb, sigma, tickSize, FVplus, header, book, traders, h, trader, outputNameStatsData,
                 outputNameTransactions, outputNameBookData);
 
         // phase 1a) initialization
-        int nEvents = 500000000;         // number of events
+        int nEvents = 50000000;         // number of events
         int ReturningHFT = 0;           // # of returning HFT traders in the book
         int ReturningNonHFT = 0;        // # of returning nonHFT traders in the book
         boolean write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
@@ -315,8 +317,8 @@ public class ThirdLobTest {
             writer.write("tickSize:" + ";" + tickSize + ";" + "\r");
             writer.write("sigma:" + ";" + sigma + ";" + "\r");
             writer.write("newTraders:" + ";" + (traderCountEnd - traderCountStart) + ";" + "\r");
-            writer.write("newHFTtrades:" + ";" + (traderCountHFTstart - traderCountHFTend) + ";" + "\r");
-            writer.write("newNonHFTtrades:" + ";" + (traderCountNonHFTstart - traderCountNonHFTend) + ";" + "\r");
+            writer.write("newHFTtrades:" + ";" + (traderCountHFTend - traderCountHFTstart) + ";" + "\r");
+            writer.write("newNonHFTtrades:" + ";" + (traderCountNonHFTend - traderCountNonHFTstart) + ";" + "\r");
             writer.write("timeElapsed:" + ";" + (timeStamp2 - timeStamp1) + ";" + "\r");
             writer.close();
         }

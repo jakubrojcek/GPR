@@ -1456,7 +1456,7 @@ public class Trader {
     private void writeDecision(int[] BookInfo, int[] BookSizes, Short[] action){
         // tables I, V
 
-        previousTraderAction[0] = decision.addDecision(BookInfo, action, previousTraderAction);
+        previousTraderAction[0] = decision.addDecision(BookInfo, action, previousTraderAction, isHFT);
         previousTraderAction[1] = BookInfo[0];
         previousTraderAction[2] = BookInfo[1];
     }

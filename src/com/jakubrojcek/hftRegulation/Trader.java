@@ -33,6 +33,7 @@ public class Trader {
     private double EventTime = 0.0; // event time
     private BeliefQ belief; // reference to an old Belief, to be updated
     private Order order = null; // reference to an old Order, to update the old Belief
+    private short cancelCount = 0;
 
     static int TraderCount = 0;         // counting number of traders, gives traderID as well
     static int TraderCountHFT = 0;      // counting HFT traders
@@ -80,7 +81,8 @@ public class Trader {
     static boolean fixedBeliefs = false;        // when true, doesn't update, holds beliefs fixed
     static boolean similar = false;             // looks for similar state|action if action not in current state
     static boolean symm = false;                // uses/updates/stores seller's beliefs for buyer
-    //private double CFEE;                      // cancellation fee
+    static float CFEE = 0.0f;                   // cancellation fee
+    static float TTAX = 0.0f;                   // transaction tax
 
 
     // constructor bool, bool, float, int
@@ -107,7 +109,7 @@ public class Trader {
     // constructor of the main trader- loads parameters from main
     public Trader(int is, double[] tb, double[] ts, byte numberPrices, int FVpos, double tickS, double rFast, double rSlow,
                   int ll, int hl, int e, int md, int bp, int hti, double pt, String f, LOB_LinkedHashMap b,
-                  double [] PVs, float r){
+                  double [] PVs, float r, float tt, float cf){
         states = new HashMap<Long, HashMap<Integer, BeliefQ>>(hti);
         previousStates = new HashMap<Long, HashMap<Integer, BeliefQ>>();
         statesConstructor = new previousStates();
@@ -147,6 +149,8 @@ public class Trader {
         previousTraderAction = new int[3];
         FprivateValues = PVs;
         rho = r;
+        TTAX = tt;
+        CFEE = cf;
     }
 
     // decision about the price is made here, so far random
@@ -199,7 +203,8 @@ public class Trader {
                     } else if (similar){
                         max = getSimilarBelief(code, action, BookInfo, q, oldPos);
                     } else {
-                        max = (discountFactorS.get(action - end)[Math.abs(q)] * ((breakPoint - action + end) * tickSize + privateValue));
+                        max = (discountFactorS.get(action - end)[Math.abs(q)] *
+                                ((breakPoint - action + end) * tickSize + privateValue)) - TTAX;
                     }
                     oldAction = action;
                 } else {
@@ -213,7 +218,8 @@ public class Trader {
                     } else if (similar){
                         max = getSimilarBelief(code, action, BookInfo, q, oldPos);
                     } else {
-                        max = (discountFactorB.get(action)[Math.abs(q)] * ((action - breakPoint) * tickSize - privateValue));
+                        max = (discountFactorB.get(action)[Math.abs(q)] *
+                                ((action - breakPoint) * tickSize - privateValue)) - TTAX;
                     }
                     oldAction = action;
                 } else {
@@ -235,17 +241,17 @@ public class Trader {
                     } else {
                         if (i < end){ // payoff to sell limit order
                             p1 = (discountFactorB.get(i)[Math.abs(BookSizes[LL + i])] *
-                                    ((i - breakPoint) * tickSize - privateValue));
+                                    ((i - breakPoint) * tickSize - privateValue)) - TTAX;
                             p.put(i, p1);
                         } else if (i < a) { // payoff to buy limit order
                             p1 = (discountFactorS.get(i - end)[Math.abs(BookSizes[LL + i - end])] *
-                                    ((breakPoint - i + end) * tickSize + privateValue));
+                                    ((breakPoint - i + end) * tickSize + privateValue)) - TTAX;
                             p.put(i, p1);
                         } else if (i == (2 * end)){
-                            p1 = ((Bt - fvPos) * tickSize - privateValue);
+                            p1 = ((Bt - fvPos) * tickSize - privateValue) - TTAX;
                             p.put(i, p1); // payoff to sell market order
                         } else if (i == (2 * end + 1)){
-                            p1 = ((fvPos - At) * tickSize + privateValue);
+                            p1 = ((fvPos - At) * tickSize + privateValue) - TTAX;
                             p.put(i, p1); // payoff to buy market order
                         } else if (i == (2 * end + 2)){
                             double Rt = (isHFT) ? 1.0 / ReturnFrequencyHFT
@@ -292,14 +298,14 @@ public class Trader {
                         if (p1 == -1.0){
                             if (i < end){ // payoff to sell limit order
                                 p1 = (discountFactorB.get(i)[Math.abs(BookSizes[LL + i])] *
-                                        ((i - breakPoint) * tickSize - privateValue));
+                                        ((i - breakPoint) * tickSize - privateValue))  - TTAX;
                             } else if (i < a) { // payoff to buy limit order
                                 p1 = (discountFactorS.get(i - end)[Math.abs(BookSizes[LL + i - end])] *
-                                        ((breakPoint - i + end) * tickSize + privateValue));
+                                        ((breakPoint - i + end) * tickSize + privateValue))  - TTAX;
                             } else if (i == (2 * end)){
-                                p1 = ((Bt - fvPos) * tickSize - privateValue); // payoff to sell market order
+                                p1 = ((Bt - fvPos) * tickSize - privateValue)  - TTAX; // payoff to sell market order
                             } else if (i == (2 * end + 1)){
-                                p1 = ((fvPos - At) * tickSize + privateValue); // payoff to buy market order
+                                p1 = ((fvPos - At) * tickSize + privateValue)  - TTAX; // payoff to buy market order
                             } else if (i == (2 * end + 2)){
                                 double Rt = (isHFT) ? 1.0 / ReturnFrequencyHFT
                                                     : 1.0 / ReturnFrequencyNonHFT; // expected return time
@@ -428,10 +434,10 @@ public class Trader {
         double payoff;
         tradeCount++;
         if (order.isBuyOrder()){ // buy LO executed
-            payoff = (breakPoint - (pos - LL)) * tickSize + privateValue;
+            payoff = (breakPoint - (pos - LL)) * tickSize + privateValue - TTAX;
                     //+ (fundamentalValue - PriceFV); // TODO: check this updating again, is the second part needed?
         } else { // sell LO executed
-            payoff = (pos - LL - breakPoint) * tickSize - privateValue;
+            payoff = (pos - LL - breakPoint) * tickSize - privateValue - TTAX;
                     //- (fundamentalValue - PriceFV);
         }
         if (fixedBeliefs){
@@ -1170,6 +1176,18 @@ System.out.println("problem");
 
     public int getTraderCountHFT() {
         return TraderCountHFT;
+    }
+
+    public static float getTTAX() {
+        return TTAX;
+    }
+
+    public static float getCFEE() {
+        return CFEE;
+    }
+
+    public short getCancelCount() {
+        return cancelCount;
     }
 
     // setters

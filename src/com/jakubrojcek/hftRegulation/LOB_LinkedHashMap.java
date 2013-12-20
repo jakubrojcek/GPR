@@ -192,8 +192,8 @@ public class LOB_LinkedHashMap {
         BookInfo[1] = At;               // best ask position
         BookInfo[2] = BookSizes[Bt];    // depth at best bid
         BookInfo[3] = - BookSizes[At];  // depth at best ask
-        BookInfo[4] = Db;               // depth buys
-        BookInfo[5] = - Ds;             // depth sells
+        BookInfo[4] = Db;               // depth off bid
+        BookInfo[5] = - Ds;             // depth off offer
         BookInfo[6] = Pt;               // last transaction position
         BookInfo[7] = b;                // 1 if last transaction buy, 0 if sell
 
