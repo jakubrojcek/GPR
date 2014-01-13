@@ -819,8 +819,8 @@ System.out.println("problem");
             long At = BookInfo[1];      // Best Ask position
             long lBt = BookInfo[2] / 2;     // depth at best Bid
             long lAt = BookInfo[3] / 2;     // depth at best Ask
-            long dBt = BookInfo[4] / 3; // depth off Bid
-            long dSt = BookInfo[5] / 3; // depth off Ask
+            long dBt = Math.min(15, BookInfo[4] / 3); // depth off Bid
+            long dSt = Math.min(15, BookInfo[5] / 3); // depth off Ask
             int Pt = BookInfo[6];       // last transaction pricePosition position
             int b = BookInfo[7];        // 1 if last transaction buy, 0 if sell
             int a = pv;                 // private value zero(0), negative (1), positive (2)
