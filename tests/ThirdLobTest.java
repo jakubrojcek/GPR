@@ -21,7 +21,7 @@ public class ThirdLobTest {
         double timeStamp1 = System.currentTimeMillis();
         String[] params = new String[11];
 
-        SingleCase case1 = new SingleCase();
+        /*SingleCase case1 = new SingleCase();
         params[0] = "_1baseCase30f\\";   // folder
         params[1] = "0";            // new HFTs
         params[2] = "2";            // # of positive PV slow traders
@@ -35,10 +35,10 @@ public class ThirdLobTest {
         params[10] = "30";          // max depth
 
         case1.main(params);
-        case1 = null;
+        case1 = null;*/
 
         SingleCase case2 = new SingleCase();
-        params[0] = "_2baseCaseHFT30f\\";
+        params[0] = "_2baseCaseHFT30g\\";
         params[1] = "1";            // new HFTs
         params[2] = "2";            // # of positive PV slow traders
         params[3]= "4";             // # of zero PV slow traders

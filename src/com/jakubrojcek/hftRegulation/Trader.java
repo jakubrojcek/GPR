@@ -823,6 +823,7 @@ System.out.println("problem");
             long dSt = Math.min(15, BookInfo[5] / 3); // depth off Ask
             int Pt = BookInfo[6];       // last transaction pricePosition position
             int b = BookInfo[7];        // 1 if last transaction buy, 0 if sell
+            q = Math.min(15, q);
             int a = pv;                 // private value zero(0), negative (1), positive (2)
             int l = (isHFT) ? 1 : 0;    // arrival frequency slow (0), fast (1)
             //System.out.println(Bt + " : " + lBt + " ; " + At + " : " + lAt);
@@ -877,7 +878,7 @@ System.out.println("problem");
                 if (test[i] == false){
                     System.out.println("testing hash code failed");
                 }
-            }*/         // tests
+            } */        // tests
         }
 
         return code;
