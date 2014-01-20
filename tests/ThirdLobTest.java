@@ -22,7 +22,7 @@ public class ThirdLobTest {
         String[] params = new String[11];
 
         /*SingleCase case1 = new SingleCase();
-        params[0] = "_1baseCase30f\\";   // folder
+        params[0] = "_1baseCase\\";   // folder
         params[1] = "0";            // new HFTs
         params[2] = "2";            // # of positive PV slow traders
         params[3]= "4";             // # of zero PV slow traders
@@ -35,10 +35,10 @@ public class ThirdLobTest {
         params[10] = "30";          // max depth
 
         case1.main(params);
-        case1 = null;*/
+        case1 = null;
 
         SingleCase case2 = new SingleCase();
-        params[0] = "_2baseCaseHFT30g\\";
+        params[0] = "_2baseCaseHFT\\";
         params[1] = "1";            // new HFTs
         params[2] = "2";            // # of positive PV slow traders
         params[3]= "4";             // # of zero PV slow traders
@@ -50,9 +50,9 @@ public class ThirdLobTest {
         params[9] = "0.125";        // arrival of changes in FV
         params[10] = "30";          // max depth
         case2.main(params);
-        case2 = null;
+        case2 = null;*/
 
-        /*SingleCase case3 = new SingleCase();
+        SingleCase case3 = new SingleCase();
         params[0] = "_3baseCaseHFTsameLambda\\";
         params[1] = "1";            // new HFTs
         params[2] = "2";            // # of positive PV slow traders
@@ -63,7 +63,7 @@ public class ThirdLobTest {
         params[7] = "0.0";          // CFEE
         params[8] = "0.25";          // lambda of new arrivals
         params[9] = "0.125";        // arrival of changes in FV
-        params[10] = "15";          // max depth
+        params[10] = "30";          // max depth
         case3.main(params);
         case3 = null;
 
@@ -78,7 +78,7 @@ public class ThirdLobTest {
         params[7] = "0.0";          // CFEE
         params[8] = "0.5";          // lambda of new arrivals
         params[9] = "0.25";         // arrival of changes in FV
-        params[10] = "15";          // max depth
+        params[10] = "30";          // max depth
         case4.main(params);
         case4 = null;
 
@@ -93,7 +93,7 @@ public class ThirdLobTest {
         params[7] = "0.0";          // CFEE
         params[8] = "0.5";          // lambda of new arrivals
         params[9] = "0.25";         // arrival of changes in FV
-        params[10] = "15";          // max depth
+        params[10] = "30";          // max depth
         case5.main(params);
         case5 = null;
 
@@ -108,7 +108,7 @@ public class ThirdLobTest {
         params[7] = "0.0";          // CFEE
         params[8] = "0.5";          // lambda of new arrivals
         params[9] = "0.125";        // arrival of changes in FV
-        params[10] = "15";          // max depth
+        params[10] = "30";          // max depth
         case6.main(params);
         case6 = null;
 
@@ -123,7 +123,7 @@ public class ThirdLobTest {
         params[7] = "0.0";          // CFEE
         params[8] = "0.5";          // lambda of new arrivals
         params[9] = "0.125";        // arrival of changes in FV
-        params[10] = "15";          // max depth
+        params[10] = "30";          // max depth
         case7.main(params);
         case7 = null;
 
@@ -138,9 +138,9 @@ public class ThirdLobTest {
         params[7] = "0.0";          // CFEE
         params[8] = "0.5";          // lambda of new arrivals
         params[9] = "0.125";        // arrival of changes in FV
-        params[10] = "15";          // max depth
+        params[10] = "30";          // max depth
         case9.main(params);
-        case9 = null;*/
+        case9 = null;
 
 
         double timeStamp2 = System.currentTimeMillis();
