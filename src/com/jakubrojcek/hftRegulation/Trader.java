@@ -28,7 +28,7 @@ public class Trader {
     private boolean isHFT; // initialized
     private boolean isTraded = false; // set by TransactionRule in book
     private boolean isReturning = false;// is he returning this time? info from priorities
-    private float rho = 0.15f; // trading "impatience" parameter              // TODO: changing this currently
+    private float rho = 0.15f; // trading "impatience" parameter
     private double PriceFV; // current fundamental value-> price at middle position
     private double EventTime = 0.0; // event time
     private BeliefQ belief; // reference to an old Belief, to be updated
@@ -54,6 +54,7 @@ public class Trader {
     static double ReturnFrequencyNonHFT;        // returning frequency of NonHFT
     static Hashtable<Integer, Double[]> discountFactorB = new Hashtable<Integer, Double[]>(); // container for discount factors computed using tauB
     static Hashtable<Integer, Double[]> discountFactorS = new Hashtable<Integer, Double[]>(); // container for discount factors computed using tauS
+    static double[] numberOfCancels;            // initial beliefs for number of cancellations
     static Random random = new Random();        // random generator, used for trembling
     static int infoSize;                        // 2-bid, ask, 4-last price, direction, 6-depth at bid,ask, 8-depth off bid,ask
     static byte nP;                             // number of prices
@@ -88,8 +89,8 @@ public class Trader {
     static boolean fixedBeliefs = false;        // when true, doesn't update, holds beliefs fixed
     static boolean similar = false;             // looks for similar state|action if action not in current state
     static boolean symm = false;                // uses/updates/stores seller's beliefs for buyer
-    static float CFEE = 0.0f;                   // cancellation fee
-    static float TTAX = 0.0f;                   // transaction tax
+    static double CFEE = 0.0f;                   // cancellation fee
+    static double TTAX = 0.0f;                   // transaction tax
 
 
     // constructor bool, bool, float, int
@@ -116,7 +117,7 @@ public class Trader {
     // constructor of the main trader- loads parameters from main
     public Trader(int is, double[] tb, double[] ts, byte numberPrices, int FVpos, double tickS, double rFast, double rSlow,
                   int ll, int hl, int e, int md, int bp, int hti, double pt, String f, LOB_LinkedHashMap b,
-                  double [] PVs, float r, float tt, float cf){
+                  double [] PVs, float r, double tt, double cf){
         states = new HashMap<Long, HashMap<Integer, BeliefQ>>(hti);
         previousStates = new HashMap<Long, HashMap<Integer, BeliefQ>>();
         convergenceStates = new HashMap<Long, HashMap<Integer, BeliefQ>>();
@@ -166,6 +167,13 @@ public class Trader {
         rho = r;
         TTAX = tt;
         CFEE = cf;
+        if (CFEE != 0.0){
+            numberOfCancels = new double[nPayoffs];
+            for (int i = 0; i < end; i++){
+                numberOfCancels[i] = (1 + i) * 0.5;
+                numberOfCancels[i + end] = (end - i) * 0.5;
+            }
+        }
         TraderCount = 0;         // counting number of traders, gives traderID as well
         TraderCountHFT = 0;      // counting HFT traders
         TraderCountNonHFT = 0;   // counting nonHFT traders
@@ -177,12 +185,12 @@ public class Trader {
     public ArrayList<Order> decision(int[] BookSizes, int[] BookInfo,
                                      double et, double priceFV){
         orders = new ArrayList<Order>();
-        PriceFV = priceFV; // get price of the fundamental value = fundamental value
-        int pricePosition; // pricePosition at which to submit
-        int forbiddenMarketOrder = -1; // if 2 * end, SMO forbidden, 2 * end + 1 BMO forbidden, to not execute against himself
-        boolean buyOrder = false; // buy order?
-        long Bt = BookInfo[0]; // Best Bid position
-        long At = BookInfo[1]; // Best Ask position
+        PriceFV = priceFV;              // get price of the fundamental value = fundamental value
+        int pricePosition;              // pricePosition at which to submit
+        int forbiddenMarketOrder = -1;  // if 2 * end, SMO forbidden, 2 * end + 1 BMO forbidden, to not execute against himself
+        boolean buyOrder = false;       // buy order?
+        long Bt = BookInfo[0];          // Best Bid position
+        long At = BookInfo[1];          // Best Ask position
         int oldPos = 0, oldAction = -1;
         int q = 0;
         int x = 0;
@@ -206,7 +214,7 @@ public class Trader {
         tempQs = states.containsKey(code) ? states.get(code)
                                           : new HashMap<Integer, BeliefQ>();
         int action = -1, nLO = 0;
-        double max = -1.0, p1 = -1.0, sum = 0.0;
+        double max = -1.0, p1 = -1.0, sum = 0.0, sumNC = 0.0, Q = -1.0, nC = -1.0, maxQ = -1.0, maxNC = -1.0;
 
         short b = (short) Math.max(BookInfo[0] - LL + 1, 0); // + 1 in order to start from one above B
         b = (short) Math.min(end, b);
@@ -217,14 +225,32 @@ public class Trader {
             boolean buy = order.isBuyOrder();
             if (buy){
                 action = oldPos - LL + end;
-                if (action >= end && action < a){ // still in the range for LO, else is cancelled for sure
-                    if (tempQs.containsKey(action)){
-                        max = tempQs.get(action).getQ();
-                    } else if (similar){
-                        max = getSimilarBelief(code, action, BookInfo, q, oldPos);
+                if (action >= end && action < a){   // still in the range for LO, else is cancelled for sure
+                    if (CFEE == 0.0){               // CFEE == 0.0 so normal payoff for old action
+                        if (tempQs.containsKey(action)){
+                            max = tempQs.get(action).getQ();
+                        } else if (similar){
+                            max = getSimilarBelief(code, action, BookInfo, q, oldPos);
+                        } else {
+                            max = (discountFactorS.get(action - end)[Math.abs(q)] *
+                                    ((breakPoint - action + end) * tickSize + privateValue - TTAX));
+                        }
                     } else {
-                        max = (discountFactorS.get(action - end)[Math.abs(q)] *
-                                ((breakPoint - action + end) * tickSize + privateValue)) - TTAX;
+                        if (tempQs.containsKey(action)){
+                            maxQ = tempQs.get(action).getQ();
+                            maxNC = tempQs.get(action).getnC();
+                            max = maxQ - maxNC * CFEE;
+                        } else if (similar){
+                            double[] similarOutcome = getSimilarQnC(code, action, BookInfo, q, oldPos);
+                            maxQ = similarOutcome[0];
+                            maxNC = similarOutcome[1];
+                            max = maxQ - maxNC * CFEE;
+                        } else {
+                            maxQ = (discountFactorS.get(action - end)[Math.abs(q)] *
+                                    ((breakPoint - action + end) * tickSize + privateValue - TTAX));
+                            maxNC = discountFactorS.get(action - end)[Math.abs(q)] * (numberOfCancels[action]);
+                            max = maxQ - maxNC * CFEE;
+                        }
                     }
                     oldAction = action;
                 } else {
@@ -233,13 +259,31 @@ public class Trader {
             } else {
                 action = oldPos - LL;
                 if (action >= 0 && action < end){ // still in the range for LO, else is cancelled for sure
-                    if (tempQs.containsKey(action)){
-                        max = tempQs.get(action).getQ();
-                    } else if (similar){
-                        max = getSimilarBelief(code, action, BookInfo, q, oldPos);
+                    if (CFEE == 0.0){               // CFEE == 0.0 so normal payoff for old action
+                        if (tempQs.containsKey(action)){
+                            max = tempQs.get(action).getQ();
+                        } else if (similar){
+                            max = getSimilarBelief(code, action, BookInfo, q, oldPos);
+                        } else {
+                            max = (discountFactorB.get(action)[Math.abs(q)] *
+                                    ((action - breakPoint) * tickSize - privateValue - TTAX));
+                        }
                     } else {
-                        max = (discountFactorB.get(action)[Math.abs(q)] *
-                                ((action - breakPoint) * tickSize - privateValue)) - TTAX;
+                        if (tempQs.containsKey(action)){
+                            maxQ = tempQs.get(action).getQ();
+                            maxNC = tempQs.get(action).getnC();
+                            max = maxQ - maxNC * CFEE;
+                        } else if (similar){
+                            double[] similarOutcome = getSimilarQnC(code, action, BookInfo, q, oldPos);
+                            maxQ = similarOutcome[0];
+                            maxNC = similarOutcome[1];
+                            max = maxQ - maxNC * CFEE;
+                        } else {
+                            maxQ = (discountFactorB.get(action)[Math.abs(q)] *
+                                    ((action - breakPoint) * tickSize - privateValue - TTAX));
+                            maxNC = discountFactorB.get(action)[Math.abs(q)] * (numberOfCancels[action]);
+                            max = maxQ - maxNC * CFEE;
+                        }
                     }
                     oldAction = action;
                 } else {
@@ -247,150 +291,413 @@ public class Trader {
                 }
             }
         }
-        if (prTremble > 0.0 && Math.random() < prTremble){
-            HashMap<Integer, Double> p = new HashMap<Integer, Double>();
-            if (action != -1){
-                p.put(action, max);
-            }
-            for(int i = b; i < nPayoffs; i++){ // searching for best payoff
-                p1 = -1.0;
-                if (i != oldAction && i != forbiddenMarketOrder){
-                    if (tempQs.containsKey(i)){
-                        p1 = tempQs.get(i).getQ();
-                        p.put(i, p1);
-                    } else {
-                        if (i < end){ // payoff to sell limit order
-                            p1 = (discountFactorB.get(i)[Math.abs(BookSizes[LL + i])] *
-                                    ((i - breakPoint) * tickSize - privateValue)) - TTAX;
-                            p.put(i, p1);
-                        } else if (i < a) { // payoff to buy limit order
-                            p1 = (discountFactorS.get(i - end)[Math.abs(BookSizes[LL + i - end])] *
-                                    ((breakPoint - i + end) * tickSize + privateValue)) - TTAX;
-                            p.put(i, p1);
-                        } else if (i == (2 * end)){
-                            p1 = ((Bt - fvPos) * tickSize - privateValue) - TTAX;
-                            p.put(i, p1); // payoff to sell market order
-                        } else if (i == (2 * end + 1)){
-                            p1 = ((fvPos - At) * tickSize + privateValue) - TTAX;
-                            p.put(i, p1); // payoff to buy market order
-                        } else if (i == (2 * end + 2)){
-                            double Rt = (isHFT) ? 1.0 / ReturnFrequencyHFT
-                                    : 1.0 / ReturnFrequencyNonHFT; // expected return time
-                            p1 = Math.exp(-rho * Rt) * (sum / Math.max(1, nLO));
-                            p.put(i, p1); // 2 for averaging over 14
-                        }
-                    }
-                    if (p1 >= 0){
-                        nLO++;
-                        sum += p1;
-                    }
+        if (CFEE == 0.0){
+            if (prTremble > 0.0 && Math.random() < prTremble){          // trembling
+                HashMap<Integer, Double> p = new HashMap<Integer, Double>();
+                if (action != -1){
+                    p.put(action, max);
                 }
-            }
-            List<Integer> actions = new ArrayList <Integer>(p.keySet());
-            action = actions.get(random.nextInt(actions.size()));
-            max = p.get(action);
-        } else {
-            for(int i = b; i < nPayoffs; i++){ // searching for best payoff
-                p1 = -1.0f;
-                if (i != oldAction && i != forbiddenMarketOrder){
-                    if (tempQs.containsKey(i)){
-                        if (i < end){
-                            //p1 = tempQs.get(i).getQ();
-                            if (BookSizes[i + LL] > -maxDepth){
-                                p1 = tempQs.get(i).getQ();
-                            } /*else {
-                                System.out.println("too low priority");
-                            }*/
-                        } else if (i < a){
-                            //p1 = tempQs.get(i).getQ();
-                            if (BookSizes[i + LL - end] < maxDepth){
-                                p1 = tempQs.get(i).getQ();
-                            } /*else {
-                                System.out.println("too low priority");
-                            }*/
-                        } else {
+                for(int i = b; i < nPayoffs; i++){ // searching for best payoff
+                    p1 = -1.0;
+                    if (i != oldAction && i != forbiddenMarketOrder){
+                        if (tempQs.containsKey(i)){
                             p1 = tempQs.get(i).getQ();
-                        }
-                    } else {
-                        if (similar){
-                            p1 = getSimilarBelief(code, i, BookInfo, q, oldPos);
-                        }
-                        if (p1 == -1.0){
+                            p.put(i, p1);
+                        } else {
                             if (i < end){ // payoff to sell limit order
                                 p1 = (discountFactorB.get(i)[Math.abs(BookSizes[LL + i])] *
-                                        ((i - breakPoint) * tickSize - privateValue))  - TTAX;
+                                        ((i - breakPoint) * tickSize - privateValue - TTAX));
+                                p.put(i, p1);
                             } else if (i < a) { // payoff to buy limit order
                                 p1 = (discountFactorS.get(i - end)[Math.abs(BookSizes[LL + i - end])] *
-                                        ((breakPoint - i + end) * tickSize + privateValue))  - TTAX;
+                                        ((breakPoint - i + end) * tickSize + privateValue - TTAX));
+                                p.put(i, p1);
                             } else if (i == (2 * end)){
-                                p1 = ((Bt - fvPos) * tickSize - privateValue)  - TTAX; // payoff to sell market order
+                                p1 = ((Bt - fvPos) * tickSize - privateValue - TTAX);
+                                p.put(i, p1); // payoff to sell market order
                             } else if (i == (2 * end + 1)){
-                                p1 = ((fvPos - At) * tickSize + privateValue)  - TTAX; // payoff to buy market order
+                                p1 = ((fvPos - At) * tickSize + privateValue - TTAX);
+                                p.put(i, p1); // payoff to buy market order
                             } else if (i == (2 * end + 2)){
                                 double Rt = (isHFT) ? 1.0 / ReturnFrequencyHFT
                                                     : 1.0 / ReturnFrequencyNonHFT; // expected return time
-                                p1 = Math.exp(-rho * Rt) * (sum / Math.max(1, nLO)); // 2 for averaging over 14
+                                p1 = Math.exp(-rho * Rt) * (sum / Math.max(1, nLO));
+                                p.put(i, p1); // 2 for averaging over 14
+                            }
+                        }
+                        if (p1 >= 0){
+                            nLO++;
+                            sum += p1;
+                        }
+                    }
+                }
+                List<Integer> actions = new ArrayList <Integer>(p.keySet());
+                action = actions.get(random.nextInt(actions.size()));
+                max = p.get(action);
+            } else {                                // get the best payoff
+                for(int i = b; i < nPayoffs; i++){  // searching for best payoff
+                    p1 = -1.0f;
+                    if (i != oldAction && i != forbiddenMarketOrder){
+                        if (tempQs.containsKey(i)){
+                            if (i < end){
+                                //p1 = tempQs.get(i).getQ();
+                                if (BookSizes[i + LL] > -maxDepth){
+                                    p1 = tempQs.get(i).getQ();
+                                } /*else {
+                                    System.out.println("too low priority");
+                                }*/
+                            } else if (i < a){
+                                //p1 = tempQs.get(i).getQ();
+                                if (BookSizes[i + LL - end] < maxDepth){
+                                    p1 = tempQs.get(i).getQ();
+                                } /*else {
+                                    System.out.println("too low priority");
+                                }*/
+                            } else {
+                                p1 = tempQs.get(i).getQ();
+                            }
+                        } else {
+                            if (similar){
+                                p1 = getSimilarBelief(code, i, BookInfo, q, oldPos);
+                            }
+                            if (p1 == -1.0){
+                                if (i < end){ // payoff to sell limit order
+                                    p1 = (discountFactorB.get(i)[Math.abs(BookSizes[LL + i])] *
+                                            ((i - breakPoint) * tickSize - privateValue - TTAX));
+                                } else if (i < a) { // payoff to buy limit order
+                                    p1 = (discountFactorS.get(i - end)[Math.abs(BookSizes[LL + i - end])] *
+                                            ((breakPoint - i + end) * tickSize + privateValue - TTAX));
+                                } else if (i == (2 * end)){
+                                    p1 = ((Bt - fvPos) * tickSize - privateValue - TTAX); // payoff to sell market order
+                                } else if (i == (2 * end + 1)){
+                                    p1 = ((fvPos - At) * tickSize + privateValue - TTAX); // payoff to buy market order
+                                } else if (i == (2 * end + 2)){
+                                    double Rt = (isHFT) ? 1.0 / ReturnFrequencyHFT
+                                                        : 1.0 / ReturnFrequencyNonHFT; // expected return time
+                                    p1 = Math.exp(-rho * Rt) * (sum / Math.max(1, nLO)); // 2 for averaging over 14
+                                }
+                            }
+                        }
+                        if (p1 >= 0.0){
+                            nLO++;
+                            sum += p1;
+                            if (p1 >= max){
+                                max = p1;
+                                action = i;
                             }
                         }
                     }
-                    if (p1 >= 0.0){
-                        nLO++;
-                        sum += p1;
-                        if (p1 >= max){
-                            max = p1;
-                            action = i;
-                        }
-                    }
                 }
-            }
-            if (isReturning && online){ // updating old belief if trader is returning
-                if (fixedBeliefs){
-                    if (!updatedTraders.contains(traderID) && (belief.getNe() > 0)){
-                        if(belief.getNe() < nResetMax) {
-                            belief.increaseNe();
+                if (isReturning && online){ // updating old belief if trader is returning
+                    if (fixedBeliefs){
+                        if (!updatedTraders.contains(traderID) && (belief.getNe() > 0)){
+                            if(belief.getNe() < nResetMax) {
+                                belief.increaseNe();
+                            }
+                            double alpha = (1.0 / (1.0 + (belief.getNe()))); // updating factor
+                            double previousDiff = belief.getDiff();
+                            belief.setDiff((1.0 - alpha) * previousDiff +
+                                    alpha * Math.exp( - rho * (et - EventTime)) * max);
+                            updatedTraders.add(traderID);
                         }
-                        double alpha = (1.0 / (1.0 + (belief.getNe()))); // updating factor
-                        double previousDiff = belief.getDiff();
-                        belief.setDiff((1.0 - alpha) * previousDiff +
+                    } else {
+                        if(belief.getN() < nResetMax) {
+                            belief.increaseN();
+                        }
+                        double alpha = (1.0 / (1.0 + (belief.getN()))); // updating factor
+                        double previousQ = belief.getQ();
+                        belief.setQ((1.0 - alpha) * previousQ +
                                 alpha * Math.exp( - rho * (et - EventTime)) * max);
-                        updatedTraders.add(traderID);
                     }
-                } else {
-                    if(belief.getN() < nResetMax) {
-                        belief.increaseN();
-                    }
-                    double alpha = (1.0 / (1.0 + (belief.getN()))); // updating factor
-                    double previousQ = belief.getQ();
-                    belief.setQ((1.0 - alpha) * previousQ +
-                            alpha * Math.exp( - rho * (et - EventTime)) * max);
                 }
             }
-        }
-        if (fixedBeliefs){                            // just save the realized beliefs for comparison
-            if (convergenceStates.containsKey(code)){
-                tempQs = convergenceStates.get(code);
-                if (tempQs.containsKey(action)){
-                    belief = tempQs.get(action);
+            if (fixedBeliefs){                            // just save the realized beliefs for comparison
+                if (convergenceStates.containsKey(code)){
+                    tempQs = convergenceStates.get(code);
+                    if (tempQs.containsKey(action)){
+                        belief = tempQs.get(action);
+                    } else {
+                        belief = new BeliefQ(1, 1, max, max);
+                        tempQs.put(action, belief);
+                    }
                 } else {
+                    tempQs = new HashMap<Integer, BeliefQ>();
                     belief = new BeliefQ(1, 1, max, max);
                     tempQs.put(action, belief);
+                    convergenceStates.put(code, tempQs);
                 }
-            } else {
-                tempQs = new HashMap<Integer, BeliefQ>();
-                belief = new BeliefQ(1, 1, max, max);
-                tempQs.put(action, belief);
-                convergenceStates.put(code, tempQs);
+            } else {                                      // beliefs saved to states HashMap
+                if (tempQs.containsKey(action)){
+                    belief = tempQs.get(action); // obtaining the belief-> store as private value
+                } else {
+                    statesCount++;
+                    belief = new BeliefQ((short) 1, max);
+                    tempQs.put(action, belief); // obtaining the belief-> store as private value
+                }
+                if (!states.containsKey(code)){
+                    states.put(code, tempQs);
+                }
             }
-        } else {                                      // beliefs saved to states HashMap
-            if (tempQs.containsKey(action)){
-                belief = tempQs.get(action); // obtaining the belief-> store as private value
-            } else {
-                statesCount++;
-                belief = new BeliefQ((short) 1, max);
-                tempQs.put(action, belief); // obtaining the belief-> store as private value
+        } else {        // CFEE != 0.0
+            boolean cancelled = false;              // is it necessary to cancel the previous order?
+            boolean buyO = false;                   // is the would be order a buy order?
+            int pPosition = 0;                      // is the would be position of a would be order
+            if (prTremble > 0.0 && Math.random() < prTremble){          // trembling
+                HashMap<Integer, Double[]> p = new HashMap<Integer, Double[]>();
+                Double[] payoffArray = new Double[3];      // TODO: test if I pass values of payoffArray into p
+                if (action != -1){
+                    payoffArray[0] = max;
+                    payoffArray[1] = maxQ;
+                    payoffArray[2] = maxNC;
+                    p.put(action, payoffArray);
+                }
+                for(int i = b; i < nPayoffs; i++){ // searching for best payoff
+                    p1 = -1.0;
+                    if (i != oldAction && i != forbiddenMarketOrder){
+                        if (tempQs.containsKey(i)){
+                            Q = tempQs.get(i).getQ();
+                            nC = tempQs.get(i).getnC();
+                            p1 = Q - nC * CFEE;
+                            payoffArray = new Double[3];
+                            payoffArray[0] = p1;
+                            payoffArray[1] = Q;
+                            payoffArray[2] = nC;
+                            p.put(i, payoffArray);
+                        } else {
+                            if (i < end){ // payoff to sell limit order
+                                Q = (discountFactorB.get(i)[Math.abs(BookSizes[LL + i])] *
+                                        ((i - breakPoint) * tickSize - privateValue - TTAX));
+                                nC = discountFactorB.get(i)[Math.abs(BookSizes[LL + i])] * numberOfCancels[i];
+                                p1 = Q - nC * CFEE;
+                                payoffArray = new Double[3];
+                                payoffArray[0] = p1;
+                                payoffArray[1] = Q;
+                                payoffArray[2] = nC;
+                                p.put(i, payoffArray);
+                            } else if (i < a) { // payoff to buy limit order
+                                Q = (discountFactorS.get(i - end)[Math.abs(BookSizes[LL + i - end])] *
+                                        ((breakPoint - i + end) * tickSize + privateValue - TTAX));
+                                nC = discountFactorS.get(i - end)[Math.abs(BookSizes[LL + i - end])] * numberOfCancels[i];
+                                p1 = Q - nC * CFEE;
+                                payoffArray = new Double[3];
+                                payoffArray[0] = p1;
+                                payoffArray[1] = Q;
+                                payoffArray[2] = nC;
+                                p.put(i, payoffArray);
+                            } else if (i == (2 * end)){
+                                Q = ((Bt - fvPos) * tickSize - privateValue - TTAX);
+                                nC = 0.0;
+                                p1 = Q - nC * CFEE;
+                                payoffArray = new Double[3];
+                                payoffArray[0] = p1;
+                                payoffArray[1] = Q;
+                                payoffArray[2] = nC;
+                                p.put(i, payoffArray);
+                            } else if (i == (2 * end + 1)){
+                                Q = ((fvPos - At) * tickSize + privateValue - TTAX);
+                                nC = 0.0;
+                                p1 = Q - nC * CFEE;
+                                payoffArray = new Double[3];
+                                payoffArray[0] = p1;
+                                payoffArray[1] = Q;
+                                payoffArray[2] = nC;
+                                p.put(i, payoffArray);
+                            } else if (i == (2 * end + 2)){
+                                double Rt = (isHFT) ? 1.0 / ReturnFrequencyHFT
+                                                    : 1.0 / ReturnFrequencyNonHFT; // expected return time
+                                Q = Math.exp(-rho * Rt) * (sum / Math.max(1, nLO));
+                                nC = Math.exp(-rho * Rt) * (sumNC / Math.max(1, nLO));
+                                p1 = Q - nC * CFEE;
+                                payoffArray = new Double[3];
+                                payoffArray[0] = p1;
+                                payoffArray[1] = Q;
+                                payoffArray[2] = nC;
+                                p.put(i, payoffArray);
+                            }
+                        }
+                        if (isReturning && order != null){
+                            if (i >= (2 * end) && i <= (2 * end + 2)){                        // no action or MO
+                                cancelled = true;
+                            } else{
+                                if (i >= end){
+                                    buyO = true;
+                                    pPosition = i + LL - end;
+                                } else {
+                                    pPosition = i + LL;
+                                }
+                                if ((oldPos != pPosition) || (order.isBuyOrder() != buyO)){   // different position or different direction
+                                    cancelled = true;
+                                }
+                            }
+                            if (cancelled && oldAction != -1){
+                                p1 -= CFEE;
+                                nC += 1.0;
+                                payoffArray[0] -= CFEE;
+                                payoffArray[2] += 1.0;
+                            }
+                            cancelled = false;
+                        }
+                        if (p1 >= 0){
+                            nLO++;
+                            sum += Q;
+                            sumNC += nC;
+                        }
+                    }
+                }
+                List<Integer> actions = new ArrayList <Integer>(p.keySet());
+                action = actions.get(random.nextInt(actions.size()));
+                payoffArray = p.get(action);
+                max = payoffArray[0];
+                maxQ = payoffArray[1];
+                maxNC = payoffArray[2];
+            } else {                                // get the best payoff
+                for(int i = b; i < nPayoffs; i++){  // searching for best payoff
+                    p1 = -1.0f;
+                    if (i != oldAction && i != forbiddenMarketOrder){
+                        if (tempQs.containsKey(i)){
+                            if (i < end){
+                                //p1 = tempQs.get(i).getQ();
+                                if (BookSizes[i + LL] > -maxDepth){
+                                    Q = tempQs.get(i).getQ();
+                                    nC = tempQs.get(i).getnC();
+                                    p1 = Q - nC * CFEE;
+                                } /*else {
+                                    System.out.println("too low priority");
+                                }*/
+                            } else if (i < a){
+                                //p1 = tempQs.get(i).getQ();
+                                if (BookSizes[i + LL - end] < maxDepth){
+                                    Q = tempQs.get(i).getQ();
+                                    nC = tempQs.get(i).getnC();
+                                    p1 = Q - nC * CFEE;
+                                } /*else {
+                                    System.out.println("too low priority");
+                                }*/
+                            } else {
+                                Q = tempQs.get(i).getQ();
+                                nC = tempQs.get(i).getnC();
+                                p1 = Q - nC * CFEE;
+                            }
+                        } else {
+                            if (similar){
+                                double[] similarOutcome = getSimilarQnC(code, i, BookInfo, q, oldPos);
+                                Q = similarOutcome[0];
+                                nC = similarOutcome[1];
+                                p1 = Q - nC * CFEE;
+                            }
+                            if (p1 == -1.0){
+                                if (i < end){ // payoff to sell limit order
+                                    Q = (discountFactorB.get(i)[Math.abs(BookSizes[LL + i])] *
+                                            ((i - breakPoint) * tickSize - privateValue - TTAX));
+                                    nC = discountFactorB.get(i)[Math.abs(BookSizes[LL + i])] * numberOfCancels[i];
+                                    p1 = Q - nC * CFEE;
+                                } else if (i < a) { // payoff to buy limit order
+                                    Q = (discountFactorS.get(i - end)[Math.abs(BookSizes[LL + i - end])] *
+                                            ((breakPoint - i + end) * tickSize + privateValue - TTAX));
+                                    nC = discountFactorS.get(i - end)[Math.abs(BookSizes[LL + i - end])] * numberOfCancels[i];
+                                    p1 = Q - nC * CFEE;
+                                } else if (i == (2 * end)){
+                                    Q = ((Bt - fvPos) * tickSize - privateValue - TTAX); // payoff to sell market order
+                                    nC = 0.0;
+                                    p1 = Q - nC * CFEE;
+                                } else if (i == (2 * end + 1)){
+                                    Q = ((fvPos - At) * tickSize + privateValue - TTAX); // payoff to buy market order
+                                    nC = 0.0;
+                                    p1 = Q - nC * CFEE;
+                                } else if (i == (2 * end + 2)){
+                                    double Rt = (isHFT) ? 1.0 / ReturnFrequencyHFT
+                                                        : 1.0 / ReturnFrequencyNonHFT; // expected return time
+                                    Q = Math.exp(-rho * Rt) * (sum / Math.max(1, nLO));
+                                    nC = Math.exp(-rho * Rt) * (sumNC / Math.max(1, nLO));
+                                    p1 = Q - nC * CFEE;
+                                }
+                            }
+                        }
+                        if (isReturning && order != null){
+                            if (i >= (2 * end) && i <= (2 * end + 2)){                        // no action or MO
+                                cancelled = true;
+                            } else{
+                                if (i >= end){
+                                    buyO = true;
+                                    pPosition = i + LL - end;
+                                } else {
+                                    pPosition = i + LL;
+                                }
+                                if ((oldPos != pPosition) || (order.isBuyOrder() != buyO)){   // different position or different direction
+                                    cancelled = true;
+                                }
+                            }
+                            if (cancelled && oldAction != -1){
+                                p1 -= CFEE;
+                                nC += 1.0;
+                            }
+                            cancelled = false;
+                        }
+                        if (p1 >= 0.0){
+                            nLO++;
+                            sum += Q;
+                            sumNC += nC;
+                            if (p1 >= max){
+                                max = p1;
+                                maxQ = Q;
+                                maxNC = nC;
+                                action = i;
+                            }
+                        }
+                    }
+                }
+                if (isReturning && online){ // updating old belief if trader is returning
+                    if (fixedBeliefs){
+                        if (!updatedTraders.contains(traderID) && (belief.getNe() > 0)){
+                            if(belief.getNe() < nResetMax) {
+                                belief.increaseNe();
+                            }
+                            double alpha = (1.0 / (1.0 + (belief.getNe()))); // updating factor
+                            double previousDiff = belief.getDiff();
+                            belief.setDiff((1.0 - alpha) * previousDiff +
+                                    alpha * Math.exp( - rho * (et - EventTime)) * max);
+                            updatedTraders.add(traderID);
+                        }
+                    } else {
+                        if(belief.getN() < nResetMax) {
+                            belief.increaseN();
+                        }
+                        double alpha = (1.0 / (1.0 + (belief.getN()))); // updating factor
+                        double previousQ = belief.getQ();
+                        double previousNC = belief.getnC();
+                        belief.setQ((1.0 - alpha) * previousQ +
+                                alpha * Math.exp( - rho * (et - EventTime)) * maxQ);
+                        belief.setnC((1.0 - alpha) * previousNC +
+                                alpha * Math.exp(-rho * (et - EventTime)) * maxNC);
+                    }
+                }
             }
-            if (!states.containsKey(code)){
-                states.put(code, tempQs);
+            if (fixedBeliefs){                            // just save the realized beliefs for comparison
+                if (convergenceStates.containsKey(code)){
+                    tempQs = convergenceStates.get(code);
+                    if (tempQs.containsKey(action)){
+                        belief = tempQs.get(action);
+                    } else {
+                        belief = new BeliefQ(1, 1, maxQ, maxQ);
+                        tempQs.put(action, belief);
+                    }
+                } else {
+                    tempQs = new HashMap<Integer, BeliefQ>();
+                    belief = new BeliefQ(1, 1, maxQ, maxQ);
+                    tempQs.put(action, belief);
+                    convergenceStates.put(code, tempQs);
+                }
+            } else {                                      // beliefs saved to states HashMap
+                if (tempQs.containsKey(action)){
+                    belief = tempQs.get(action); // obtaining the belief-> store as private value
+                } else {
+                    statesCount++;
+                    belief = new BeliefQ((short) 1, maxQ, maxNC);
+                    tempQs.put(action, belief); // obtaining the belief-> store as private value
+                }
+                if (!states.containsKey(code)){
+                    states.put(code, tempQs);
+                }
             }
         }
 
@@ -435,6 +742,7 @@ public class Trader {
             order = currentOrder;
             orders.add(currentOrder);
         }
+        if (CFEE != 0.0 && (cancelled && oldAction != -1.0)){cancelCount++;}
 
         if ((action == (2 * end)) || (action == (2 * end + 1))) {
             isTraded = true; // isTraded set to true if submitting MOs
@@ -455,7 +763,7 @@ public class Trader {
         tradeCount++;
         if (order.isBuyOrder()){ // buy LO executed
             payoff = (breakPoint - (pos - LL)) * tickSize + privateValue - TTAX;
-                    //+ (fundamentalValue - PriceFV); // TODO: check this updating again, is the second part needed?
+                    //+ (fundamentalValue - PriceFV);
         } else { // sell LO executed
             payoff = (pos - LL - breakPoint) * tickSize - privateValue - TTAX;
                     //- (fundamentalValue - PriceFV);
@@ -487,6 +795,11 @@ public class Trader {
             double previousQ = belief.getQ();
             belief.setQ((1.0 - alpha) * previousQ +
                     alpha * Math.exp( - rho * (et - EventTime)) * payoff);
+            if (CFEE != 0.0){
+                double previousNC = belief.getnC();
+                belief.setnC((1.0 - alpha) * previousNC +
+                        alpha * Math.exp(-rho * (et - EventTime)) * cancelCount);   
+         }
             if (writeDiagnostics){writeDiagnostics(belief.getQ() - previousQ);}
         }
         isTraded = true;
@@ -606,6 +919,57 @@ public class Trader {
                                                                                 : -1.0;//similarBelief;
     }
 
+    private double[] getSimilarQnC(long code1b, int ac, int[] bi, int priority, int ownPrice){
+        long code2 = code1b;                            // modified code trying to find similar action-state belief
+        //HashMap<Integer, BeliefQ> similarQs;          // HashMap of similar beliefs
+        double[] similarBelief = {-1.0, 0.0};             // similar belief, initialized to equal standard -1 in the max choosing for loop
+        int i = 13;                                     // number of possible
+        //while (similarBelief == -1.0 && i > 0) {
+        while ((states.get(code2) == null || states.get(code2).get(ac) == null) && i > 0) { // TODO: test
+            if (i == 13 && bi[5] < 2 * maxDepth - 1){       // depth off ask
+                code2 = code1b + (1<<19);
+            } else if (i == 12 && bi[4] < 2 * maxDepth - 1){ // depth off bid is bigger than 1
+                code2 = code1b + (1<<23);
+            } else if (i == 11 && bi[5] >= 3){              // depth off ask is bigger than 3
+                code2 = code1b - (1<<19);
+            } else if (i == 10 && bi[4] >= 3){              // depth off bid is bigger than 3
+                code2 = code1b - (1<<23);
+            } else if (i == 9 && priority >= 1){            // priority of past own action is higher than 0
+                code2 = code1b - (1<<6);
+            } else if (i == 8 && bi[6] >= 3){               // past price is higher than 3
+                code2 = code1b - (1<<15);
+            } else if (i == 7 && ownPrice >= 3){
+                code2 = code1b - (1<<10);
+            } else if (i == 6 && bi[6] <= 11){              // past price is below 11
+                code2 = code1b + (1<<15);
+            } else if (i == 5 && ownPrice <= 11){
+                code2 = code1b + (1<<10);
+            } else if (i == 4 && bi[6] >= 4){               // past price is higher than 4
+                code2 = code1b - (2<<15);
+            } else if (i == 3 && ownPrice >= 4){
+                code2 = code1b - (2<<10);
+            } else if (i == 2 && bi[6] <= 10){              // past price is below 10
+                code2 = code1b + (2<<15);
+            } else if (i == 1 && ownPrice <= 10){
+                code2 = code1b + (2<<10);
+            }
+            /*if (states.containsKey(code2)){
+                similarQs = states.get(code2);
+                if (similarQs.containsKey(ac)){
+                    similarBelief = similarQs.get(ac).getQ();
+                }
+            }*/
+            i--;
+        }
+
+        if (states.get(code2) != null && states.get(code2).get(ac) != null){
+            similarBelief[0] = states.get(code2).get(ac).getQ();
+            similarBelief[1] = states.get(code2).get(ac).getnC();
+        }
+
+        return  similarBelief;
+    }
+
     // writing decisions
     private void writeDecision(int[] BookInfo, int[] BookSizes, Short[] action){
         // tables I, V
@@ -665,6 +1029,27 @@ public class Trader {
         diag.addDiff(diff);
     }
 
+    public void computeInitialBeliefs(){
+        int[] occurrences = new int[nPayoffs];
+        Iterator<Integer> iteratorActions;
+        HashMap<Integer, BeliefQ> beliefQs;
+        Iterator<Long> iteratorStates = states.keySet().iterator();
+        Long code;
+        Integer action;
+        while (iteratorStates.hasNext()){
+            code = iteratorStates.next();
+            beliefQs = states.get(code);
+            iteratorActions = beliefQs.keySet().iterator();
+            while (iteratorActions.hasNext()){
+                action = iteratorActions.next();
+                numberOfCancels[action] += beliefQs.get(action).getnC();
+                occurrences[action]++;
+            }
+        }
+        for (int i = 0; i < nPayoffs; i++){
+            numberOfCancels[i] = (double)(numberOfCancels[i] / Math.max(occurrences[i], 1));
+        }
+    }
 
     // Hash code computed dependent on various Information Size (2, 4, 6, 7, 8)
     public Long HashCode(int P, int q, int x, int[] BookInfo, int [] BS){
@@ -1284,11 +1669,11 @@ System.out.println("problem");
         return TraderCountHFT;
     }
 
-    public static float getTTAX() {
+    public static double getTTAX() {
         return TTAX;
     }
 
-    public static float getCFEE() {
+    public static double getCFEE() {
         return CFEE;
     }
 

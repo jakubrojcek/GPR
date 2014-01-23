@@ -28,8 +28,8 @@ public class SingleCase {
         int nZeroNonHFT = Integer.parseInt(args[3]);                    // # of zero PV slow traders
         int nNegativeNonHFT = Integer.parseInt(args[4]);                // # of negative PV slow traders
         double tif = Double.parseDouble(args[5]);                       // time if force
-        float TTAX = Float.parseFloat(args[6]);                         // transaction tax
-        float CFEE = Float.parseFloat(args[7]);                         // cancellation fee
+        double TTAX = Float.parseFloat(args[6]);                         // transaction tax
+        double CFEE = Float.parseFloat(args[7]);                         // cancellation fee
         float rho = 0.15f;                      // impatience parameter
         int NewNonHFT = nNegativeNonHFT + nPositiveNonHFT + nZeroNonHFT;
         double lambdaArrival = Double.parseDouble(args[8]);             // arrival frequency, same for all
@@ -140,6 +140,27 @@ public class SingleCase {
         FV = RunOutcome[1];
         ReturningHFT = (int) RunOutcome[2];
         ReturningNonHFT = (int) RunOutcome[3];
+
+        if (CFEE != 0.0){               // collect initial beliefs and restart
+            trader.computeInitialBeliefs();
+            nEvents = 100000000;         // number of events
+            write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
+            writeDiagnostics = true;// write diagnostics controls diagnostics
+            writeHistogram = true; // write histogram
+            purge = true;          // purge in this com.jakubrojcek.gpr2005a.SingleRun?
+            nReset = true;         // reset n in this com.jakubrojcek.gpr2005a.SingleRun?
+            trader.setPrTremble(0.017);
+            //trader.setWriteDec(false);
+            trader.setWriteDiag(writeDiagnostics);
+            trader.setWriteHist(writeHistogram);
+            RunOutcome =
+                    sr.run(nEvents, nHFT, NewNonHFT, ReturningHFT, ReturningNonHFT, EventTime, FV,
+                            write, purge, nReset, writeDiagnostics, writeHistogram, convergence);
+            EventTime = RunOutcome[0];
+            FV = RunOutcome[1];
+            ReturningHFT = (int) RunOutcome[2];
+            ReturningNonHFT = (int) RunOutcome[3];
+        }
 
         nEvents = 2000000000;         // number of events
         write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?

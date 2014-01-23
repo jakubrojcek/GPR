@@ -26,8 +26,8 @@ public class History {
     int[] depths;                       // count, lBt, lAt, dBt, dSt
     Vector<Trade> history;
     String folder;
-    float TTAX = 0.0f;
-    float CFEE = 0.0f;
+    double TTAX = 0.0f;
+    double CFEE = 0.0f;
 
     public History(HashMap<Integer, Trader> t, String f){
         traders = t;
@@ -42,7 +42,7 @@ public class History {
         folder = f;
     }
 
-    public History(HashMap<Integer, Trader> t, String f, float tt, float cf){
+    public History(HashMap<Integer, Trader> t, String f, double tt, double cf){
         traders = t;
         Asks = new ArrayList<Integer>();
         Bids = new ArrayList<Integer>();
@@ -61,18 +61,12 @@ public class History {
         int bID = buy.getTraderID();
         int sID = sell.getTraderID();
 
-        if (TTAX != 0.0){
+        if (TTAX != 0.0 || CFEE != 0.0){
             history.add(new Trade(bID, traders.get(bID).getPrivateValue(), traders.get(bID).getIsHFT(),
                     sID, traders.get(sID).getPrivateValue(), traders.get(sID).getIsHFT(),
                     buy.getTimeStamp(), sell.getTimeStamp(),
                     traders.get(bID).getPriceFV(), traders.get(sID).getPriceFV(), timeTrade, price, fv,
-                    traders.get(bID).getTTAX(),  traders.get(sID).getTTAX()));
-        } else if (CFEE != 0.0){
-            history.add(new Trade(bID, traders.get(bID).getPrivateValue(), traders.get(bID).getIsHFT(),
-                    sID, traders.get(sID).getPrivateValue(), traders.get(sID).getIsHFT(),
-                    buy.getTimeStamp(), sell.getTimeStamp(),
-                    traders.get(bID).getPriceFV(), traders.get(sID).getPriceFV(), timeTrade, price, fv,
-                    traders.get(bID).getCancelCount() * CFEE, traders.get(sID).getCancelCount() * CFEE));
+                    traders.get(bID).getCancelCount() * CFEE + TTAX, traders.get(sID).getCancelCount() * CFEE + TTAX));
         } else {
             history.add(new Trade(bID, traders.get(bID).getPrivateValue(), traders.get(bID).getIsHFT(),
                     sID, traders.get(sID).getPrivateValue(), traders.get(sID).getIsHFT(),

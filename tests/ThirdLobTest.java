@@ -52,7 +52,7 @@ public class ThirdLobTest {
         case2.main(params);
         case2 = null;*/
 
-        SingleCase case3 = new SingleCase();
+        /*SingleCase case3 = new SingleCase();
         params[0] = "_3baseCaseHFTsameLambda\\";
         params[1] = "1";            // new HFTs
         params[2] = "2";            // # of positive PV slow traders
@@ -95,9 +95,9 @@ public class ThirdLobTest {
         params[9] = "0.25";         // arrival of changes in FV
         params[10] = "30";          // max depth
         case5.main(params);
-        case5 = null;
+        case5 = null;*/
 
-        SingleCase case6 = new SingleCase();
+        /*SingleCase case6 = new SingleCase();
         params[0] = "_6baseCaseHftTIF1\\";
         params[1] = "1";            // new HFTs
         params[2] = "2";            // # of positive PV slow traders
@@ -125,7 +125,22 @@ public class ThirdLobTest {
         params[9] = "0.125";        // arrival of changes in FV
         params[10] = "30";          // max depth
         case7.main(params);
-        case7 = null;
+        case7 = null;*/
+
+        SingleCase case8 = new SingleCase();
+        params[0] = "_8baseCaseHftCFEE\\";
+        params[1] = "1";            // new HFTs
+        params[2] = "2";            // # of positive PV slow traders
+        params[3]= "4";             // # of zero PV slow traders
+        params[4] = "2";            // # of negative PV slow traders
+        params[5] = "0.0";          // time in force
+        params[6] = "0.0";          // TTAX
+        params[7] = "0.01";         // CFEE
+        params[8] = "0.5";          // lambda of new arrivals
+        params[9] = "0.125";        // arrival of changes in FV
+        params[10] = "30";          // max depth
+        case8.main(params);
+        case8 = null;
 
         SingleCase case9 = new SingleCase();
         params[0] = "_9baseCaseHftTTAX\\";

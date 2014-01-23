@@ -12,10 +12,17 @@ public class BeliefQ implements java.io.Serializable {
     private int ne = 0;               // number of times executed
     private double q;                 // execution probability or Q factor in continuous time
     private double diff;              // difference of new vs old execution probability
+    private double nC = 0.0;          // expected number of cancellations
 
     public BeliefQ(int n, double q) {
         this.n = n;
         this.q = q;
+    }
+
+    public BeliefQ(int n, double q, double nc) {
+        this.n = n;
+        this.q = q;
+        this.nC = nc;
     }
 
     public BeliefQ(int n, int ne, double q, double diff) {
@@ -25,6 +32,8 @@ public class BeliefQ implements java.io.Serializable {
         this.diff = diff;
     }
 
+
+
     public int getN() {
         return n;
     }
@@ -33,12 +42,20 @@ public class BeliefQ implements java.io.Serializable {
         return q;
     }
 
+    public double getnC() {
+        return nC;
+    }
+
     public void setN(int n) {
         this.n = n;
     }
 
     public void setQ(double q) {
         this.q = q;
+    }
+
+    public void setnC(double nc) {
+        this.nC = nc;
     }
 
     public void setDiff(double diff) {

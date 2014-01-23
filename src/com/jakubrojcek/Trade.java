@@ -20,9 +20,9 @@ public class Trade {
     private double FVbeforeBuyer;
     private double FVbeforeSeller;
     private double price;
-    private double FV;              // fundamental value
-    private float trCostsBuyer = 0.0f;    // buyer's transaction costs
-    private float trCostsSeller = 0.0f;   // seller's transaction costs
+    private double FV;                      // fundamental value
+    private double trCostsBuyer = 0.0;      // buyer's transaction costs
+    private double trCostsSeller = 0.0;     // seller's transaction costs
 
     public Trade(int buyerID, double bPV, boolean bHFT, int sellerID, double sPV, boolean sHFT,
                  double timeBuyer, double timeSeller, double FVb, double FVs,
@@ -44,7 +44,7 @@ public class Trade {
 
     public Trade(int buyerID, double bPV, boolean bHFT, int sellerID, double sPV, boolean sHFT,
                  double timeBuyer, double timeSeller, double FVb, double FVs,
-                 double timeTrade, double price, double fv, float tcBuyer, float tcSeller){
+                 double timeTrade, double price, double fv, double tcBuyer, double tcSeller){
         this.buyerID = buyerID;
         this.buyerPV = bPV;
         this.buyerIsHFT = bHFT;
@@ -112,11 +112,11 @@ public class Trade {
         return FVbeforeSeller;
     }
 
-    public float getTrCostsBuyer() {
+    public double getTrCostsBuyer() {
         return trCostsBuyer;
     }
 
-    public float getTrCostsSeller() {
+    public double getTrCostsSeller() {
         return trCostsSeller;
     }
 }
