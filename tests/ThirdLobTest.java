@@ -80,9 +80,9 @@ public class ThirdLobTest {
         params[9] = "0.25";         // arrival of changes in FV
         params[10] = "30";          // max depth
         case4.main(params);
-        case4 = null;
+        case4 = null; */
 
-        SingleCase case5 = new SingleCase();
+        /*SingleCase case5 = new SingleCase();
         params[0] = "_5baseCaseHftHighVol\\";
         params[1] = "1";            // new HFTs
         params[2] = "2";            // # of positive PV slow traders
@@ -127,7 +127,7 @@ public class ThirdLobTest {
         case7.main(params);
         case7 = null;*/
 
-        SingleCase case8 = new SingleCase();
+        /*SingleCase case8 = new SingleCase();
         params[0] = "_8baseCaseHftCFEE\\";
         params[1] = "1";            // new HFTs
         params[2] = "2";            // # of positive PV slow traders
@@ -155,8 +155,22 @@ public class ThirdLobTest {
         params[9] = "0.125";        // arrival of changes in FV
         params[10] = "30";          // max depth
         case9.main(params);
-        case9 = null;
+        case9 = null;*/
 
+        SingleCase case10 = new SingleCase();
+        params[0] = "_8baseCaseHftCFEEnew\\";
+        params[1] = "1";            // new HFTs
+        params[2] = "2";            // # of positive PV slow traders
+        params[3]= "4";             // # of zero PV slow traders
+        params[4] = "2";            // # of negative PV slow traders
+        params[5] = "0.0";          // time in force
+        params[6] = "0.0";          // TTAX
+        params[7] = "0.01";         // CFEE
+        params[8] = "0.5";          // lambda of new arrivals
+        params[9] = "0.125";        // arrival of changes in FV
+        params[10] = "30";          // max depth
+        case10.main(params);
+        case10 = null;
 
         double timeStamp2 = System.currentTimeMillis();
         System.out.println("It took: " + (timeStamp2 - timeStamp1));

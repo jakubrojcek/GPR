@@ -358,7 +358,7 @@ public class SingleCase {
         ReturningHFT = (int) RunOutcome[2];
         ReturningNonHFT = (int) RunOutcome[3];
         // occurrences Beliefs
-        trader.printStatesDensity(EventTime);
+        //trader.printStatesDensity(EventTime);
         int traderCountEnd = trader.getTraderCount();
         int traderCountHFTend = trader.getTraderCountHFT();
         int traderCountNonHFTend = trader.getTraderCountNonHFT();

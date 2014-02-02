@@ -230,7 +230,7 @@ public class Decision {
                         } else if ((ac[t] - e) == (bi[0] - LL)){             // AtBLO
                             counts[156]++;
                         } else if ((ac[t] - e) > (bi[0] - LL)){            // AggBLO
-                            counts[154]++;
+                            counts[155]++;
                         }
                     }
                 }

@@ -22,18 +22,18 @@ import com.jakubrojcek.*;
  * class trader serves as (i) parameter container for individual traders (ii) individual trader object
  */
 public class Trader {
-    private int traderID; // initialized
-    private float privateValue; // initialized, can be changed to double later on
-    private int pv; // holder for private value 0(0), 1(negative), 2(positive)
-    private boolean isHFT; // initialized
-    private boolean isTraded = false; // set by TransactionRule in book
+    private int traderID;               // initialized
+    private float privateValue;         // initialized, can be changed to double later on
+    private int pv;                     // holder for private value 0(0), 1(negative), 2(positive)
+    private boolean isHFT;              // initialized
+    private boolean isTraded = false;   // set by TransactionRule in book
     private boolean isReturning = false;// is he returning this time? info from priorities
-    private float rho = 0.15f; // trading "impatience" parameter
-    private double PriceFV; // current fundamental value-> price at middle position
-    private double EventTime = 0.0; // event time
-    private BeliefQ belief; // reference to an old Belief, to be updated
-    private Order order = null; // reference to an old Order, to update the old Belief
-    private short cancelCount = 0;
+    private float rho = 0.15f;          // trading "impatience" parameter
+    private double PriceFV;             // current fundamental value-> price at middle position
+    private double EventTime = 0.0;     // event time
+    private BeliefQ belief;             // reference to an old Belief, to be updated
+    private Order order = null;         // reference to an old Order, to update the old Belief
+    private short cancelCount = 0;      // how many times cancelled
 
     static int TraderCount = 0;         // counting number of traders, gives traderID as well
     static int TraderCountHFT = 0;      // counting HFT traders
@@ -89,8 +89,8 @@ public class Trader {
     static boolean fixedBeliefs = false;        // when true, doesn't update, holds beliefs fixed
     static boolean similar = false;             // looks for similar state|action if action not in current state
     static boolean symm = false;                // uses/updates/stores seller's beliefs for buyer
-    static double CFEE = 0.0f;                   // cancellation fee
-    static double TTAX = 0.0f;                   // transaction tax
+    static double CFEE = 0.0;                   // cancellation fee
+    static double TTAX = 0.0;                   // transaction tax
 
 
     // constructor bool, bool, float, int
@@ -797,10 +797,10 @@ public class Trader {
                     alpha * Math.exp( - rho * (et - EventTime)) * payoff);
             if (CFEE != 0.0){
                 double previousNC = belief.getnC();
-                belief.setnC((1.0 - alpha) * previousNC +
-                        alpha * Math.exp(-rho * (et - EventTime)) * cancelCount);   
+                belief.setnC((1.0 - alpha) * previousNC);   // executed before cancelled, i.e. cancelled is zero
          }
             if (writeDiagnostics){writeDiagnostics(belief.getQ() - previousQ);}
+            //if (writeDiagnostics){writeDiagnostics(belief.getnC() - previousNC);}
         }
         isTraded = true;
         order = null;
@@ -1027,6 +1027,7 @@ public class Trader {
     }
     private void writeDiagnostics(double diff){
         diag.addDiff(diff);
+        if (CFEE != 0.0){diag.addCancelCount(cancelCount, pv, isHFT);}
     }
 
     public void computeInitialBeliefs(){
@@ -1384,6 +1385,18 @@ System.out.println("problem");
         catch (Exception e){
             e.printStackTrace();
             System.exit(1);
+        }
+        if (CFEE != 0.0){
+            try{
+                String outputFileName = folder + "diagnostics3.csv";
+                FileWriter writer = new FileWriter(outputFileName, true);
+                writer.write(diag.printDiagnostics("cancellations"));
+                writer.close();
+            }
+            catch (Exception e){
+                e.printStackTrace();
+                System.exit(1);
+            }
         }
     }
 
