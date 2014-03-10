@@ -30,13 +30,15 @@ public class SingleCase {
         double tif = Double.parseDouble(args[5]);                       // time if force
         double TTAX = Float.parseFloat(args[6]);                         // transaction tax
         double CFEE = Float.parseFloat(args[7]);                         // cancellation fee
+        double MFEE = Float.parseFloat(args[8]);                         // LO make fee
+        double TFEE = Float.parseFloat(args[9]);                         // MO take fee
         float rho = 0.15f;                      // impatience parameter
         int NewNonHFT = nNegativeNonHFT + nPositiveNonHFT + nZeroNonHFT;
-        double lambdaArrival = Double.parseDouble(args[8]);             // arrival frequency, same for all
-        double lambdaFV = Double.parseDouble(args[9]);                  // frequency of FV changes
+        double lambdaArrival = Double.parseDouble(args[10]);             // arrival frequency, same for all
+        double lambdaFV = Double.parseDouble(args[11]);                  // frequency of FV changes
         double ReturnFrequencyHFT = 5;          // returning frequency of HFT
         double ReturnFrequencyNonHFT = 0.25;     // returning frequency of NonHFT
-        int maxDepth = Integer.parseInt(args[10]);// 0 to 7 which matter
+        int maxDepth = Integer.parseInt(args[12]);// 0 to 7 which matter
         int FVpos = nP/2;                          // position of the fundamental value
         int HL = FVpos + 3; //                  // Lowest  allowed limit order price.  LL + HL = nP-1 for allowed orders centered around E(v)
         int LL = FVpos - 3; //                  // Highest allowed limit order price
@@ -57,6 +59,8 @@ public class SingleCase {
         double  [] FprivateValues = {- 2 * PVsigma * tickSize, - PVsigma * tickSize, 0,
                 PVsigma * tickSize, 2 * PVsigma * tickSize};// distribution over private values
         double [] PVdistrb = {.15, .35, .65, .85, 1.0};
+        //double [] PVdistrb = {.134, .311, .689, .866, 1.0};
+        //double [] PVdistrb = {.0, .0, 1.0, 1.0, 1.0};
         /*double [] PVdistrb = new double[3];
         PVdistrb[0] = (double)nNegativeNonHFT / NewNonHFT;
         PVdistrb[1] = PVdistrb[0] + (double) nZeroNonHFT / NewNonHFT;
@@ -105,11 +109,11 @@ public class SingleCase {
             }      // computing taus
         }
         HashMap<Integer, Trader> traders = new HashMap<Integer, Trader>(); //trader ID, trader object
-        History h = new History(traders, folder, TTAX, CFEE); // create history
+        History h = new History(traders, folder, TTAX, CFEE, MFEE, TFEE); // create history
         LOB_LinkedHashMap book = new LOB_LinkedHashMap(model, FV, FVpos, maxDepth, end, tickSize, nP, h, traders);
         Trader trader = new Trader(infoSize, tauB, tauS, nP, FVpos, tickSize, ReturnFrequencyHFT,
                 ReturnFrequencyNonHFT, LL, HL, end, maxDepth, breakPoint, hti, prTremble, folder, book, FprivateValues,
-                rho, TTAX, CFEE);
+                rho, TTAX, CFEE, MFEE, TFEE);
         book.makeBook(Prices);
         SingleRun sr = new SingleRun(model, tif, lambdaArrival, lambdaFV, ReturnFrequencyHFT, ReturnFrequencyNonHFT,
                 FprivateValues, PVdistrb, sigma, tickSize, FVplus, header, book, traders, h, trader, outputNameStatsData,

@@ -19,7 +19,7 @@ import java.util.*;
 public class ThirdLobTest {
     public static void main(String[] args) {
         double timeStamp1 = System.currentTimeMillis();
-        String[] params = new String[11];
+        String[] params = new String[13];
 
         /*SingleCase case1 = new SingleCase();
         params[0] = "_1baseCase\\";   // folder
@@ -157,7 +157,7 @@ public class ThirdLobTest {
         case9.main(params);
         case9 = null;*/
 
-        SingleCase case10 = new SingleCase();
+        /*SingleCase case10 = new SingleCase();
         params[0] = "_8baseCaseHftCFEEnew\\";
         params[1] = "1";            // new HFTs
         params[2] = "2";            // # of positive PV slow traders
@@ -170,9 +170,163 @@ public class ThirdLobTest {
         params[9] = "0.125";        // arrival of changes in FV
         params[10] = "30";          // max depth
         case10.main(params);
-        case10 = null;
+        case10 = null;*//*SingleCase case10 = new SingleCase();
+        params[0] = "_8baseCaseHftCFEEnew\\";
+        params[1] = "1";            // new HFTs
+        params[2] = "2";            // # of positive PV slow traders
+        params[3]= "4";             // # of zero PV slow traders
+        params[4] = "2";            // # of negative PV slow traders
+        params[5] = "0.0";          // time in force
+        params[6] = "0.0";          // TTAX
+        params[7] = "0.01";         // CFEE
+        params[8] = "0.5";          // lambda of new arrivals
+        params[9] = "0.125";        // arrival of changes in FV
+        params[10] = "30";          // max depth
+        case10.main(params);
+        case10 = null;*/
+
+        /*SingleCase case11 = new SingleCase();
+        params[0] = "_8baseCaseHftCFEElow\\";
+        params[1] = "1";            // new HFTs
+        params[2] = "2";            // # of positive PV slow traders
+        params[3]= "4";             // # of zero PV slow traders
+        params[4] = "2";            // # of negative PV slow traders
+        params[5] = "0.0";          // time in force
+        params[6] = "0.0";          // TTAX
+        params[7] = "0.00375";         // CFEE
+        params[8] = "0.5";          // lambda of new arrivals
+        params[9] = "0.125";        // arrival of changes in FV
+        params[10] = "30";          // max depth
+        case11.main(params);
+        case11 = null;*/
+
+        /*SingleCase case12 = new SingleCase();
+        params[0] = "_11trial\\";
+        params[1] = "1";            // new HFTs
+        params[2] = "2";            // # of positive PV slow traders
+        params[3]= "4";             // # of zero PV slow traders
+        params[4] = "2";            // # of negative PV slow traders
+        params[5] = "0.0";          // time in force
+        params[6] = "0.0";          // TTAX
+        params[7] = "0.0";          // CFEE
+        params[8] = "0.5";          // lambda of new arrivals
+        params[9] = "0.125";        // arrival of changes in FV
+        params[10] = "30";          // max depth
+        case12.main(params);
+        case12 = null;*/
+
+        /*SingleCase case13 = new SingleCase();
+        params[0] = "_12baseCaseHighActivity\\";
+        params[1] = "0";            // new HFTs
+        params[2] = "4";            // # of positive PV slow traders
+        params[3]= "8";             // # of zero PV slow traders
+        params[4] = "4";            // # of negative PV slow traders
+        params[5] = "0.0";          // time in force
+        params[6] = "0.0";          // TTAX
+        params[7] = "0.0";          // CFEE
+        params[8] = "0.5";          // lambda of new arrivals
+        params[9] = "0.125";        // arrival of changes in FV
+        params[10] = "30";          // max depth
+        case13.main(params);
+        case13 = null;*/
+
+        /*SingleCase case13 = new SingleCase();
+        params[0] = "_13baseCaseMoreSlow\\";
+        params[1] = "0";            // new HFTs
+        params[2] = "2";            // # of positive PV slow traders
+        params[3]= "5";             // # of zero PV slow traders
+        params[4] = "2";            // # of negative PV slow traders
+        params[5] = "0.0";          // time in force
+        params[6] = "0.0";          // TTAX
+        params[7] = "0.0";          // CFEE
+        params[8] = "0.5";          // lambda of new arrivals
+        params[9] = "0.125";        // arrival of changes in FV
+        params[10] = "30";          // max depth
+        case13.main(params);
+        case13 = null;*/
+
+        /*SingleCase case14 = new SingleCase();
+        params[0] = "_14baseCaseMoreSlowSpec\\";
+        params[1] = "0";            // new HFTs
+        params[2] = "2";            // # of positive PV slow traders
+        params[3]= "5";             // # of zero PV slow traders
+        params[4] = "2";            // # of negative PV slow traders
+        params[5] = "0.0";          // time in force
+        params[6] = "0.0";          // TTAX
+        params[7] = "0.0";          // CFEE
+        params[8] = "0.5";          // lambda of new arrivals
+        params[9] = "0.125";        // arrival of changes in FV
+        params[10] = "30";          // max depth
+        case14.main(params);
+        case14 = null;*/
+
+        /*SingleCase case15 = new SingleCase();
+        params[0] = "_15baseCaseHFT50a\\";
+        params[1] = "8";            // new HFTs
+        params[2] = "2";            // # of positive PV slow traders
+        params[3]= "4";             // # of zero PV slow traders
+        params[4] = "2";            // # of negative PV slow traders
+        params[5] = "0.0";          // time in force
+        params[6] = "0.0";          // TTAX
+        params[7] = "0.0";          // CFEE
+        params[8] = "0.5";          // lambda of new arrivals
+        params[9] = "0.125";        // arrival of changes in FV
+        params[10] = "30";          // max depth
+        case15.main(params);
+        case15 = null;*/
+
+        /*SingleCase case16 = new SingleCase();
+        params[0] = "_16baseCaseHFT50aHighVol\\";
+        params[1] = "8";            // new HFTs
+        params[2] = "2";            // # of positive PV slow traders
+        params[3]= "4";             // # of zero PV slow traders
+        params[4] = "2";            // # of negative PV slow traders
+        params[5] = "0.0";          // time in force
+        params[6] = "0.0";          // TTAX
+        params[7] = "0.0";          // CFEE
+        params[8] = "0.5";          // lambda of new arrivals
+        params[9] = "0.25";        // arrival of changes in FV
+        params[10] = "30";          // max depth
+        case16.main(params);
+        case16 = null;*/
+
+        /*SingleCase case18 = new SingleCase();
+        params[0] = "_18baseCaseMTd\\";
+        params[1] = "0";            // new HFTs
+        params[2] = "2";            // # of positive PV slow traders
+        params[3]= "4";             // # of zero PV slow traders
+        params[4] = "2";            // # of negative PV slow traders
+        params[5] = "0.0";          // time in force
+        params[6] = "0.0";          // TTAX
+        params[7] = "0.0";          // CFEE
+        params[8] = "0.01";          // LO make fee
+        params[9] = "0.01";          // MO take fee
+        params[10] = "0.5";         // lambda of new arrivals
+        params[11] = "0.125";       // arrival of changes in FV
+        params[12] = "30";          // max depth
+        case18.main(params);
+        case18 = null;*/
+
+        SingleCase case18 = new SingleCase();
+        params[0] = "TIF2\\";
+        params[1] = "1";            // new HFTs
+        params[2] = "1";            // # of positive PV slow traders
+        params[3]= "1";             // # of zero PV slow traders
+        params[4] = "1";            // # of negative PV slow traders
+        params[5] = "0.2";          // time in force
+        params[6] = "0.0";          // TTAX
+        params[7] = "0.0";          // CFEE
+        params[8] = "0.0";          // LO make fee
+        params[9] = "0.0";          // MO take fee
+        params[10] = "0.1";         // lambda of new arrivals
+        params[11] = "0.125";       // arrival of changes in FV
+        params[12] = "30";          // max depth
+        case18.main(params);
+        case18 = null;
 
         double timeStamp2 = System.currentTimeMillis();
         System.out.println("It took: " + (timeStamp2 - timeStamp1));
+
+
     }
 }

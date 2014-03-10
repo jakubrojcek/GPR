@@ -28,6 +28,8 @@ public class History {
     String folder;
     double TTAX = 0.0f;
     double CFEE = 0.0f;
+    double MFEE = 0.0f;
+    double TFEE = 0.0f;
 
     public History(HashMap<Integer, Trader> t, String f){
         traders = t;
@@ -42,7 +44,7 @@ public class History {
         folder = f;
     }
 
-    public History(HashMap<Integer, Trader> t, String f, double tt, double cf){
+    public History(HashMap<Integer, Trader> t, String f, double tt, double cf, double mf, double tf){
         traders = t;
         Asks = new ArrayList<Integer>();
         Bids = new ArrayList<Integer>();
@@ -55,6 +57,8 @@ public class History {
         folder = f;
         TTAX = tt;
         CFEE = cf;
+        MFEE = mf;
+        TFEE = tf;
     }
     
     public void addTrade(Order buy, Order sell, double timeTrade, double price, double fv){
@@ -67,6 +71,22 @@ public class History {
                     buy.getTimeStamp(), sell.getTimeStamp(),
                     traders.get(bID).getPriceFV(), traders.get(sID).getPriceFV(), timeTrade, price, fv,
                     traders.get(bID).getCancelCount() * CFEE + TTAX, traders.get(sID).getCancelCount() * CFEE + TTAX));
+        } else if (MFEE != 0.0){
+            if (buy.getTimeStamp() < sell.getTimeStamp()){   // sell MO
+                history.add(new Trade(bID, traders.get(bID).getPrivateValue(), traders.get(bID).getIsHFT(),
+                        sID, traders.get(sID).getPrivateValue(), traders.get(sID).getIsHFT(),
+                        buy.getTimeStamp(), sell.getTimeStamp(),
+                        traders.get(bID).getPriceFV(), traders.get(sID).getPriceFV(), timeTrade, price, fv,
+                        traders.get(bID).getCancelCount() * CFEE + TTAX - MFEE,
+                        traders.get(sID).getCancelCount() * CFEE + TTAX + TFEE));
+            } else {                                        // buy MO
+                history.add(new Trade(bID, traders.get(bID).getPrivateValue(), traders.get(bID).getIsHFT(),
+                        sID, traders.get(sID).getPrivateValue(), traders.get(sID).getIsHFT(),
+                        buy.getTimeStamp(), sell.getTimeStamp(),
+                        traders.get(bID).getPriceFV(), traders.get(sID).getPriceFV(), timeTrade, price, fv,
+                        traders.get(bID).getCancelCount() * CFEE + TTAX + TFEE,
+                        traders.get(sID).getCancelCount() * CFEE + TTAX - MFEE));
+            }
         } else {
             history.add(new Trade(bID, traders.get(bID).getPrivateValue(), traders.get(bID).getIsHFT(),
                     sID, traders.get(sID).getPrivateValue(), traders.get(sID).getIsHFT(),

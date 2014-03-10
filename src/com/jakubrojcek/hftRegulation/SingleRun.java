@@ -121,6 +121,7 @@ public class SingleRun {
                         ID = waitingTraders.remove(waitingTraders.firstKey());
                         if (traders.containsKey(ID)){
                             boolean isHFT = traders.get(ID).getIsHFT();
+                            // TODO: collect traders statistics here
                             ArrayList<Order> orders = traders.get(ID).decision(book.getBookSizes(), book.getBookInfo(), EventTime, FV);
                             if (!orders.isEmpty()){
                                 Integer IDr = book.transactionRule(ID , orders);
