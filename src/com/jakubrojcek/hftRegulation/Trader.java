@@ -660,7 +660,7 @@ public class Trader {
                             double previousDiff = belief.getDiff();
                             belief.setDiff((1.0 - alpha) * previousDiff +
                                     alpha * Math.exp( - rho * (et - EventTime)) * max);
-                            updatedTraders.add(traderID);
+                            updatedTraders.add(traderID);                   // one-step ahead stored
                         }
                     } else {
                         if(belief.getN() < nResetMax) {
@@ -1404,6 +1404,32 @@ System.out.println("problem");
         }
     }
 
+    // prints diagnostics collected from data in SingleRun about populations and waiting counts
+    public void printTif(HashMap times, HashMap counts, HashMap pop){
+        try{
+            String outputFileName = folder + "tif.csv";
+            FileWriter writer = new FileWriter(outputFileName, true);
+            String s = new String();
+            for (int i = 0; i < 6; i++){
+                s = s + counts.get(i) + ";";
+            }
+            for (int i = 0; i < 6; i++){
+                s = s + times.get(i) + ";";
+            }
+            for (int i = 0; i < 6; i++){
+                s = s + pop.get(i) + ";";
+            }
+            s = s + "\r";
+            writer.write(s);
+            writer.close();
+        }
+        catch (Exception e){
+            e.printStackTrace();
+            System.exit(1);
+        }
+    }
+
+
     public double printConvergence(int t2, String convergenceType, boolean write){
         if (convergenceType != "convergenceSecond.csv"){
             return 0.0;                                     // right now, I don't need first convergence
@@ -1698,7 +1724,7 @@ System.out.println("problem");
         return cancelCount;
     }
 
-    public int getPv(){return pv;}
+    public int getPv(){ return pv; }
 
     // setters
     public void setIsTraded(boolean traded){

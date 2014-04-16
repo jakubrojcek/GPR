@@ -32,13 +32,13 @@ public class SingleCase {
         double CFEE = Float.parseFloat(args[7]);                         // cancellation fee
         double MFEE = Float.parseFloat(args[8]);                         // LO make fee
         double TFEE = Float.parseFloat(args[9]);                         // MO take fee
-        float rho = 0.15f;                      // impatience parameter
+        float rho = Float.parseFloat(args[11]);                         // impatience parameter
         int NewNonHFT = nNegativeNonHFT + nPositiveNonHFT + nZeroNonHFT;
         double lambdaArrival = Double.parseDouble(args[10]);             // arrival frequency, same for all
-        double lambdaFV = Double.parseDouble(args[11]);                  // frequency of FV changes
+        double lambdaFV = Double.parseDouble(args[12]);                  // frequency of FV changes
         double ReturnFrequencyHFT = 5;          // returning frequency of HFT
         double ReturnFrequencyNonHFT = 0.25;     // returning frequency of NonHFT
-        int maxDepth = Integer.parseInt(args[12]);// 0 to 7 which matter
+        int maxDepth = Integer.parseInt(args[13]);// 0 to 7 which matter
         int FVpos = nP/2;                          // position of the fundamental value
         int HL = FVpos + 3; //                  // Lowest  allowed limit order price.  LL + HL = nP-1 for allowed orders centered around E(v)
         int LL = FVpos - 3; //                  // Highest allowed limit order price
@@ -339,7 +339,7 @@ public class SingleCase {
         int traderCountStart = trader.getTraderCount();
         int traderCountHFTstart = trader.getTraderCountHFT();
         int traderCountNonHFTstart = trader.getTraderCountNonHFT();
-        nEvents = 1000000000;         // number of events
+        nEvents = 20000000;         // number of events
         write = true;          // writeDecisions output in this SingleRun?
         writeDiagnostics = true;// write diagnostics controls diagnostics
         writeHistogram = true; // write histogram
@@ -392,6 +392,9 @@ public class SingleCase {
             writer.write("newHFTtrades:" + ";" + (traderCountHFTend - traderCountHFTstart) + ";" + "\r");
             writer.write("newNonHFTtrades:" + ";" + (traderCountNonHFTend - traderCountNonHFTstart) + ";" + "\r");
             writer.write("timeElapsed:" + ";" + (timeStamp2 - timeStamp1) + ";" + "\r");
+            writer.write("MFEE:" + ";" + MFEE + ";" + "\r");
+            writer.write("TFEE:" + ";" + TFEE + ";" + "\r");
+            writer.write("rho:" + ";" + rho + ";" + "\r");
             writer.close();
         }
         catch (Exception e){

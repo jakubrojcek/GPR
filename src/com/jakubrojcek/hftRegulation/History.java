@@ -122,11 +122,12 @@ public class History {
             String outputFileName = folder + fileNameTransactions;
             FileWriter writer = new FileWriter(outputFileName, true);
             if (writeHeader){
-                writer.write("buyerID;buyerPV;buyerIsHFT;sellerID;sellerPV;sellerIsHFT;timeBuyer;timeSeller;timeTrade;price;FV;" + "\r");
+                writer.write("moHFT;mo;loHFT;lo;tradeTime;FV;Price;buyerPV;sellerPV;buyMO;buyerCosts;sellerCosts;timeLO;" + "\r");
             }
             int sz = history.size();
             double mo;                               // payoff from market order
             double lo;                               // payoff from limit order
+            double loTime;                           // time of limit order submission
             int moHFT;                               // is the MO submitter HFT
             int loHFT;                               // is the LO submitter HFT
             int buyMO;
@@ -138,18 +139,20 @@ public class History {
                     lo = t.getFV() + t.getBuyerPV() - t.getPrice();
                     loHFT = t.isBuyerIsHFT() ? 1 : 0;
                     buyMO = 0;                                      // seller initiated order
+                    loTime = t.getTimeBuyer();
                 } else {
                     mo = t.getFV() + t.getBuyerPV() - t.getPrice();
                     moHFT = t.isBuyerIsHFT() ? 1 : 0;
                     lo = t.getPrice() - t.getSellerPV() - t.getFV();
                     loHFT = t.isSellerIsHFT() ? 1 : 0;
                     buyMO = 1;                                      // buyer initiated order
+                    loTime = t.getTimeSeller();
                 }
                 //writer.writeDecisions(history.get(i).printTrade());
                 writer.write(moHFT + ";" + mo + ";" + loHFT + ";" + lo + ";"  + t.getTimeTrade() +  ";"
                         + t.getFV() + ";" + t.getPrice() + ";" + t.getBuyerPV() + ";" +
                         t.getSellerPV() + ";" + buyMO + ";"
-                        + t.getTrCostsBuyer() + ";" + t.getTrCostsSeller() + ";" +  "\r");
+                        + t.getTrCostsBuyer() + ";" + t.getTrCostsSeller() + ";" + loTime + ";" +  "\r");
             }
             writer.close();
         }

@@ -1,10 +1,8 @@
 package com.jakubrojcek.hftRegulation;
 
 import com.jakubrojcek.Order;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.SortedSet;
-import java.util.TreeMap;
+
+import java.util.*;
 
 /**
  * Created with IntelliJ IDEA.
@@ -23,6 +21,11 @@ import java.util.TreeMap;
 public class SingleRun {
 
     String model;
+
+    HashMap<Integer, Integer> tifCounts = new HashMap<Integer, Integer>(6);     // 5- HFT, rest 0, 1, etc is according to trader.getPv
+    HashMap<Integer, Double> tifTimes = new HashMap<Integer, Double>(6);
+    HashMap<Integer, Integer> population = new HashMap<Integer, Integer>(6);
+
 
     double lambdaArrival;
     double lambdaFVchange;
@@ -63,6 +66,11 @@ public class SingleRun {
                      double [] FprivateValues, double[] PVdist, double sigma, float tickSize, double FVplus, boolean head,
                      LOB_LinkedHashMap b, HashMap<Integer, Trader> ts, History his, Trader TR, String stats,
                      String trans, String bookd){
+        for (int i = 0; i < 6; i++){
+            tifCounts.put(i, 0);
+            tifTimes.put(i,0.0);
+            population.put(i, 0);
+        }
         this.model = m;
         this.tif = t;
         this.lambdaArrival = lambdaArrival;
@@ -117,45 +125,58 @@ public class SingleRun {
                 // number of all agents to trade
                 if (!waitingTraders.isEmpty() && (EventTime > waitingTraders.firstKey())){
                     Integer ID;
-                    while (!waitingTraders.isEmpty() && EventTime > waitingTraders.firstKey()){
-                        ID = waitingTraders.remove(waitingTraders.firstKey());
-                        if (traders.containsKey(ID)){
-                            boolean isHFT = traders.get(ID).getIsHFT();
-                            // TODO: collect traders statistics here
-                            ArrayList<Order> orders = traders.get(ID).decision(book.getBookSizes(), book.getBookInfo(), EventTime, FV);
-                            if (!orders.isEmpty()){
-                                Integer IDr = book.transactionRule(ID , orders);
-                                if (ID.equals(IDr)) { // executed against fringe, remove ID trader
-                                    traders.remove(ID);
-                                    if (isHFT){
-                                        ReturningHFT--;
-                                        traderIDsHFT.remove(ID);
-                                    } else {
-                                        ReturningNonHFT--;
-                                        traderIDsNonHFT.remove(ID);
-                                    }
-                                } else if (IDr != null){ // returning trader has executed, remove him and the counterparty as well
-                                    if (isHFT){
-                                        ReturningHFT--;
-                                        traderIDsHFT.remove(ID);
-                                    } else {
-                                        ReturningNonHFT--;
-                                        traderIDsNonHFT.remove(ID);
-                                    }
-                                    if (traders.get(IDr).getIsHFT()){
-                                        ReturningHFT--;
-                                        traderIDsHFT.remove(IDr);
-                                    } else {
-                                        ReturningNonHFT--;
-                                        traderIDsNonHFT.remove(IDr);
-                                    }
-                                    traders.remove(ID);
-                                    traders.remove(IDr);
+                    //while (!waitingTraders.isEmpty() && EventTime > waitingTraders.firstKey()){
+                    EventTime = waitingTraders.firstKey();   // TODO: remove afterwards
+                    ID = waitingTraders.remove(waitingTraders.firstKey());
+                    if (traders.containsKey(ID)){
+                        boolean isHFT = traders.get(ID).getIsHFT();
+                        /*if (isHFT){
+                            int x = tifCounts.get(5);
+                            tifCounts.put(5, x + 1);
+                            double y = tifTimes.get(5);
+                            tifTimes.put(5, y + tif);
+                        } else {
+                            int pv = traders.get(ID).getPv();
+                            int x = tifCounts.get(pv);
+                            tifCounts.put(pv, x + 1);
+                            double y = tifTimes.get(pv);
+                            tifTimes.put(pv, y + tif);
+                        }*/
+                        // TODO: collect traders statistics here na remove afterwards
+                        ArrayList<Order> orders = traders.get(ID).decision(book.getBookSizes(), book.getBookInfo(), EventTime, FV);
+                        if (!orders.isEmpty()){
+                            Integer IDr = book.transactionRule(ID , orders);
+                            if (ID.equals(IDr)) { // executed against fringe, remove ID trader
+                                traders.remove(ID);
+                                if (isHFT){
+                                    ReturningHFT--;
+                                    traderIDsHFT.remove(ID);
+                                } else {
+                                    ReturningNonHFT--;
+                                    traderIDsNonHFT.remove(ID);
                                 }
+                            } else if (IDr != null){ // returning trader has executed, remove him and the counterparty as well
+                                if (isHFT){
+                                    ReturningHFT--;
+                                    traderIDsHFT.remove(ID);
+                                } else {
+                                    ReturningNonHFT--;
+                                    traderIDsNonHFT.remove(ID);
+                                }
+                                if (traders.get(IDr).getIsHFT()){
+                                    ReturningHFT--;
+                                    traderIDsHFT.remove(IDr);
+                                } else {
+                                    ReturningNonHFT--;
+                                    traderIDsNonHFT.remove(IDr);
+                                }
+                                traders.remove(ID);
+                                traders.remove(IDr);
                             }
-                            break;
                         }
+                        //break;
                     }
+                    //}
                 } else {
                     prob1 = (double) (nHFT) * lambdaArrival / Lambda;
                     prob2 = (double) (NewNonHFT) * lambdaArrival / Lambda;
@@ -176,7 +197,6 @@ public class SingleRun {
                     Trader tr;
                     Integer ID;
                     double FVrealization;
-                    boolean removed = true;
                     if (rn < x1){ // New arrival HFT
                         tr = new Trader(true, 0.0f);
                         ID = tr.getTraderID();
@@ -250,6 +270,10 @@ public class SingleRun {
                         if (traders.get(ID).getOrder() != null &&
                                 ((EventTime - traders.get(ID).getOrder().getTimeStamp()) < tif)){
                             waitingTraders.put(traders.get(ID).getOrder().getTimeStamp() + tif, ID);
+                            /*int x = tifCounts.get(5);     // TODO: delete these four lines afterwards
+                            tifCounts.put(5, x + 1);
+                            double y = tifTimes.get(5);
+                            tifTimes.put(5, y + EventTime - traders.get(ID).getOrder().getTimeStamp());*/
                         } else {
                             ArrayList<Order> orders = traders.get(ID).decision(book.getBookSizes(), book.getBookInfo(), EventTime, FV);
                             if (!orders.isEmpty()){
@@ -278,6 +302,11 @@ public class SingleRun {
                         if (traders.get(ID).getOrder() != null &&
                                 ((EventTime - traders.get(ID).getOrder().getTimeStamp()) < tif)){
                             waitingTraders.put(traders.get(ID).getOrder().getTimeStamp() + tif, ID);
+                            /*int pv = traders.get(ID).getPv();  // TODO: remove this five lines afterwards
+                            int x = tifCounts.get(pv);
+                            tifCounts.put(pv, x + 1);
+                            double y = tifTimes.get(pv);
+                            tifTimes.put(pv, y + EventTime - traders.get(ID).getOrder().getTimeStamp());*/
                         } else {
                             ArrayList<Order> orders = traders.get(ID).decision(book.getBookSizes(), book.getBookInfo(), EventTime, FV);
                             if (!orders.isEmpty()){
@@ -357,6 +386,35 @@ public class SingleRun {
             h.printBookData(header, outputNameBookData);
             trader.printDecisions();
             trader.resetDecisionHistory();
+            Iterator keys = waitingTraders.values().iterator();         // counting guys in the waiting queue
+            Integer key;
+            while (keys.hasNext()){
+                key = (Integer) keys.next();
+                if (traders.containsKey(key)){
+                    if (traders.get(key).getIsHFT()){
+                        int x = tifCounts.get(5);
+                        tifCounts.put(5, x + 1);
+                    } else {
+                        int pv = traders.get(key).getPv();
+                        int x = tifCounts.get(pv);
+                        tifCounts.put(pv, x + 1);
+                    }
+                }
+            }
+            population.put(5, ReturningHFT);
+            keys = traderIDsNonHFT.iterator();
+            while (keys.hasNext()){
+                key = (Integer) keys.next();
+                int pv = traders.get(key).getPv();
+                int x = population.get(pv);
+                population.put(pv, x + 1);
+            }
+            trader.printTif(tifTimes, tifCounts, population);   // TODO: delete afterwards
+            for (int j = 0; j < 6; j++){
+                tifCounts.put(j, 0);
+                tifTimes.put(j, 0.0);
+                population.put(j, 0);
+            }
         }
         h.printStatisticsData(header, outputNameStatsData);
         h.resetHistory();

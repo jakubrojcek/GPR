@@ -526,26 +526,26 @@ public class Decision {
 
     public void addDecisionLiquidity(int ac, boolean hft, boolean cancelled){
         if (hft){
-            if (ac < (2 * e)){
+            if (ac < (2 * e)){              // LO
                 countsLiquidity[4]++;
-            } else if (ac == (2 * e + 2)){
+            } else if (ac == (2 * e + 2)){  // NO
                 countsLiquidity[5]++;
             } else {
-                countsLiquidity[3]++;
+                countsLiquidity[3]++;       // MO
             }
             if (cancelled){
-                countsLiquidity[7]++;
+                countsLiquidity[7]++;       // cancellation
             }
         } else {
-            if (ac < (2 * e)){
+            if (ac < (2 * e)){              // LO
                 countsLiquidity[1]++;
             } else if (ac == (2 * e + 2)){
-                countsLiquidity[2]++;
+                countsLiquidity[2]++;       // NO
             } else {
-                countsLiquidity[0]++;
+                countsLiquidity[0]++;       // MO
             }
             if (cancelled){
-                countsLiquidity[6]++;
+                countsLiquidity[6]++;       // cancellation
             }
         }
     }
