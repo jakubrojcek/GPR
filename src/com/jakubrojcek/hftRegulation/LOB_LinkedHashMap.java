@@ -159,8 +159,8 @@ public class LOB_LinkedHashMap {
 
         int Bt; // best bid position in Prices
         int At; // best ask position in Prices
-        int Db = 0; // depth buys
-        int Ds = 0; // depth sells
+        int Db = 0; // depth off best buy
+        int Ds = 0; // depth off best sell
 
 
         int j = 0;

@@ -752,7 +752,7 @@ public class Trader {
             isTraded = true; // isTraded set to true if submitting MOs
         }
         isReturning = true;
-        if (writeDecisions){writeDecision(BookInfo, BookSizes, (short)action, cancelled);} // printing data for output tables
+        if (writeDecisions){writeDecision(BookInfo, (short)action, cancelled);} // printing data for output tables
         if (writeHistogram){writeHistogram(BookSizes);}
         if (writeDiagnostics){writeDiagnostics((short)action);}
 
@@ -881,10 +881,80 @@ public class Trader {
         //double similarBelief = -1.0;                    // similar belief, initialized to equal standard -1 in the max choosing for loop
         int i = 13;                                     // number of possible
         //while (similarBelief == -1.0 && i > 0) {
-        while ((states.get(code2) == null || states.get(code2).get(ac) == null) && i > 0) { // TODO: test
-            if (i == 13 && bi[5] < 2 * maxDepth - 1){       // depth off ask
+        while ((states.get(code2) == null || states.get(code2).get(ac) == null) && i > 0) {
+            switch (i) {
+                case 13:
+                    if (bi[5] < 2 * maxDepth - 1){       // depth off ask
+                        code2 = code1b + (1<<19);
+                    }
+                    break;
+                case 12:
+                    if (bi[4] < 2 * maxDepth - 1){ // depth off bid is bigger than 1
+                        code2 = code1b + (1<<23);
+                    }
+                    break;
+                case 11:
+                    if (bi[5] >= 3){              // depth off ask is bigger than 3
+                        code2 = code1b - (1<<19);
+                    }
+                    break;
+                case 10:
+                    if (bi[4] >= 3){              // depth off bid is bigger than 3
+                        code2 = code1b - (1<<23);
+                    }
+                    break;
+                case 9:
+                    if (priority >= 1){            // priority of past own action is higher than 0
+                        code2 = code1b - (1<<6);
+                    }
+                    break;
+                case 8:
+                    if (bi[6] >= 3){               // past price is higher than 3
+                        code2 = code1b - (1<<15);
+                    }
+                    break;
+                case 7:
+                    if (ownPrice >= 3){
+                        code2 = code1b - (1<<10);
+                    }
+                    break;
+                case 6:
+                    if (i == 6 && bi[6] <= 11){              // past price is below 11
+                        code2 = code1b + (1<<15);
+                    }
+                    break;
+                case 5:
+                    if (ownPrice <= 11){
+                        code2 = code1b + (1<<10);
+                    }
+                    break;
+                case 4:
+                    if (bi[6] >= 4){               // past price is higher than 4
+                        code2 = code1b - (2<<15);
+                    }
+                    break;
+                case 3:
+                    if (ownPrice >= 4){
+                        code2 = code1b - (2<<10);
+                    }
+                    break;
+                case 2:
+                    if (bi[6] <= 10){              // past price is below 10
+                        code2 = code1b + (2<<15);
+                    }
+                    break;
+                case 1:
+                    if (ownPrice <= 10){
+                        code2 = code1b + (2<<10);
+                    }
+                    break;
+            }
+            i--;
+        }
+        /*while ((states.get(code2) == null || states.get(code2).get(ac) == null) && i > 0) {
+            if (i == 13 && bi[5] < 2 * maxDepth - 1){       // depth off ask is less than full
                 code2 = code1b + (1<<19);
-            } else if (i == 12 && bi[4] < 2 * maxDepth - 1){ // depth off bid is bigger than 1
+            } else if (i == 12 && bi[4] < 2 * maxDepth - 1){// depth off bid is less than full
                 code2 = code1b + (1<<23);
             } else if (i == 11 && bi[5] >= 3){              // depth off ask is bigger than 3
                 code2 = code1b - (1<<19);
@@ -909,14 +979,14 @@ public class Trader {
             } else if (i == 1 && ownPrice <= 10){
                 code2 = code1b + (2<<10);
             }
-            /*if (states.containsKey(code2)){
+            *//*if (states.containsKey(code2)){
                 similarQs = states.get(code2);
                 if (similarQs.containsKey(ac)){
                     similarBelief = similarQs.get(ac).getQ();
                 }
-            }*/
+            }*//*
             i--;
-        }
+        }*/
 
 
         return (states.get(code2) != null && states.get(code2).get(ac) != null) ? states.get(code2).get(ac).getQ()
@@ -929,7 +999,77 @@ public class Trader {
         double[] similarBelief = {-1.0, 0.0};             // similar belief, initialized to equal standard -1 in the max choosing for loop
         int i = 13;                                     // number of possible
         //while (similarBelief == -1.0 && i > 0) {
-        while ((states.get(code2) == null || states.get(code2).get(ac) == null) && i > 0) { // TODO: test
+        while ((states.get(code2) == null || states.get(code2).get(ac) == null) && i > 0) {
+            switch (i) {
+                case 13:
+                    if (bi[5] < 2 * maxDepth - 1){       // depth off ask
+                        code2 = code1b + (1<<19);
+                    }
+                    break;
+                case 12:
+                    if (bi[4] < 2 * maxDepth - 1){ // depth off bid is bigger than 1
+                        code2 = code1b + (1<<23);
+                    }
+                    break;
+                case 11:
+                    if (bi[5] >= 3){              // depth off ask is bigger than 3
+                        code2 = code1b - (1<<19);
+                    }
+                    break;
+                case 10:
+                    if (bi[4] >= 3){              // depth off bid is bigger than 3
+                        code2 = code1b - (1<<23);
+                    }
+                    break;
+                case 9:
+                    if (priority >= 1){            // priority of past own action is higher than 0
+                        code2 = code1b - (1<<6);
+                    }
+                    break;
+                case 8:
+                    if (bi[6] >= 3){               // past price is higher than 3
+                        code2 = code1b - (1<<15);
+                    }
+                    break;
+                case 7:
+                    if (ownPrice >= 3){
+                        code2 = code1b - (1<<10);
+                    }
+                    break;
+                case 6:
+                    if (i == 6 && bi[6] <= 11){              // past price is below 11
+                        code2 = code1b + (1<<15);
+                    }
+                    break;
+                case 5:
+                    if (ownPrice <= 11){
+                        code2 = code1b + (1<<10);
+                    }
+                    break;
+                case 4:
+                    if (bi[6] >= 4){               // past price is higher than 4
+                        code2 = code1b - (2<<15);
+                    }
+                    break;
+                case 3:
+                    if (ownPrice >= 4){
+                        code2 = code1b - (2<<10);
+                    }
+                    break;
+                case 2:
+                    if (bi[6] <= 10){              // past price is below 10
+                        code2 = code1b + (2<<15);
+                    }
+                    break;
+                case 1:
+                    if (ownPrice <= 10){
+                        code2 = code1b + (2<<10);
+                    }
+                    break;
+            }
+            i--;
+        }
+        /*while ((states.get(code2) == null || states.get(code2).get(ac) == null) && i > 0) {
             if (i == 13 && bi[5] < 2 * maxDepth - 1){       // depth off ask
                 code2 = code1b + (1<<19);
             } else if (i == 12 && bi[4] < 2 * maxDepth - 1){ // depth off bid is bigger than 1
@@ -957,14 +1097,14 @@ public class Trader {
             } else if (i == 1 && ownPrice <= 10){
                 code2 = code1b + (2<<10);
             }
-            /*if (states.containsKey(code2)){
+            *//*if (states.containsKey(code2)){
                 similarQs = states.get(code2);
                 if (similarQs.containsKey(ac)){
                     similarBelief = similarQs.get(ac).getQ();
                 }
-            }*/
+            }*//*
             i--;
-        }
+        }*/
 
         if (states.get(code2) != null && states.get(code2).get(ac) != null){
             similarBelief[0] = states.get(code2).get(ac).getQ();
@@ -981,6 +1121,24 @@ public class Trader {
         previousTraderAction[0] = decision.addDecision(BookInfo, action, previousTraderAction, isHFT);
         previousTraderAction[1] = BookInfo[0];
         previousTraderAction[2] = BookInfo[1];
+    }
+
+    private void writeDecision(int[] BookInfo, short ac, boolean cancelled){
+        // Aggressiveness, cancellations and liquidity provision tables
+        if (isHFT){
+            decisionHFT.addDecision(BookInfo, ac, cancelled);
+        } else if (pv == 0) {
+            decision_4.addDecision(BookInfo, ac, cancelled);
+        } else if (pv == 1) {
+            decision_2.addDecision(BookInfo, ac, cancelled);
+        } else if (pv == 2) {
+            decision0.addDecision(BookInfo, ac, cancelled);
+        } else if (pv == 3) {
+            decision2.addDecision(BookInfo, ac, cancelled);
+        } else if (pv == 4) {
+            decision4.addDecision(BookInfo, ac, cancelled);
+        }
+        decision.addDecisionLiquidity(ac, isHFT, cancelled);
     }
 
     private void writeDecision(int[] BookInfo, int[] BookSizes, Short action, boolean cancelled){
@@ -1557,7 +1715,7 @@ System.out.println("problem");
 
     // prints decisions data collected from actions in different states
     public void printDecisions(){
-        try{
+        /*try{
             String outputFileName = folder + "decisions.csv";
             FileWriter writer = new FileWriter(outputFileName, true);
             writer.write(decision.printDecision());
@@ -1566,12 +1724,12 @@ System.out.println("problem");
         catch (Exception e){
             e.printStackTrace();
             System.exit(1);
-        }
+        }*/
 
         try{
             String outputFileName = folder + "decisionsHFT.csv";
             FileWriter writer = new FileWriter(outputFileName, true);
-            writer.write(decisionHFT.printDecision());
+            writer.write(decisionHFT.printDecision("simple"));
             writer.close();
         }
         catch (Exception e){
@@ -1582,7 +1740,7 @@ System.out.println("problem");
         try{
             String outputFileName = folder + "decisions_4.csv";
             FileWriter writer = new FileWriter(outputFileName, true);
-            writer.write(decision_4.printDecision());
+            writer.write(decision_4.printDecision("simple"));
             writer.close();
         }
         catch (Exception e){
@@ -1593,7 +1751,7 @@ System.out.println("problem");
         try{
             String outputFileName = folder + "decisions_2.csv";
             FileWriter writer = new FileWriter(outputFileName, true);
-            writer.write(decision_2.printDecision());
+            writer.write(decision_2.printDecision("simple"));
             writer.close();
         }
         catch (Exception e){
@@ -1604,7 +1762,7 @@ System.out.println("problem");
         try{
             String outputFileName = folder + "decisions0.csv";
             FileWriter writer = new FileWriter(outputFileName, true);
-            writer.write(decision0.printDecision());
+            writer.write(decision0.printDecision("simple"));
             writer.close();
         }
         catch (Exception e){
@@ -1615,7 +1773,7 @@ System.out.println("problem");
         try{
             String outputFileName = folder + "decisions2.csv";
             FileWriter writer = new FileWriter(outputFileName, true);
-            writer.write(decision2.printDecision());
+            writer.write(decision2.printDecision("simple"));
             writer.close();
         }
         catch (Exception e){
@@ -1626,7 +1784,7 @@ System.out.println("problem");
         try{
             String outputFileName = folder + "decisions4.csv";
             FileWriter writer = new FileWriter(outputFileName, true);
-            writer.write(decision4.printDecision());
+            writer.write(decision4.printDecision("simple"));
             writer.close();
         }
         catch (Exception e){

@@ -17,6 +17,7 @@ public class Decision {
     private int breakPoint;
     private int[] counts;           // holds counts of decisions. [0] overall count
     private int[] countsLiquidity;  // holds counts of LOs vs MOs vs NOs
+    private int[] countsSimple;     // holds counts of decisions not conditioned on previous action or book
         /*
         Table V, DA = depth at ask
         DA 1-2, spread 1,   [41] count, [1] SBMOs, [86] LBO, [2] AggBLO [94] AtBLO [95] BelowBLO
@@ -65,7 +66,30 @@ public class Decision {
         this.LL = ll;
         counts = new int[158];
         countsLiquidity = new int[8];   //  MO nonHFT, LO nonHFT, NO nonHFT; MO HFT, LO HFT, NO HFT
+        countsSimple = new int[7];      // count, BMO, AggBLO, AtBLO, BelowBLO, NO, cancellations
     }
+
+    // adds information to the decision
+    public void addDecision(int[] bi, short ac, boolean cancelled){
+        countsSimple[0]++;
+        if (ac == (2 * e + 1)){                     // Buy market order
+            countsSimple[1]++;
+        } else if (ac >= e && ac < 2 * e){          // Buy Limit order
+            if ((ac - e) < (bi[0] - LL)){           // BelowBLO
+                countsSimple[4]++;
+            } else if ((ac - e) == (bi[0] - LL)){   // AtBLO
+                countsSimple[3]++;
+            } else if ((ac - e) > (bi[0] - LL)){    // AggBLO
+                countsSimple[2]++;
+            }
+        } else if (ac == 2 * e + 2){
+            countsSimple[5]++;                  // no-orders
+        }
+        if (cancelled){                         // cancellations
+            countsSimple[6]++;
+        }
+    }
+
     // adds information to the decision
     public int addDecision(int[] bi, Short [] ac , int[] prevTrAc, boolean isHFT){
         byte t = 0;                                         // designates which action matters
@@ -551,6 +575,26 @@ public class Decision {
     }
 
     // printing decisions here
+    public String printDecision(String type){
+        if (type.equals("simple")){
+            int sz = countsSimple.length;
+            String s = new String();
+            for (int i = 0; i < sz; i++){
+                s = s + countsSimple[i] + ";";
+            }
+            s = s + "\r";
+            return s;
+        } else {
+            int sz = counts.length;
+            String s = new String();
+            for (int i = 0; i < sz; i++){
+                s = s + counts[i] + ";";
+            }
+            s = s + "\r";
+            return s;
+        }
+    }
+
     public String printDecision(){
         int sz = counts.length;
         String s = new String();

@@ -21,8 +21,32 @@ public class Test_various {
     public static void main(String[] args) {
 
 
+        double timeStamp1 = System.nanoTime();
 
+        for (int i = 0; i < 100000000; i++){
+            int j = 10;
+            while (j > 0){
+                switch (j) {
+                    case 10:
+                        break;
+                    case 9:
+                        break;
+                    case 8:
+                        break;
+                    case 7:
+                        break;
+                }
+                /*if (j == 10){
+                } else if (j == 9){
+                } else if (j == 8){
+                } else if (j == 7){
+                }*/
+                j--;
+            }
+        }
 
+        double timeStamp2 = System.nanoTime();
+        System.out.println(timeStamp2 - timeStamp1);
         /*HashMap<Long, HashMap<Integer, BeliefQ>> states = new HashMap<Long, HashMap<Integer, BeliefQ>>();
         HashMap<Integer, BeliefQ> beliefs = new HashMap<Integer, BeliefQ>();
         beliefs.put(1, new BeliefQ(1, 0.5));
