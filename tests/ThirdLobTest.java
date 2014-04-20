@@ -59,7 +59,7 @@ public class ThirdLobTest {
         case2 = null;*/
 
         /*SingleCase case3 = new SingleCase();
-        params[0] = "_3baseCaseHFTsameLambda2\\";
+        params[0] = "_3baseCaseHFTsameLambda4\\";
         params[1] = "1";            // new HFTs
         params[2] = "0";            // # of positive PV slow traders
         params[3]= "1";             // # of zero PV slow traders
@@ -69,32 +69,32 @@ public class ThirdLobTest {
         params[7] = "0.0";          // CFEE
         params[8] = "0.0";          // LO make fee
         params[9] = "0.0";          // MO take fee
-        params[10] = "0.1";          // lambda of new arrivals
+        params[10] = "0.5";          // lambda of new arrivals
         params[11] = "0.05f";       // rho- impatience parameters
         params[12] = "0.125";        // arrival of changes in FV
         params[13] = "30";          // max depth
         case3.main(params);
-        case3 = null;
+        case3 = null;*/
 
         SingleCase case4 = new SingleCase();
-        params[0] = "_4baseCaseHighVol2\\";
+        params[0] = "_4baseCaseHighVol3\\";
         params[1] = "0";            // new HFTs
         params[2] = "0";            // # of positive PV slow traders
-        params[3]= "1";             // # of zero PV slow traders
+        params[3]= "2";             // # of zero PV slow traders
         params[4] = "0";            // # of negative PV slow traders
         params[5] = "0.0";          // time in force
         params[6] = "0.0";          // TTAX
         params[7] = "0.0";          // CFEE
         params[8] = "0.0";          // LO make fee
         params[9] = "0.0";          // MO take fee
-        params[10] = "0.2";          // lambda of new arrivals
+        params[10] = "0.5";          // lambda of new arrivals
         params[11] = "0.05f";       // rho- impatience parameters
         params[12] = "0.25";        // arrival of changes in FV
         params[13] = "30";          // max depth
         case4.main(params);
         case4 = null;
 
-        SingleCase case5 = new SingleCase();
+        /*SingleCase case5 = new SingleCase();
         params[0] = "_5baseCaseHftHighVol2\\";
         params[1] = "1";            // new HFTs
         params[2] = "0";            // # of positive PV slow traders
@@ -130,7 +130,7 @@ public class ThirdLobTest {
         case6.main(params);
         case6 = null;*/
 
-        SingleCase case7 = new SingleCase();
+        /*SingleCase case7 = new SingleCase();
         params[0] = "_7baseCaseHftTIF23\\";
         params[1] = "1";            // new HFTs
         params[2] = "0";            // # of positive PV slow traders
@@ -146,36 +146,38 @@ public class ThirdLobTest {
         params[12] = "0.125";        // arrival of changes in FV
         params[13] = "30";          // max depth
         case7.main(params);
-        case7 = null;
+        case7 = null;*/
 
         /*SingleCase case8 = new SingleCase();
         params[0] = "_8baseCaseHftCFEE2\\";
         params[1] = "1";            // new HFTs
         params[2] = "0";            // # of positive PV slow traders
-        params[3]= "1";             // # of zero PV slow traders
+        params[3]= "2";             // # of zero PV slow traders
         params[4] = "0";            // # of negative PV slow traders
         params[5] = "0.0";          // time in force
         params[6] = "0.0";          // TTAX
         params[7] = "0.01";          // CFEE
         params[8] = "0.0";          // LO make fee
         params[9] = "0.0";          // MO take fee
-        params[10] = "0.2";          // lambda of new arrivals
+        params[10] = "0.5";          // lambda of new arrivals
         params[11] = "0.05f";       // rho- impatience parameters
         params[12] = "0.125";        // arrival of changes in FV
         params[13] = "30";          // max depth
+        case8.main(params);
+        case8 = null;
 
         SingleCase case9 = new SingleCase();
-        params[0] = "_9baseCaseHftTTAX2\\";
+        params[0] = "_9baseCaseHftTTAX3\\";
         params[1] = "1";            // new HFTs
         params[2] = "0";            // # of positive PV slow traders
-        params[3]= "1";             // # of zero PV slow traders
+        params[3]= "2";             // # of zero PV slow traders
         params[4] = "0";            // # of negative PV slow traders
         params[5] = "0.0";          // time in force
         params[6] = "0.00375";      // TTAX
         params[7] = "0.0";          // CFEE
         params[8] = "0.0";          // LO make fee
         params[9] = "0.0";          // MO take fee
-        params[10] = "0.2";          // lambda of new arrivals
+        params[10] = "0.5";          // lambda of new arrivals
         params[11] = "0.05f";       // rho- impatience parameters
         params[12] = "0.125";        // arrival of changes in FV
         params[13] = "30";          // max depth
