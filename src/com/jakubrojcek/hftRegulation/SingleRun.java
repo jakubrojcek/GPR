@@ -106,8 +106,7 @@ public class SingleRun {
         purge = p;
         nReset = n;
 
-
-        if (model == "returning"){
+        if (model.equals("returning")){
             if (EventTime < 0.0){
                 System.out.println("negative event time, debug");
             }
@@ -409,7 +408,7 @@ public class SingleRun {
                 int x = population.get(pv);
                 population.put(pv, x + 1);
             }
-            trader.printTif(tifTimes, tifCounts, population);   // TODO: delete afterwards
+            trader.printTif(tifTimes, tifCounts, population);
             for (int j = 0; j < 6; j++){
                 tifCounts.put(j, 0);
                 tifTimes.put(j, 0.0);

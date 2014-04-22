@@ -1,9 +1,5 @@
 import com.jakubrojcek.Belief;
 import com.jakubrojcek.BeliefQ;
-import com.jakubrojcek.gpr2005a.Payoff;
-import com.jakubrojcek.gpr2005a.GPR2005Payoff_test3;
-import com.jakubrojcek.gpr2005a.Trader;
-import com.jakubrojcek.Choices;
 import com.jakubrojcek.hftRegulation.previousStates;
 import java.io.*;
 

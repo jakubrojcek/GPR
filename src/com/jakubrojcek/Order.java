@@ -75,6 +75,9 @@ public class Order {
 
     public void setOrderID(int orderID) {
         this.orderID = orderID;
+        if (orderID == 0){
+            System.out.println("debug");
+        }
     }
 
     public void setPosition(int position) {   // used in the book, like CurrentPosition
@@ -99,5 +102,8 @@ public class Order {
 
     public void increasePriority(int i){
         q -= i;
+        if (q < 0){
+            System.out.println("debug");
+        }
     }
 }
