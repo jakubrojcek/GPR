@@ -76,7 +76,7 @@ public class ThirdLobTest {
         case3.main(params);
         case3 = null;*/
 
-        SingleCase case4 = new SingleCase();
+        /*SingleCase case4 = new SingleCase();
         params[0] = "_4baseCaseHighVol3\\";
         params[1] = "0";            // new HFTs
         params[2] = "0";            // # of positive PV slow traders
@@ -92,20 +92,20 @@ public class ThirdLobTest {
         params[12] = "0.25";        // arrival of changes in FV
         params[13] = "30";          // max depth
         case4.main(params);
-        case4 = null;
+        case4 = null;*/
 
         /*SingleCase case5 = new SingleCase();
         params[0] = "_5baseCaseHftHighVol2\\";
         params[1] = "1";            // new HFTs
         params[2] = "0";            // # of positive PV slow traders
-        params[3]= "1";             // # of zero PV slow traders
+        params[3]= "2";             // # of zero PV slow traders
         params[4] = "0";            // # of negative PV slow traders
         params[5] = "0.0";          // time in force
         params[6] = "0.0";          // TTAX
         params[7] = "0.0";          // CFEE
         params[8] = "0.0";          // LO make fee
         params[9] = "0.0";          // MO take fee
-        params[10] = "0.2";          // lambda of new arrivals
+        params[10] = "0.5";          // lambda of new arrivals
         params[11] = "0.05f";       // rho- impatience parameters
         params[12] = "0.25";        // arrival of changes in FV
         params[13] = "30";          // max depth
@@ -184,8 +184,8 @@ public class ThirdLobTest {
         case9.main(params);
         case9 = null;*/
 
-        /*SingleCase case10 = new SingleCase();
-        params[0] = "_10baseCaseMT7\\";
+        SingleCase case10 = new SingleCase();
+        params[0] = "_10baseCaseMT8\\";
         params[1] = "1";            // new HFTs
         params[2] = "0";            // # of positive PV slow traders
         params[3]= "2";             // # of zero PV slow traders
@@ -193,14 +193,14 @@ public class ThirdLobTest {
         params[5] = "0.0";          // time in force
         params[6] = "0.0";          // TTAX
         params[7] = "0.0";          // CFEE
-        params[8] = "0.008";          // LO make fee
-        params[9] = "0.012";          // MO take fee
+        params[8] = "0.006";          // LO make fee
+        params[9] = "0.009";          // MO take fee
         params[10] = "0.5";         // lambda of new arrivals
         params[11] = "0.05f";       // rho- impatience parameters
         params[12] = "0.125";       // arrival of changes in FV
         params[13] = "30";          // max depth
         case10.main(params);
-        case10 = null;*/
+        case10 = null;
 
         /*SingleCase case10 = new SingleCase();
         params[0] = "_8baseCaseHftCFEEnew\\";
