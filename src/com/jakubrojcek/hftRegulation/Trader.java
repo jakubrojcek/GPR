@@ -28,13 +28,13 @@ public class Trader {
     private boolean isHFT;              // initialized
     private boolean isTraded = false;   // set by TransactionRule in book
     private boolean isReturning = false;// is he returning this time? info from priorities
-    private float rho = 0.15f;          // trading "impatience" parameter
     private double PriceFV;             // current fundamental value-> price at middle position
     private double EventTime = 0.0;     // event time
     private BeliefQ belief;             // reference to an old Belief, to be updated
     private Order order = null;         // reference to an old Order, to update the old Belief
     private short cancelCount = 0;      // how many times cancelled
 
+    static int model;                   // model of simulation, e.g. "returning" = 0, "speedBump" = 1
     static int TraderCount = 0;         // counting number of traders, gives traderID as well
     static int TraderCountHFT = 0;      // counting HFT traders
     static int TraderCountNonHFT = 0;   // counting nonHFT traders
@@ -93,6 +93,8 @@ public class Trader {
     static double TTAX = 0.0;                   // transaction tax
     static double MFEE = 0.0;                   // LO make fee
     static double TFEE = 0.0;                   // MO take fee
+    static float rho;                           // trading "impatience" parameter
+
 
 
     // constructor bool, bool, float, int
@@ -119,7 +121,7 @@ public class Trader {
     // constructor of the main trader- loads parameters from main
     public Trader(int is, double[] tb, double[] ts, byte numberPrices, int FVpos, double tickS, double rFast, double rSlow,
                   int ll, int hl, int e, int md, int bp, int hti, double pt, String f, LOB_LinkedHashMap b,
-                  double [] PVs, float r, double tt, double cf, double mf, double tf){
+                  double [] PVs, float r, double tt, double cf, double mf, double tf, int m){
         states = new HashMap<Long, HashMap<Integer, BeliefQ>>(hti);
         previousStates = new HashMap<Long, HashMap<Integer, BeliefQ>>();
         convergenceStates = new HashMap<Long, HashMap<Integer, BeliefQ>>();
@@ -134,6 +136,7 @@ public class Trader {
         breakPoint = bp;
         nPayoffs = 2 * end + 3;
         maxDepth = md;
+        rho = r;
         for (int i = 0; i < end; i++){
             Double[] DiscountsB = new Double[maxDepth + 1];
             Double[] DiscountsS = new Double[maxDepth + 1];
@@ -166,7 +169,6 @@ public class Trader {
         bookSizesHistory[0] = 0;
         previousTraderAction = new int[3];
         FprivateValues = PVs;
-        rho = r;
         TTAX = tt;
         CFEE = cf;
         if (CFEE != 0.0){
@@ -183,6 +185,7 @@ public class Trader {
         TraderCountNonHFT = 0;   // counting nonHFT traders
         tradeCount = 0;          // counting number of trader
         statesCount = 0;
+        model = m;
     }
 
     // decision about the price is made here, so far random
@@ -718,7 +721,7 @@ public class Trader {
             buyOrder = false;
         }
         if (action == (2 * end + 1)){pricePosition = BookInfo[1];} // position is Ask
-        Order currentOrder = new Order(traderID, et, buyOrder, 1, 0, pricePosition);
+        Order currentOrder = new Order(traderID, et, buyOrder, 1, 0, pricePosition, action);
 
         boolean cancelled = false;                                   // used to count cancellations
         if (isReturning){
@@ -753,7 +756,7 @@ public class Trader {
         }
         isReturning = true;
         if (writeDecisions){writeDecision(BookInfo, (short)action, cancelled);} // printing data for output tables
-        if (writeHistogram){writeHistogram(BookSizes);}
+        //if (writeHistogram){writeHistogram(BookSizes);}       // TODO: I don't need that often, do I?
         if (writeDiagnostics){writeDiagnostics((short)action);}
 
         EventTime = et;
@@ -766,10 +769,14 @@ public class Trader {
         double payoff;
         tradeCount++;
         if (order.isBuyOrder()){ // buy LO executed
-            payoff = (breakPoint - (pos - LL)) * tickSize + privateValue - TTAX + MFEE;
+            payoff = (order.getAction() == 2 * end + 1) ?
+                    (breakPoint - (pos - LL)) * tickSize + privateValue - TTAX - TFEE :
+                    (breakPoint - (pos - LL)) * tickSize + privateValue - TTAX + MFEE;
                     //+ (fundamentalValue - PriceFV);
         } else { // sell LO executed
-            payoff = (pos - LL - breakPoint) * tickSize - privateValue - TTAX + MFEE;
+            payoff = (order.getAction() == 2 * end) ?
+                    (pos - LL - breakPoint) * tickSize - privateValue - TTAX - TFEE :
+                    (pos - LL - breakPoint) * tickSize - privateValue - TTAX + MFEE;
                     //- (fundamentalValue - PriceFV);
         }
         if (fixedBeliefs){

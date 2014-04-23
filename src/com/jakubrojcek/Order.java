@@ -37,6 +37,16 @@ public class Order {
         this.q = Q;
         this.position = position;
     }
+
+    public Order(int traderID, double timeStamp, boolean buyOrder, int size, int Q, int position, int a){
+        this.traderID = traderID;
+        this.timeStamp = timeStamp;
+        this.buyOrder = buyOrder;
+        this.size = size;
+        this.q = Q;
+        this.position = position;
+        this.action = a;
+    }
     
     public int getTraderID(){
         return traderID;
@@ -82,6 +92,10 @@ public class Order {
 
     public void setPosition(int position) {   // used in the book, like CurrentPosition
         this.position = position;
+    }
+
+    public void setTimeStamp(double timeStamp) {
+        this.timeStamp = timeStamp;
     }
 
     public void setAction(short action) {

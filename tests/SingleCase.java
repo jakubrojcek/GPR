@@ -13,7 +13,14 @@ public class SingleCase {
 
     public boolean main(String[] args) {
         double timeStamp1 = System.nanoTime();
-        String model = "returning";
+        String mode = args[14];
+        int model = 0;
+        if (mode.equals("returning")){
+            model = 0;
+        } else if (mode.equals("speedBump")) {
+            model = 1;
+        }
+
         String folder = "D:\\_paper1 HFT, MM, rebates and market quality\\Matlab Analysis\\" + args[0];
         String outputNameTransactions = "Transactions8.csv";  // output file name
         String outputNameBookData = "effSpread.csv";   // output file name
@@ -33,6 +40,7 @@ public class SingleCase {
         double MFEE = Float.parseFloat(args[8]);                         // LO make fee
         double TFEE = Float.parseFloat(args[9]);                         // MO take fee
         float rho = Float.parseFloat(args[11]);                         // impatience parameter
+        double sb = Double.parseDouble(args[15]);                       // speed bump length
         int NewNonHFT = nNegativeNonHFT + nPositiveNonHFT + nZeroNonHFT;
         double lambdaArrival = Double.parseDouble(args[10]);             // arrival frequency, same for all
         double lambdaFV = Double.parseDouble(args[12]);                  // frequency of FV changes
@@ -113,11 +121,11 @@ public class SingleCase {
         LOB_LinkedHashMap book = new LOB_LinkedHashMap(model, FV, FVpos, maxDepth, end, tickSize, nP, h, traders);
         Trader trader = new Trader(infoSize, tauB, tauS, nP, FVpos, tickSize, ReturnFrequencyHFT,
                 ReturnFrequencyNonHFT, LL, HL, end, maxDepth, breakPoint, hti, prTremble, folder, book, FprivateValues,
-                rho, TTAX, CFEE, MFEE, TFEE);
+                rho, TTAX, CFEE, MFEE, TFEE, model);
         book.makeBook(Prices);
         SingleRun sr = new SingleRun(model, tif, lambdaArrival, lambdaFV, ReturnFrequencyHFT, ReturnFrequencyNonHFT,
                 FprivateValues, PVdistrb, sigma, tickSize, FVplus, header, book, traders, h, trader, outputNameStatsData,
-                outputNameTransactions, outputNameBookData);
+                outputNameTransactions, outputNameBookData, sb, end);
 
         // phase 1a) initialization
         int nEvents = 2000000000;         // number of events
@@ -280,6 +288,25 @@ public class SingleCase {
             ReturningHFT = (int) RunOutcome[2];
             ReturningNonHFT = (int) RunOutcome[3];
         }
+
+
+        nEvents = 1000000000;         // number of events
+        write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
+        writeDiagnostics = true;// write diagnostics controls diagnostics
+        writeHistogram = true; // write histogram
+        purge = false;          // purge in this com.jakubrojcek.gpr2005a.SingleRun?
+        nReset = true;         // reset n in this com.jakubrojcek.gpr2005a.SingleRun?
+        trader.setPrTremble(0.0009);
+        //trader.setWriteDec(false);
+        trader.setWriteDiag(writeDiagnostics);
+        //trader.setWriteHist(writeHistogram);
+        RunOutcome =
+                sr.run(nEvents, nHFT, NewNonHFT, ReturningHFT, ReturningNonHFT, EventTime, FV,
+                        write, purge, nReset, writeDiagnostics, writeHistogram, convergence);
+        EventTime = RunOutcome[0];
+        FV = RunOutcome[1];
+        ReturningHFT = (int) RunOutcome[2];
+        ReturningNonHFT = (int) RunOutcome[3];
 
         nEvents = 1000000000;         // number of events
         write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?

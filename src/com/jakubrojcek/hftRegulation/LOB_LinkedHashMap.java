@@ -13,18 +13,18 @@ import java.util.*;
  * To change this template use File | Settings | File Templates.
  */
 public class LOB_LinkedHashMap {
-    String model;
-    double[] Prices; // prices for trading
-    private int[] BookSizes; // signed sizes of the book
-    private int[] BookInfo; // info used in decision making
-    private int positionShift; // ++ if FVup, -- if FVdown
-    double FV; // Fundamental value
-    double tickSize; // size of one tick
-    byte nPoints; // number of available positions
-    int maxDepth; // 0 to 7 which matter
-    private int Pt = 0; // last transaction position
-    private int b = 0; // 1 if last transaction buy, 0 if sell
-    private int OrderID = 0; // id stamp for orders used as key in the book LHM
+    int model;                              // model of simulation, e.g. "returning" = 0, "speedBump" = 1
+    double[] Prices;                        // prices for trading
+    private int[] BookSizes;                // signed sizes of the book
+    private int[] BookInfo;                 // info used in decision making
+    private int positionShift;              // ++ if FVup, -- if FVdown
+    double FV;                              // Fundamental value
+    double tickSize;                        // size of one tick
+    byte nPoints;                           // number of available positions
+    int maxDepth;                           // 0 to 7 which matter
+    private int Pt = 0;                     // last transaction position
+    private int b = 0;                      // 1 if last transaction buy, 0 if sell
+    private int OrderID = 0;                // id stamp for orders used as key in the book LHM
     ArrayList<Integer> traderIDsHFT = new ArrayList<Integer>();
     ArrayList<Integer> traderIDsNonHFT = new ArrayList<Integer>();
     //vectors holding traderIDs, HFT or nonHFT, traderID and position, price and position
@@ -39,7 +39,7 @@ public class LOB_LinkedHashMap {
     History hist;
     HashMap<Integer, Trader> traders;
 
-    public LOB_LinkedHashMap(String m, double fv, int fvPos, int md, int e, double ts, byte nP, History h, HashMap<Integer, Trader> t){
+    public LOB_LinkedHashMap(int m, double fv, int fvPos, int md, int e, double ts, byte nP, History h, HashMap<Integer, Trader> t){
         model = m;
         hist = h;
         traders = t;
@@ -201,8 +201,8 @@ public class LOB_LinkedHashMap {
     }
 
     public Integer transactionRule(Integer oID, ArrayList<Order> orders){
-        hist.addQuotedSpread(BookInfo[1] - BookInfo[0]);    // quoted spread
-        hist.addDepth(BookInfo);                            // quoted depths
+        //hist.addQuotedSpread(BookInfo[1] - BookInfo[0]);    // quoted spread  // TODO: do I need this often?
+        //hist.addDepth(BookInfo);                            // quoted depths  // TODO: do I need this often?
         int pos, size;
         for (Order o : orders){
             size = o.getSize();
@@ -223,6 +223,8 @@ public class LOB_LinkedHashMap {
                         Order cp = book[pos].remove(book[pos].keySet().iterator().next());
                         Integer CPid = cp.getTraderID();
                         traders.get(CPid).execution(FV, o.getTimeStamp());
+                        o.setPosition(pos + positionShift);
+                        traders.get(o.getTraderID()).execution(FV, o.getTimeStamp());
                         ActiveOrders.remove(cp);
                         Pt = pos; // sets last transaction position
                         b = 1; // sets last transaction direction, buy = 1
@@ -235,6 +237,8 @@ public class LOB_LinkedHashMap {
                         oID = CPid;
                     } else if (pos == nPoints - 1){ // if BMO executed against fringe, just continue
                         oID = o.getTraderID();
+                        o.setPosition(pos + positionShift);
+                        traders.get(oID).execution(FV, o.getTimeStamp());   // TODO: test if OK
                     } else{
                         OrderID++;
                         o.setOrderID(OrderID);
@@ -244,12 +248,13 @@ public class LOB_LinkedHashMap {
                         ActiveOrders.add(o);
                         oID = null;
                     }
-
                 } else {
                     if (book[pos].size() > 0 && book[pos].get(book[pos].keySet().iterator().next()).isBuyOrder()){
                         Order cp = book[pos].remove(book[pos].keySet().iterator().next());
                         Integer CPid = cp.getTraderID();
                         traders.get(CPid).execution(FV, o.getTimeStamp());
+                        o.setPosition(pos + positionShift);
+                        traders.get(o.getTraderID()).execution(FV, o.getTimeStamp());   // TODO: test if OK
                         ActiveOrders.remove(cp);
                         Pt = pos; // set last transaction price
                         b = 0; // set last transaction direction, 0=sell
@@ -262,6 +267,8 @@ public class LOB_LinkedHashMap {
                         oID = CPid;
                     } else if (pos == 0){ // if SMO executed against fringe, just continue
                         oID = o.getTraderID();
+                        o.setPosition(pos + positionShift);
+                        traders.get(oID).execution(FV, o.getTimeStamp());           // TODO: test if OK
                     } else{
                         OrderID++;
                         o.setOrderID(OrderID);
