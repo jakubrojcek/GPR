@@ -652,6 +652,9 @@ public class SingleRun {
                     System.out.println(i + " events");
                 }
 
+                if (i % 10000 == 0){
+                    writeWrite();
+                }
                 if (i % 1000000 == 0) {
                     writePrint(i);
                 }

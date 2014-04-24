@@ -749,7 +749,7 @@ public class Trader {
             order = currentOrder;
             orders.add(currentOrder);
         }
-        if (CFEE != 0.0 && (cancelled && oldAction != -1.0)){cancelCount++;}
+        if (cancelled && oldAction != -1.0){cancelCount++;}
 
         if ((action == (2 * end)) || (action == (2 * end + 1))) {
             isTraded = true; // isTraded set to true if submitting MOs
@@ -1196,7 +1196,7 @@ public class Trader {
     }
     private void writeDiagnostics(double diff){
         diag.addDiff(diff);
-        if (CFEE != 0.0){diag.addCancelCount(cancelCount, pv, isHFT);}
+        diag.addCancelCount(cancelCount, pv, isHFT);
     }
 
     public void computeInitialBeliefs(){
@@ -1555,17 +1555,16 @@ System.out.println("problem");
             e.printStackTrace();
             System.exit(1);
         }
-        if (CFEE != 0.0){
-            try{
-                String outputFileName = folder + "diagnostics3.csv";
-                FileWriter writer = new FileWriter(outputFileName, true);
-                writer.write(diag.printDiagnostics("cancellations"));
-                writer.close();
-            }
-            catch (Exception e){
-                e.printStackTrace();
-                System.exit(1);
-            }
+
+        try{
+            String outputFileName = folder + "diagnostics3.csv";
+            FileWriter writer = new FileWriter(outputFileName, true);
+            writer.write(diag.printDiagnostics("cancellations"));
+            writer.close();
+        }
+        catch (Exception e){
+            e.printStackTrace();
+            System.exit(1);
         }
     }
 

@@ -152,7 +152,8 @@ public class History {
                 writer.write(moHFT + ";" + mo + ";" + loHFT + ";" + lo + ";"  + t.getTimeTrade() +  ";"
                         + t.getFV() + ";" + t.getPrice() + ";" + t.getBuyerPV() + ";" +
                         t.getSellerPV() + ";" + buyMO + ";"
-                        + t.getTrCostsBuyer() + ";" + t.getTrCostsSeller() + ";" + loTime + ";" +  "\r");
+                        + t.getTrCostsBuyer() + ";" + t.getTrCostsSeller() + ";" + loTime + ";" +
+                        t.getFVbeforeBuyer() + ";" + t.getFVbeforeSeller() + ";" + "\r");
             }
             writer.close();
         }
