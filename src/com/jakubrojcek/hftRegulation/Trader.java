@@ -756,7 +756,7 @@ public class Trader {
         }
         isReturning = true;
         if (writeDecisions){writeDecision(BookInfo, (short)action, cancelled);} // printing data for output tables
-        //if (writeHistogram){writeHistogram(BookSizes);}       // TODO: I don't need that often, do I?
+        //if (writeHistogram){writeHistogram(BookSizes);}
         if (writeDiagnostics){writeDiagnostics((short)action);}
 
         EventTime = et;
@@ -797,6 +797,7 @@ public class Trader {
                     belief.setDiff((float)((1.0 - alpha) * previousQ +                  // one-step ahead
                             alpha * Math.exp( - rho * (et - EventTime)) * payoff));
                 }
+                if (writeDiagnostics){writeDiagnostics(belief.getDiff() - previousQ);}
             }
         } else {
             if(belief.getN() < nResetMax) {
@@ -926,7 +927,7 @@ public class Trader {
                     }
                     break;
                 case 6:
-                    if (i == 6 && bi[6] <= 11){              // past price is below 11
+                    if (bi[6] <= 11){              // past price is below 11
                         code2 = code1b + (1<<15);
                     }
                     break;
@@ -1044,7 +1045,7 @@ public class Trader {
                     }
                     break;
                 case 6:
-                    if (i == 6 && bi[6] <= 11){              // past price is below 11
+                    if (bi[6] <= 11){              // past price is below 11
                         code2 = code1b + (1<<15);
                     }
                     break;
@@ -1526,7 +1527,7 @@ System.out.println("problem");
                 b.setN(NN);
             }
         }
-        for (Long code2delete: codes2remove){
+        for (Long code2delete : codes2remove){
             NN = states.get(code2delete).size();
             statesCount -= NN;
             states.remove(code2delete);

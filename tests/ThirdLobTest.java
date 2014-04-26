@@ -250,7 +250,7 @@ public class ThirdLobTest {
         case11 = null;*/
 
         SingleCase case11 = new SingleCase();
-        params[0] = "_11speedBump3\\";   // folder
+        params[0] = "_11speedBump5\\";   // folder
         params[1] = "1";            // new HFTs
         params[2] = "0";            // # of positive PV slow traders
         params[3]= "2";             // # of zero PV slow traders
@@ -261,11 +261,11 @@ public class ThirdLobTest {
         params[8] = "0.0";          // LO make fee
         params[9] = "0.0";          // MO take fee
         params[10] = "0.5";          // lambda of new arrivals
-        params[11] = "0.15f";       // rho- impatience parameters
+        params[11] = "0.05f";       // rho- impatience parameters
         params[12] = "0.125";        // arrival of changes in FV
         params[13] = "30";          // max depth
         params[14] = "speedBump";   // model to use
-        params[15] = "0.2";         // speed bump length
+        params[15] = "0.5";         // speed bump length
         case11.main(params);
         case11 = null;
 

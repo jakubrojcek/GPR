@@ -265,15 +265,16 @@ public class SingleCase {
         ReturningNonHFT = (int) RunOutcome[3];
         // phase 1b) extensive simulation and learning
         for (int i = 0; i < 3; i++){
-            nEvents = 1500000000;         // number of events
+            nEvents = 1000000000;         // number of events
             write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
             writeDiagnostics = true;// write diagnostics controls diagnostics
             writeHistogram = true; // write histogram
-            if (i % 5 == 0) {
+            purge = false;
+            /*if (i % 5 == 0) {
                 purge = true;      // purge occasionally in this phase
             } else {
                 purge = false;
-            }
+            }*/
             nReset = true;         // reset n in this com.jakubrojcek.gpr2005a.SingleRun?
             trader.setPrTremble(0.0012);
             //trader.setWriteDec(false);
@@ -373,7 +374,7 @@ public class SingleCase {
                 FV = RunOutcome[1];
                 ReturningHFT = (int) RunOutcome[2];
                 ReturningNonHFT = (int) RunOutcome[3];
-                if (RunOutcome[4] < 0.01){       // TODO: uncomment, if you want to use this
+                if (RunOutcome[4] < 0.01){
                     break;
                 }
             }
@@ -383,7 +384,7 @@ public class SingleCase {
         int traderCountStart = trader.getTraderCount();
         int traderCountHFTstart = trader.getTraderCountHFT();
         int traderCountNonHFTstart = trader.getTraderCountNonHFT();
-        nEvents = 100000000;         // number of events
+        nEvents = 200000000;         // number of events
         write = true;          // writeDecisions output in this SingleRun?
         writeDiagnostics = true;// write diagnostics controls diagnostics
         writeHistogram = true; // write histogram

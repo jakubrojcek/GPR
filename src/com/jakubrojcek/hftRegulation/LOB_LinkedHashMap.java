@@ -238,7 +238,7 @@ public class LOB_LinkedHashMap {
                     } else if (pos == nPoints - 1){ // if BMO executed against fringe, just continue
                         oID = o.getTraderID();
                         o.setPosition(pos + positionShift);
-                        traders.get(oID).execution(FV, o.getTimeStamp());   // TODO: test if OK
+                        traders.get(oID).execution(FV, o.getTimeStamp());
                     } else{
                         OrderID++;
                         o.setOrderID(OrderID);
@@ -254,7 +254,7 @@ public class LOB_LinkedHashMap {
                         Integer CPid = cp.getTraderID();
                         traders.get(CPid).execution(FV, o.getTimeStamp());
                         o.setPosition(pos + positionShift);
-                        traders.get(o.getTraderID()).execution(FV, o.getTimeStamp());   // TODO: test if OK
+                        traders.get(o.getTraderID()).execution(FV, o.getTimeStamp());
                         ActiveOrders.remove(cp);
                         Pt = pos; // set last transaction price
                         b = 0; // set last transaction direction, 0=sell
@@ -268,7 +268,7 @@ public class LOB_LinkedHashMap {
                     } else if (pos == 0){ // if SMO executed against fringe, just continue
                         oID = o.getTraderID();
                         o.setPosition(pos + positionShift);
-                        traders.get(oID).execution(FV, o.getTimeStamp());           // TODO: test if OK
+                        traders.get(oID).execution(FV, o.getTimeStamp());
                     } else{
                         OrderID++;
                         o.setOrderID(OrderID);

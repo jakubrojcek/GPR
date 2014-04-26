@@ -131,23 +131,10 @@ public class SingleRun {
                 if (!waitingTraders.isEmpty() && (EventTime > waitingTraders.firstKey())){
                     Integer ID;
                     //while (!waitingTraders.isEmpty() && EventTime > waitingTraders.firstKey()){
-                    EventTime = waitingTraders.firstKey();   // TODO: remove afterwards
+                    EventTime = waitingTraders.firstKey();
                     ID = waitingTraders.remove(waitingTraders.firstKey());
                     if (traders.containsKey(ID)){
                         boolean isHFT = traders.get(ID).getIsHFT();
-                        /*if (isHFT){
-                            int x = tifCounts.get(5);
-                            tifCounts.put(5, x + 1);
-                            double y = tifTimes.get(5);
-                            tifTimes.put(5, y + tif);
-                        } else {
-                            int pv = traders.get(ID).getPv();
-                            int x = tifCounts.get(pv);
-                            tifCounts.put(pv, x + 1);
-                            double y = tifTimes.get(pv);
-                            tifTimes.put(pv, y + tif);
-                        }*/
-                        // TODO: collect traders statistics here na remove afterwards
                         ArrayList<Order> orders = traders.get(ID).decision(book.getBookSizes(), book.getBookInfo(), EventTime, FV);
                         if (!orders.isEmpty()){
                             Integer IDr = book.transactionRule(ID , orders);
@@ -275,10 +262,6 @@ public class SingleRun {
                         if (traders.get(ID).getOrder() != null &&
                                 ((EventTime - traders.get(ID).getOrder().getTimeStamp()) < tif)){
                             waitingTraders.put(traders.get(ID).getOrder().getTimeStamp() + tif, ID);
-                            /*int x = tifCounts.get(5);     // TODO: delete these four lines afterwards
-                            tifCounts.put(5, x + 1);
-                            double y = tifTimes.get(5);
-                            tifTimes.put(5, y + EventTime - traders.get(ID).getOrder().getTimeStamp());*/
                         } else {
                             ArrayList<Order> orders = traders.get(ID).decision(book.getBookSizes(), book.getBookInfo(), EventTime, FV);
                             if (!orders.isEmpty()){
@@ -307,11 +290,6 @@ public class SingleRun {
                         if (traders.get(ID).getOrder() != null &&
                                 ((EventTime - traders.get(ID).getOrder().getTimeStamp()) < tif)){
                             waitingTraders.put(traders.get(ID).getOrder().getTimeStamp() + tif, ID);
-                            /*int pv = traders.get(ID).getPv();  // TODO: remove this five lines afterwards
-                            int x = tifCounts.get(pv);
-                            tifCounts.put(pv, x + 1);
-                            double y = tifTimes.get(pv);
-                            tifTimes.put(pv, y + EventTime - traders.get(ID).getOrder().getTimeStamp());*/
                         } else {
                             ArrayList<Order> orders = traders.get(ID).decision(book.getBookSizes(), book.getBookInfo(), EventTime, FV);
                             if (!orders.isEmpty()){
@@ -395,9 +373,6 @@ public class SingleRun {
                     if (traders.containsKey(ID)){
                         //boolean isHFT = traders.get(ID).getIsHFT();
                         heldOrder = traders.get(ID).getOrder();
-                        if (!ID.equals(heldOrder.getTraderID())){
-                            System.out.println("debug here: order not from the trader");  // TODO: delete afterwards
-                        }
                         bi = book.getBookInfo();
                         if (heldOrder.isBuyOrder()){
                             heldOrder.setPosition(bi[1]);   // buy MO sets the position to ask
@@ -413,21 +388,7 @@ public class SingleRun {
                             Integer IDr = book.transactionRule(ID , orders);
                             if (ID.equals(IDr)) { // executed against fringe, remove ID trader
                                 traders.remove(ID);
-                                /*if (isHFT){                   // TODO: not needed, right?
-                                    ReturningHFT--;
-                                    traderIDsHFT.remove(ID);
-                                } else {
-                                    ReturningNonHFT--;
-                                    traderIDsNonHFT.remove(ID);
-                                }*/
                             } else if (IDr != null){ // returning trader has executed, remove him and the counterparty as well
-                                /*if (isHFT){                   // TODO: not needed, right?
-                                    ReturningHFT--;
-                                    traderIDsHFT.remove(ID);
-                                } else {
-                                    ReturningNonHFT--;
-                                    traderIDsNonHFT.remove(ID);
-                                }*/
                                 if (traders.get(IDr).getIsHFT()){
                                     ReturningHFT--;
                                     traderIDsHFT.remove(IDr);
@@ -438,11 +399,7 @@ public class SingleRun {
                                 traders.remove(ID);
                                 traders.remove(IDr);
                             }           // else, he hasn't executed, leave him in the traders arrays
-                        } else {
-                            System.out.println("debug here: orders is empty");  // TODO: delete afterwards
                         }
-                    } else {
-                        System.out.println("debug here: trader is not here, it's ok if isTraded == true");  // TODO: delete afterwards
                     }
                 } else {
                     prob1 = (double) (nHFT) * lambdaArrival / Lambda;
@@ -473,28 +430,12 @@ public class SingleRun {
                             if ((orders.get(0).getAction() == 2 * end) || (orders.get(0).getAction() == 2 * end + 1)){
                                 waitingTraders.put(EventTime + speedBump, ID);
                                 continue;
-                            }  // TODO: test this part more
+                            }
                             Integer IDr = book.transactionRule(ID , orders);
                             if (IDr == null){ // order put to the book
                                 traderIDsHFT.add(ID);
                                 ReturningHFT++;
                             }
-                            /*if (IDr == null){ // order put to the book    // TODO: is this needed?
-                                traderIDsHFT.add(ID);
-                                ReturningHFT++;
-                            } else if (!ID.equals(IDr)) { // returns another trader-> executed counterparty
-                                if (traders.get(IDr).getIsHFT()){
-                                    ReturningHFT--;
-                                    traderIDsHFT.remove(IDr);
-                                } else {
-                                    ReturningNonHFT--;
-                                    traderIDsNonHFT.remove(IDr);
-                                }
-                                traders.remove(IDr);
-                                traders.remove(ID);
-                            } else { // MO against fringe
-                                traders.remove(ID);
-                            }*/
                         } else {    // no order, put the trader to the returning lists
                             traderIDsHFT.add(ID);
                             ReturningHFT++;
@@ -522,24 +463,12 @@ public class SingleRun {
                             if ((orders.get(0).getAction() == 2 * end) || (orders.get(0).getAction() == 2 * end + 1)){
                                 waitingTraders.put(EventTime + speedBump, ID);
                                 continue;
-                            }  // TODO: test this part more
+                            }
                             Integer IDr = book.transactionRule(ID , orders);
                             if (IDr == null){ // order put to the book
                                 traderIDsNonHFT.add(ID);
-                                ReturningNonHFT++;                          // TODO: is it needed?
-                            } /*else if (!ID.equals(IDr)) { // returns another trader-> executed counterparty
-                                if (traders.get(IDr).getIsHFT()){
-                                    ReturningHFT--;
-                                    traderIDsHFT.remove(IDr);
-                                } else {
-                                    traderIDsNonHFT.remove(IDr);
-                                    ReturningNonHFT--;
-                                }
-                                traders.remove(IDr);
-                                traders.remove(ID);
-                            } else { // MO against fringe
-                                traders.remove(ID);
-                            }*/
+                                ReturningNonHFT++;
+                            }
                         } else {    // no order, put the trader to the returning lists
                             traderIDsNonHFT.add(ID);
                             ReturningNonHFT++;
@@ -548,7 +477,6 @@ public class SingleRun {
                         ID = traderIDsHFT.get((int) (Math.random() * traderIDsHFT.size()));
                         ArrayList<Order> orders = traders.get(ID).decision(book.getBookSizes(), book.getBookInfo(), EventTime, FV);
                         if (!orders.isEmpty()){
-                            // TODO: think about IDs handling and deleting
                             ArrayList<Order> orders2hold = new ArrayList<Order>();
                             for (Order o : orders){
                                 if (o.getAction() == (2 * end) || (o.getAction() == 2 * end + 1)){
@@ -562,29 +490,11 @@ public class SingleRun {
                                 traderIDsHFT.remove(ID);
                             }
                             book.transactionRule(ID , orders);
-                            /*if (ID.equals(IDr)) { // executed against fringe, remove ID trader // TODO: don't need this?
-                                traders.remove(ID);
-                                ReturningHFT--;
-                                traderIDsHFT.remove(ID);
-                            } else if (IDr != null){ // returning trader has executed, remove him and the counterparty as well
-                                ReturningHFT--;
-                                traderIDsHFT.remove(ID);
-                                if (traders.get(IDr).getIsHFT()){
-                                    ReturningHFT--;
-                                    traderIDsHFT.remove(IDr);
-                                } else {
-                                    ReturningNonHFT--;
-                                    traderIDsNonHFT.remove(IDr);
-                                }
-                                traders.remove(ID);
-                                traders.remove(IDr);
-                            }*/
                         }
                     } else if (rn < x4){ // Returning nonHFT
                         ID = traderIDsNonHFT.get(((int) Math.random() * traderIDsNonHFT.size()));
                         ArrayList<Order> orders = traders.get(ID).decision(book.getBookSizes(), book.getBookInfo(), EventTime, FV);
                         if (!orders.isEmpty()){
-                            // TODO: think about IDs handling and deleting
                             ArrayList<Order> orders2hold = new ArrayList<Order>();
                             for (Order o : orders){
                                 if (o.getAction() == (2 * end) || (o.getAction() == 2 * end + 1)){
@@ -598,23 +508,6 @@ public class SingleRun {
                                 traderIDsNonHFT.remove(ID);
                             }
                             book.transactionRule(ID , orders);
-                            /*if (ID.equals(IDr)){ // executed against fringe, remove ID trader // TODO: don't need this?
-                                traders.remove(ID);
-                                ReturningNonHFT--;
-                                traderIDsNonHFT.remove(ID);
-                            } else if (IDr != null){ // returning trader has executed, remove him and the counterparty as well
-                                ReturningNonHFT--;
-                                traderIDsNonHFT.remove(ID);
-                                if (traders.get(IDr).getIsHFT()){
-                                    ReturningHFT--;
-                                    traderIDsHFT.remove(IDr);
-                                } else {
-                                    ReturningNonHFT--;
-                                    traderIDsNonHFT.remove(IDr);
-                                }
-                                traders.remove(ID);
-                                traders.remove(IDr);
-                            }*/
                         }
                     } else { // Change in FV
                         double rn3 = Math.random();
@@ -630,14 +523,10 @@ public class SingleRun {
                             if (traders.get(trID).getIsHFT()){
                                 if (traderIDsHFT.remove(trID)){
                                     ReturningHFT--;
-                                }  else {
-                                    System.out.println("debug here: trader not found");  // TODO: delete afterwards
                                 }
                             } else {
                                 if (traderIDsNonHFT.remove(trID)){
                                     ReturningNonHFT--;
-                                } else {
-                                    System.out.println("debug here: trader not found");  // TODO: delete afterwards
                                 }
                             }
                             traders.remove(trID);
@@ -661,7 +550,7 @@ public class SingleRun {
             }
 
         }
-        if (convergence != "none"){                                          // TODO: distinguish with separate boolean about second type convergence
+        if (convergence != "none"){
             convergenceStat = trader.printConvergence(15, convergence, write);
         }
         return new double[]{EventTime, FV, ReturningHFT, ReturningNonHFT, convergenceStat};
@@ -705,19 +594,21 @@ public class SingleRun {
     private void writePrint (int i){
         h.addStatisticsData(i, trader.getStatesCount()); // multiple payoffs count
         if (writeDiagnostics){
-            trader.printDiagnostics();
+            if (i != 0){trader.printDiagnostics();}
             trader.resetDiagnostics();
         }
         if (writeHistogram){
-            trader.printHistogram();
+            if (i != 0){trader.printHistogram();}
             trader.resetHistogram();
         }
         if (write){
-            h.printTransactions(header, outputNameTransactions);
-            h.printBookData(header, outputNameBookData);
-            trader.printDecisions();
+            if (i != 0){
+                h.printTransactions(header, outputNameTransactions);
+                h.printBookData(header, outputNameBookData);
+                trader.printDecisions();
+                trader.printTif(tifTimes, tifCounts, population);
+            }
             trader.resetDecisionHistory();
-            trader.printTif(tifTimes, tifCounts, population);
             for (int j = 0; j < 6; j++){
                 tifCounts.put(j, 0);
                 tifTimes.put(j, 0.0);
