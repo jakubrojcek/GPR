@@ -270,11 +270,11 @@ public class SingleCase {
             writeDiagnostics = true;// write diagnostics controls diagnostics
             writeHistogram = true; // write histogram
             purge = false;
-            /*if (i % 5 == 0) {
+            if (i % 5 == 0) {
                 purge = true;      // purge occasionally in this phase
             } else {
                 purge = false;
-            }*/
+            }
             nReset = true;         // reset n in this com.jakubrojcek.gpr2005a.SingleRun?
             trader.setPrTremble(0.0012);
             //trader.setWriteDec(false);
@@ -297,6 +297,7 @@ public class SingleCase {
         writeHistogram = true; // write histogram
         purge = false;          // purge in this com.jakubrojcek.gpr2005a.SingleRun?
         nReset = true;         // reset n in this com.jakubrojcek.gpr2005a.SingleRun?
+        //trader.setPrTremble(0.0);
         trader.setPrTremble(0.0009);
         //trader.setWriteDec(false);
         trader.setWriteDiag(writeDiagnostics);
@@ -384,7 +385,7 @@ public class SingleCase {
         int traderCountStart = trader.getTraderCount();
         int traderCountHFTstart = trader.getTraderCountHFT();
         int traderCountNonHFTstart = trader.getTraderCountNonHFT();
-        nEvents = 200000000;         // number of events
+        nEvents = 100000000;         // number of events
         write = true;          // writeDecisions output in this SingleRun?
         writeDiagnostics = true;// write diagnostics controls diagnostics
         writeHistogram = true; // write histogram
@@ -396,7 +397,7 @@ public class SingleCase {
         trader.setWriteDiag(writeDiagnostics);
         trader.setWriteHist(writeHistogram);
         trader.setOnline(true);
-        trader.setFixedBeliefs(true);
+        trader.setFixedBeliefs(false);  // TODO: change back to true after debugging
         trader.setSimilar(true);       // controls if beliefs for a state not present, looks for similar state belief
 
         RunOutcome =

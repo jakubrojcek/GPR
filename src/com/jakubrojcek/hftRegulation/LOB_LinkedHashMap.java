@@ -179,7 +179,7 @@ public class LOB_LinkedHashMap {
             Db += BookSizes[j];
             j++;
         }
-        Db = Math.min(Db, 2 * maxDepth);    // limited to 90
+        Db = Math.min(Db, 2 * maxDepth);    // limited to 60
 
         j = nPoints - 1;
         while (j > At){

@@ -40,6 +40,15 @@ public class Trade {
         this.FVbeforeSeller = FVs;
         this.price = price;
         this.FV = fv;
+        /*double mo;
+        if (timeBuyer < timeSeller){           // distinguishing if seller initiated
+            mo = price - sellerPV - fv;
+        } else {
+            mo = fv + buyerPV - price;
+        }
+        if (mo < 0){
+            System.out.println("negative mo");
+        }*/
     }
 
     public Trade(int buyerID, double bPV, boolean bHFT, int sellerID, double sPV, boolean sHFT,

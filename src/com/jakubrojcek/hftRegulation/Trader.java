@@ -361,10 +361,16 @@ public class Trader {
                                     System.out.println("too low priority");
                                 }*/
                             } else {
+                                /*if (fixedBeliefs && (i == 14 || i == 15)){
+                                    System.out.println("mo");
+                                }*/
                                 p1 = tempQs.get(i).getQ();
                             }
                         } else {
                             if (similar){
+                                /*if (fixedBeliefs && (i == 14 || i == 15)){
+                                    System.out.println("mo");
+                                }*/
                                 p1 = getSimilarBelief(code, i, BookInfo, q, oldPos);
                             }
                             if (p1 == -1.0){
@@ -421,6 +427,9 @@ public class Trader {
             if (fixedBeliefs){                            // just save the realized beliefs for comparison
                 if (convergenceStates.containsKey(code)){
                     tempQs = convergenceStates.get(code);
+                    /*if (action == 14 || action == 15){
+                        System.out.println("mo");
+                    }*/
                     if (tempQs.containsKey(action)){
                         belief = tempQs.get(action);
                     } else {
@@ -753,6 +762,9 @@ public class Trader {
 
         if ((action == (2 * end)) || (action == (2 * end + 1))) {
             isTraded = true; // isTraded set to true if submitting MOs
+            /*if (max < 0.0){
+                System.out.println("negative belief");
+            }*/
         }
         isReturning = true;
         if (writeDecisions){writeDecision(BookInfo, (short)action, cancelled);} // printing data for output tables
@@ -780,6 +792,11 @@ public class Trader {
                     //- (fundamentalValue - PriceFV);
         }
         if (fixedBeliefs){
+            /*if (order.getAction() == 15 || order.getAction() == 14){
+                if (payoff < 0.0){
+                    System.out.println("negative payoff");
+                }
+            }*/
             if (belief.getNe() > 0){
                 if(belief.getN() < nResetMax) {
                     belief.increaseN();
@@ -892,12 +909,12 @@ public class Trader {
         while ((states.get(code2) == null || states.get(code2).get(ac) == null) && i > 0) {
             switch (i) {
                 case 13:
-                    if (bi[5] < 2 * maxDepth - 1){       // depth off ask
+                    if (bi[5] < 2 * maxDepth - 15){       // depth off ask
                         code2 = code1b + (1<<19);
                     }
                     break;
                 case 12:
-                    if (bi[4] < 2 * maxDepth - 1){ // depth off bid is bigger than 1
+                    if (bi[4] < 2 * maxDepth - 15){ // depth off bid is bigger than 1
                         code2 = code1b + (1<<23);
                     }
                     break;
@@ -995,8 +1012,21 @@ public class Trader {
             }*//*
             i--;
         }*/
+        /*if (states.get(code2) != null && states.get(code2).get(ac) != null){
+            long c = (code2 >> 39);
+            if (c != bi[0]){
+                System.out.println("bid not the same" + (code1b >> 39));
+            }
+            long b = bi[0];
+            c = (code2 - (b << 39));
+            long a = (c >> 35);
 
+            if (a != bi[1]){
+                c = code1b - (bi[0] << 39);
+                System.out.println("bid not the same" + (c >> 35));
+            }
 
+        }*/
         return (states.get(code2) != null && states.get(code2).get(ac) != null) ? states.get(code2).get(ac).getQ()
                                                                                 : -1.0;//similarBelief;
     }
@@ -1434,7 +1464,7 @@ System.out.println("problem");
                 if (test[i] == false){
                     System.out.println("testing hash code failed");
                 }
-            } */        // tests
+            }*/         // tests
         }
 
         return code;

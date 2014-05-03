@@ -375,9 +375,15 @@ public class SingleRun {
                         heldOrder = traders.get(ID).getOrder();
                         bi = book.getBookInfo();
                         if (heldOrder.isBuyOrder()){
+                            /*if (write && (heldOrder.getPosition() != bi[1])){
+                                System.out.println("different position");
+                            }*/
                             heldOrder.setPosition(bi[1]);   // buy MO sets the position to ask
                             heldOrder.setTimeStamp(EventTime);
                         } else {
+                            /*if (write && (heldOrder.getPosition() != bi[0])){
+                                System.out.println("different position");
+                            }*/
                             heldOrder.setPosition(bi[0]);   // sell MO sets the position to bid
                             heldOrder.setTimeStamp(EventTime);
                         }
