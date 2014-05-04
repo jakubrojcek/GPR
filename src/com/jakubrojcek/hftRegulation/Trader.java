@@ -10,6 +10,7 @@ import java.util.Iterator;
 
 import java.io.FileWriter;
 import java.util.*;
+import java.util.concurrent.SynchronousQueue;
 
 import com.jakubrojcek.*;
 
@@ -55,6 +56,8 @@ public class Trader {
     static Hashtable<Integer, Double[]> discountFactorB = new Hashtable<Integer, Double[]>(); // container for discount factors computed using tauB
     static Hashtable<Integer, Double[]> discountFactorS = new Hashtable<Integer, Double[]>(); // container for discount factors computed using tauS
     static double[] numberOfCancels;            // initial beliefs for number of cancellations
+    static double[] slippageS;                  // initial beliefs for slippage of SMO in case of speed bumps
+    static double[] slippageB;                  // initial beliefs for slippage of BMO in case of speed bumps
     static Random random = new Random();        // random generator, used for trembling
     static int infoSize;                        // 2-bid, ask, 4-last price, direction, 6-depth at bid,ask, 8-depth off bid,ask
     static byte nP;                             // number of prices
@@ -188,6 +191,8 @@ public class Trader {
         statesCount = 0;
         model = m;
         speedBump = sb;
+        slippageS = new double[maxDepth + 1];
+        slippageB = new double[maxDepth + 1];
     }
 
     // decision about the price is made here, so far random
@@ -322,12 +327,10 @@ public class Trader {
                                         ((breakPoint - i + end) * tickSize + privateValue - TTAX + MFEE));
                                 p.put(i, p1);
                             } else if (i == (2 * end)){
-                                p1 = ((Bt - fvPos) * tickSize - privateValue - TTAX - TFEE
-                                        - speedBump * Math.max(0,3 - BookInfo[2]));
+                                p1 = ((Bt - fvPos) * tickSize - privateValue - TTAX - TFEE - slippageS[BookInfo[2]]);
                                 p.put(i, p1); // payoff to sell market order
                             } else if (i == (2 * end + 1)){
-                                p1 = ((fvPos - At) * tickSize + privateValue - TTAX -TFEE
-                                        - speedBump * Math.max(0,3 - BookInfo[3]));
+                                p1 = ((fvPos - At) * tickSize + privateValue - TTAX -TFEE - slippageB[BookInfo[3]]);
                                 p.put(i, p1); // payoff to buy market order
                             } else if (i == (2 * end + 2)){
                                 double Rt = (isHFT) ? 1.0 / ReturnFrequencyHFT
@@ -385,11 +388,9 @@ public class Trader {
                                     p1 = (discountFactorS.get(i - end)[Math.abs(BookSizes[LL + i - end])] *
                                             ((breakPoint - i + end) * tickSize + privateValue - TTAX + MFEE));
                                 } else if (i == (2 * end)){
-                                    p1 = ((Bt - fvPos) * tickSize - privateValue - TTAX - TFEE
-                                            - speedBump * Math.max(0,3 - BookInfo[2])); // payoff to sell market order
+                                    p1 = ((Bt - fvPos) * tickSize - privateValue - TTAX - TFEE - slippageS[BookInfo[2]]); // payoff to sell market order
                                 } else if (i == (2 * end + 1)){                    // TODO: did this help?
-                                    p1 = ((fvPos - At) * tickSize + privateValue - TTAX - TFEE
-                                            - speedBump * Math.max(0,3 - BookInfo[3])); // payoff to buy market order
+                                    p1 = ((fvPos - At) * tickSize + privateValue - TTAX - TFEE - slippageB[BookInfo[3]]); // payoff to buy market order
                                 } else if (i == (2 * end + 2)){
                                     double Rt = (isHFT) ? 1.0 / ReturnFrequencyHFT
                                                         : 1.0 / ReturnFrequencyNonHFT; // expected return time
@@ -1236,25 +1237,98 @@ public class Trader {
         diag.addCancelCount(cancelCount, pv, isHFT);
     }
 
-    public void computeInitialBeliefs(){
-        int[] occurrences = new int[nPayoffs];
-        Iterator<Integer> iteratorActions;
-        HashMap<Integer, BeliefQ> beliefQs;
-        Iterator<Long> iteratorStates = states.keySet().iterator();
-        Long code;
-        Integer action;
-        while (iteratorStates.hasNext()){
-            code = iteratorStates.next();
-            beliefQs = states.get(code);
-            iteratorActions = beliefQs.keySet().iterator();
-            while (iteratorActions.hasNext()){
-                action = iteratorActions.next();
-                numberOfCancels[action] += beliefQs.get(action).getnC();
-                occurrences[action]++;
+    public void computeInitialBeliefs(double cf, double sb){
+        if (cf != 0.0){
+            int[] occurrences = new int[nPayoffs];
+            Iterator<Integer> iteratorActions;
+            HashMap<Integer, BeliefQ> beliefQs;
+            Iterator<Long> iteratorStates = states.keySet().iterator();
+            Long code;
+            Integer action;
+            while (iteratorStates.hasNext()){
+                code = iteratorStates.next();
+                beliefQs = states.get(code);
+                iteratorActions = beliefQs.keySet().iterator();
+                while (iteratorActions.hasNext()){
+                    action = iteratorActions.next();
+                    numberOfCancels[action] += beliefQs.get(action).getnC();
+                    occurrences[action]++;
+                }
+            }
+            for (int i = 0; i < nPayoffs; i++){
+                numberOfCancels[i] = (double)(numberOfCancels[i] / Math.max(occurrences[i], 1));
             }
         }
-        for (int i = 0; i < nPayoffs; i++){
-            numberOfCancels[i] = (double)(numberOfCancels[i] / Math.max(occurrences[i], 1));
+        if (sb != 0.0){
+            int[] slippageScount = new int[maxDepth + 1];
+            int[] slippageBcount = new int[maxDepth + 1];
+            Iterator<Integer> iteratorActions;
+            HashMap<Integer, BeliefQ> beliefQs;
+            Iterator<Long> iteratorStates = states.keySet().iterator();
+            Long code;
+            while (iteratorStates.hasNext()){
+                code = iteratorStates.next();
+                beliefQs = states.get(code);
+                long code2 = code;
+                long Bt = (code2 >> 39);
+                code2 = code2 - (Bt << 39);
+
+                long At = (code2 >> 35);
+                code2 = code2 - (At << 35);
+
+                long lBt = (code2 >> 31);
+                code2 = code2 - (lBt << 31);
+
+                long lAt = (code2 >> 27);
+                code2 = code2 - (lAt<<27);
+
+                long dBt = (code2 >> 23);
+                code2 = code2 - (dBt<<23);
+
+                long dSt = (code2 >> 19);
+                code2 = code2 - (dSt<<19);
+
+                long Pt = (code2 >> 15);
+                code2 = code2 - (Pt<<15);
+
+                long b = (code2 >> 14);
+                code2 = code2 - (b<<14);
+
+                long P = (code2 >> 10);
+                code2 = code2 - (P<<10);
+
+                long q = (code2 >> 6);
+                code2 = code2 - (q<<6);
+
+                long x = (code2 >> 4);
+                code2 = code2 - (x<<4);
+
+                long a = (code2 >> 1);
+                code2 = code2 - (a<<1);
+
+                long l = code2;
+                code2 = code2 - l;
+                if (code2 != 0){
+                    System.out.println("code not 0");
+                }
+                if (beliefQs.containsKey(2 * end)){
+                    double p1 = (Bt - fvPos) * tickSize - FprivateValues[(int)a] - TTAX - TFEE; // payoff to sell market order
+                    slippageS[2 * (int)lBt] += p1 - beliefQs.get(2 * end).getQ();
+                    slippageScount[2 * (int)lBt]++;
+                }
+                if (beliefQs.containsKey(2 *  end + 1)){
+                    double p1 = (fvPos - At) * tickSize + FprivateValues[(int)a] - TTAX - TFEE;
+                    slippageB[2 * (int)lAt] += p1 - beliefQs.get(2 * end + 1).getQ();
+                    slippageBcount[2 * (int)lAt]++;
+                }
+            }
+            int sz = maxDepth / 2;
+            for (int i = 0; i < sz; i++){
+                slippageS[2 * i] = (double)(slippageS[i] / Math.max(slippageScount[2 * i], 1));
+                slippageB[2 * i] = (double)(slippageB[i] / Math.max(slippageBcount[2 * i], 1));
+                slippageS[2 * i + 1] = slippageS[2 * i];
+                slippageB[2 * i + 1] = slippageB[2 * i];
+            }
         }
     }
 

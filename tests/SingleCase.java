@@ -128,7 +128,7 @@ public class SingleCase {
                 outputNameTransactions, outputNameBookData, sb, end);
 
         // phase 1a) initialization
-        int nEvents = 2000000000;         // number of events
+        int nEvents = 20000000;         // number of events
         int ReturningHFT = 0;           // # of returning HFT traders in the book
         int ReturningNonHFT = 0;        // # of returning nonHFT traders in the book
         boolean write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
@@ -153,8 +153,8 @@ public class SingleCase {
         ReturningHFT = (int) RunOutcome[2];
         ReturningNonHFT = (int) RunOutcome[3];
 
-        if (CFEE != 0.0){               // collect initial beliefs and restart
-            trader.computeInitialBeliefs();
+        if (CFEE != 0.0 || sb != 0.0){               // collect initial beliefs and restart
+            trader.computeInitialBeliefs(CFEE, sb);
             nEvents = 100000000;         // number of events
             write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
             writeDiagnostics = true;// write diagnostics controls diagnostics
@@ -174,7 +174,7 @@ public class SingleCase {
             ReturningNonHFT = (int) RunOutcome[3];
         }
 
-        nEvents = 2000000000;         // number of events
+        /*nEvents = 2000000000;         // number of events
         write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
         writeDiagnostics = true;// write diagnostics controls diagnostics
         writeHistogram = true; // write histogram
@@ -264,7 +264,7 @@ public class SingleCase {
         ReturningHFT = (int) RunOutcome[2];
         ReturningNonHFT = (int) RunOutcome[3];
         // phase 1b) extensive simulation and learning
-        /*for (int i = 0; i < 3; i++){
+        *//*for (int i = 0; i < 3; i++){
             nEvents = 1000000000;         // number of events
             write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
             writeDiagnostics = true;// write diagnostics controls diagnostics
@@ -288,7 +288,7 @@ public class SingleCase {
             FV = RunOutcome[1];
             ReturningHFT = (int) RunOutcome[2];
             ReturningNonHFT = (int) RunOutcome[3];
-        }*/
+        }*//*
 
 
         nEvents = 1000000000;         // number of events
@@ -308,7 +308,7 @@ public class SingleCase {
         EventTime = RunOutcome[0];
         FV = RunOutcome[1];
         ReturningHFT = (int) RunOutcome[2];
-        ReturningNonHFT = (int) RunOutcome[3];
+        ReturningNonHFT = (int) RunOutcome[3];*/
 
         nEvents = 1000000000;         // number of events
         write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?

@@ -19,7 +19,13 @@ public class Test_various {
 
         double timeStamp1 = System.nanoTime();
 
-        for (int i = 0; i < 100000000; i++){
+        int maxDepth = 31;
+        int sz = (maxDepth) / 2;
+        System.out.println(sz);
+        for (int i = 0; i < sz; i++){
+            System.out.println(i);
+        }
+        /*for (int i = 0; i < 100000000; i++){
             int j = 10;
             while (j > 0){
                 switch (j) {
@@ -32,17 +38,17 @@ public class Test_various {
                     case 7:
                         break;
                 }
-                /*if (j == 10){
+                *//*if (j == 10){
                 } else if (j == 9){
                 } else if (j == 8){
                 } else if (j == 7){
-                }*/
+                }*//*
                 j--;
             }
         }
 
         double timeStamp2 = System.nanoTime();
-        System.out.println(timeStamp2 - timeStamp1);
+        System.out.println(timeStamp2 - timeStamp1);*/
         /*HashMap<Long, HashMap<Integer, BeliefQ>> states = new HashMap<Long, HashMap<Integer, BeliefQ>>();
         HashMap<Integer, BeliefQ> beliefs = new HashMap<Integer, BeliefQ>();
         beliefs.put(1, new BeliefQ(1, 0.5));
