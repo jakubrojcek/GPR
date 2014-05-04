@@ -121,7 +121,7 @@ public class SingleCase {
         LOB_LinkedHashMap book = new LOB_LinkedHashMap(model, FV, FVpos, maxDepth, end, tickSize, nP, h, traders);
         Trader trader = new Trader(infoSize, tauB, tauS, nP, FVpos, tickSize, ReturnFrequencyHFT,
                 ReturnFrequencyNonHFT, LL, HL, end, maxDepth, breakPoint, hti, prTremble, folder, book, FprivateValues,
-                rho, TTAX, CFEE, MFEE, TFEE, model);
+                rho, TTAX, CFEE, MFEE, TFEE, model, sb);
         book.makeBook(Prices);
         SingleRun sr = new SingleRun(model, tif, lambdaArrival, lambdaFV, ReturnFrequencyHFT, ReturnFrequencyNonHFT,
                 FprivateValues, PVdistrb, sigma, tickSize, FVplus, header, book, traders, h, trader, outputNameStatsData,
@@ -264,7 +264,7 @@ public class SingleCase {
         ReturningHFT = (int) RunOutcome[2];
         ReturningNonHFT = (int) RunOutcome[3];
         // phase 1b) extensive simulation and learning
-        for (int i = 0; i < 3; i++){
+        /*for (int i = 0; i < 3; i++){
             nEvents = 1000000000;         // number of events
             write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
             writeDiagnostics = true;// write diagnostics controls diagnostics
@@ -288,7 +288,7 @@ public class SingleCase {
             FV = RunOutcome[1];
             ReturningHFT = (int) RunOutcome[2];
             ReturningNonHFT = (int) RunOutcome[3];
-        }
+        }*/
 
 
         nEvents = 1000000000;         // number of events
@@ -441,6 +441,7 @@ public class SingleCase {
             writer.write("MFEE:" + ";" + MFEE + ";" + "\r");
             writer.write("TFEE:" + ";" + TFEE + ";" + "\r");
             writer.write("rho:" + ";" + rho + ";" + "\r");
+            writer.write("speedBump:" + ";" + sb + ";" + "\r");
             writer.close();
         }
         catch (Exception e){

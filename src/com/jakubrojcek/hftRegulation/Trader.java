@@ -94,6 +94,7 @@ public class Trader {
     static double MFEE = 0.0;                   // LO make fee
     static double TFEE = 0.0;                   // MO take fee
     static float rho;                           // trading "impatience" parameter
+    static double speedBump;                    // value of speed bump
 
 
 
@@ -121,7 +122,7 @@ public class Trader {
     // constructor of the main trader- loads parameters from main
     public Trader(int is, double[] tb, double[] ts, byte numberPrices, int FVpos, double tickS, double rFast, double rSlow,
                   int ll, int hl, int e, int md, int bp, int hti, double pt, String f, LOB_LinkedHashMap b,
-                  double [] PVs, float r, double tt, double cf, double mf, double tf, int m){
+                  double [] PVs, float r, double tt, double cf, double mf, double tf, int m, double sb){
         states = new HashMap<Long, HashMap<Integer, BeliefQ>>(hti);
         previousStates = new HashMap<Long, HashMap<Integer, BeliefQ>>();
         convergenceStates = new HashMap<Long, HashMap<Integer, BeliefQ>>();
@@ -186,6 +187,7 @@ public class Trader {
         tradeCount = 0;          // counting number of trader
         statesCount = 0;
         model = m;
+        speedBump = sb;
     }
 
     // decision about the price is made here, so far random
@@ -320,10 +322,12 @@ public class Trader {
                                         ((breakPoint - i + end) * tickSize + privateValue - TTAX + MFEE));
                                 p.put(i, p1);
                             } else if (i == (2 * end)){
-                                p1 = ((Bt - fvPos) * tickSize - privateValue - TTAX - TFEE);
+                                p1 = ((Bt - fvPos) * tickSize - privateValue - TTAX - TFEE
+                                        - speedBump * Math.max(0,3 - BookInfo[2]));
                                 p.put(i, p1); // payoff to sell market order
                             } else if (i == (2 * end + 1)){
-                                p1 = ((fvPos - At) * tickSize + privateValue - TTAX -TFEE);
+                                p1 = ((fvPos - At) * tickSize + privateValue - TTAX -TFEE
+                                        - speedBump * Math.max(0,3 - BookInfo[3]));
                                 p.put(i, p1); // payoff to buy market order
                             } else if (i == (2 * end + 2)){
                                 double Rt = (isHFT) ? 1.0 / ReturnFrequencyHFT
@@ -381,9 +385,11 @@ public class Trader {
                                     p1 = (discountFactorS.get(i - end)[Math.abs(BookSizes[LL + i - end])] *
                                             ((breakPoint - i + end) * tickSize + privateValue - TTAX + MFEE));
                                 } else if (i == (2 * end)){
-                                    p1 = ((Bt - fvPos) * tickSize - privateValue - TTAX - TFEE); // payoff to sell market order
-                                } else if (i == (2 * end + 1)){
-                                    p1 = ((fvPos - At) * tickSize + privateValue - TTAX - TFEE); // payoff to buy market order
+                                    p1 = ((Bt - fvPos) * tickSize - privateValue - TTAX - TFEE
+                                            - speedBump * Math.max(0,3 - BookInfo[2])); // payoff to sell market order
+                                } else if (i == (2 * end + 1)){                    // TODO: did this help?
+                                    p1 = ((fvPos - At) * tickSize + privateValue - TTAX - TFEE
+                                            - speedBump * Math.max(0,3 - BookInfo[3])); // payoff to buy market order
                                 } else if (i == (2 * end + 2)){
                                     double Rt = (isHFT) ? 1.0 / ReturnFrequencyHFT
                                                         : 1.0 / ReturnFrequencyNonHFT; // expected return time

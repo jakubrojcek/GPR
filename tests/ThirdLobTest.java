@@ -300,7 +300,7 @@ public class ThirdLobTest {
         params[12] = "0.125";        // arrival of changes in FV
         params[13] = "30";          // max depth
         params[14] = "speedBump";   // model to use
-        params[15] = "0.1";         // speed bump length
+        params[15] = "0.2";         // speed bump length
         case11.main(params);
         case11 = null;
 
