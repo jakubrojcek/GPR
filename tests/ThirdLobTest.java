@@ -42,7 +42,7 @@ public class ThirdLobTest {
         case1 = null;*/
 
         SingleCase case2 = new SingleCase();
-        params[0] = "_2baseCaseHFT40\\";   // folder
+        params[0] = "_2baseCaseHFT41\\";   // folder
         params[1] = "2";            // new HFTs
         params[2] = "1";            // # of positive PV slow traders
         params[3]= "2";             // # of zero PV slow traders
@@ -58,8 +58,8 @@ public class ThirdLobTest {
         params[13] = "30";          // max depth
         params[14] = "returning";   // model to use
         params[15] = "0.0";         // speed bump length
-        params[16] = "15";          // number of ticks
-        params[17] = "8";           // infoSize
+        params[16] = "31";          // number of ticks
+        params[17] = "9";           // infoSize
         case2.main(params);
         case2 = null;
 
