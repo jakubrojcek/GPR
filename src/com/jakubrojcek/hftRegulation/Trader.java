@@ -768,7 +768,9 @@ public class Trader {
         if (cancelled && oldAction != -1.0){cancelCount++;}
 
         if ((action == (2 * end)) || (action == (2 * end + 1))) {
-            isTraded = true; // isTraded set to true if submitting MOs
+            if (speedBump == 0.0){
+                isTraded = true; // isTraded set to true if submitting MOs      // TODO: can change back afterwards
+            }
             /*if (max < 0.0){
                 System.out.println("negative belief");
             }*/
@@ -1047,12 +1049,12 @@ public class Trader {
         while ((states.get(code2) == null || states.get(code2).get(ac) == null) && i > 0) {
             switch (i) {
                 case 13:
-                    if (bi[5] < 2 * maxDepth - 1){       // depth off ask
+                    if (bi[5] < 2 * maxDepth - 15){       // depth off ask
                         code2 = code1b + (1<<19);
                     }
                     break;
                 case 12:
-                    if (bi[4] < 2 * maxDepth - 1){ // depth off bid is bigger than 1
+                    if (bi[4] < 2 * maxDepth - 15){ // depth off bid is bigger than 1
                         code2 = code1b + (1<<23);
                     }
                     break;
@@ -1238,6 +1240,7 @@ public class Trader {
     }
 
     public void computeInitialBeliefs(double cf, double sb){
+        System.out.println("computing initial beliefs CFEE or SB");
         if (cf != 0.0){
             int[] occurrences = new int[nPayoffs];
             Iterator<Integer> iteratorActions;
@@ -2060,5 +2063,9 @@ System.out.println("problem");
 
     public static void setTraderCountNonHFT(int traderCountNonHFT) {
         TraderCountNonHFT = traderCountNonHFT;
+    }
+
+    public void setOrder(Order order) {
+        this.order = order;
     }
 }

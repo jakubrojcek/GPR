@@ -378,17 +378,41 @@ public class SingleRun {
                             /*if (write && (heldOrder.getPosition() != bi[1])){
                                 System.out.println("different position");
                             }*/
-                            heldOrder.setPosition(bi[1]);   // buy MO sets the position to ask
-                            heldOrder.setTimeStamp(EventTime);
+                            if (heldOrder.getPosition() <= bi[1]){      // TODO: can change back afterwards
+                                heldOrder.setPosition(bi[1]);   // buy MO sets the position to ask
+                                heldOrder.setTimeStamp(EventTime);
+                            } else {
+                                heldOrder = null;
+                                traders.get(ID).setOrder(null);
+                                if (traders.get(ID).getIsHFT()){
+                                    ReturningHFT++;
+                                    traderIDsHFT.add(ID);
+                                } else {
+                                    ReturningNonHFT++;
+                                    traderIDsNonHFT.add(ID);
+                                }
+                            }
                         } else {
                             /*if (write && (heldOrder.getPosition() != bi[0])){
                                 System.out.println("different position");
                             }*/
-                            heldOrder.setPosition(bi[0]);   // sell MO sets the position to bid
-                            heldOrder.setTimeStamp(EventTime);
+                            if (heldOrder.getPosition() >= bi[0]){      // TODO: can change back afterwards
+                                heldOrder.setPosition(bi[0]);   // buy MO sets the position to ask
+                                heldOrder.setTimeStamp(EventTime);
+                            } else {
+                                heldOrder = null;
+                                traders.get(ID).setOrder(null);
+                                if (traders.get(ID).getIsHFT()){
+                                    ReturningHFT++;
+                                    traderIDsHFT.add(ID);
+                                } else {
+                                    ReturningNonHFT++;
+                                    traderIDsNonHFT.add(ID);
+                                }
+                            }
                         }
                         ArrayList<Order> orders = new ArrayList<Order>();
-                        orders.add(heldOrder);
+                        if (heldOrder != null){orders.add(heldOrder);}
 
                         if (!orders.isEmpty()){
                             Integer IDr = book.transactionRule(ID , orders);
@@ -405,8 +429,12 @@ public class SingleRun {
                                 traders.remove(ID);
                                 traders.remove(IDr);
                             }           // else, he hasn't executed, leave him in the traders arrays
-                        }
-                    }
+                        } /*else {
+                            System.out.println("MO not there");
+                        }*/
+                    } /*else {
+                        System.out.println("trader not there");
+                    }*/
                 } else {
                     prob1 = (double) (nHFT) * lambdaArrival / Lambda;
                     prob2 = (double) (NewNonHFT) * lambdaArrival / Lambda;
@@ -434,7 +462,7 @@ public class SingleRun {
                         ArrayList<Order> orders = tr.decision(book.getBookSizes(), book.getBookInfo(), EventTime, FV);
                         if (!orders.isEmpty()){
                             if ((orders.get(0).getAction() == 2 * end) || (orders.get(0).getAction() == 2 * end + 1)){
-                                waitingTraders.put(EventTime + speedBump, ID);
+                                waitingTraders.put((EventTime + speedBump), ID);
                                 continue;
                             }
                             Integer IDr = book.transactionRule(ID , orders);
@@ -467,7 +495,7 @@ public class SingleRun {
                         ArrayList<Order> orders = tr.decision(book.getBookSizes(), book.getBookInfo(), EventTime, FV);
                         if (!orders.isEmpty()){
                             if ((orders.get(0).getAction() == 2 * end) || (orders.get(0).getAction() == 2 * end + 1)){
-                                waitingTraders.put(EventTime + speedBump, ID);
+                                waitingTraders.put((EventTime + speedBump), ID);
                                 continue;
                             }
                             Integer IDr = book.transactionRule(ID , orders);
@@ -487,7 +515,7 @@ public class SingleRun {
                             for (Order o : orders){
                                 if (o.getAction() == (2 * end) || (o.getAction() == 2 * end + 1)){
                                     orders2hold.add(o);
-                                    waitingTraders.put(EventTime + speedBump, ID);
+                                    waitingTraders.put((EventTime + speedBump), ID);
                                 }
                             }
                             for (Order o : orders2hold){
@@ -505,7 +533,7 @@ public class SingleRun {
                             for (Order o : orders){
                                 if (o.getAction() == (2 * end) || (o.getAction() == 2 * end + 1)){
                                     orders2hold.add(o);
-                                    waitingTraders.put(EventTime + speedBump, ID);
+                                    waitingTraders.put((EventTime + speedBump), ID);
                                 }
                             }
                             for (Order o : orders2hold){
