@@ -331,7 +331,7 @@ public class SingleCase {
         ReturningNonHFT = (int) RunOutcome[3];
         // phase 2a) less extensive simulation, checking for convergence of type 1
         for (int i = 0; i < 2; i++){    // outer loop for convergence type 1
-            nEvents = 70000000;         // number of events
+            nEvents = 80000000;         // number of events
             write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
             writeDiagnostics = true;// write diagnostics controls diagnostics
             writeHistogram = true; // write histogram
