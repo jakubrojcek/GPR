@@ -768,7 +768,9 @@ public class Trader {
         if (cancelled && oldAction != -1.0){cancelCount++;}
 
         if ((action == (2 * end)) || (action == (2 * end + 1))) {
-            isTraded = true; // isTraded set to true if submitting MOs
+            if (speedBump == 0.0){
+                isTraded = true; // isTraded set to true if submitting MOs      // TODO: can change back afterwards
+            }
             /*if (max < 0.0){
                 System.out.println("negative belief");
             }*/
@@ -1047,12 +1049,12 @@ public class Trader {
         while ((states.get(code2) == null || states.get(code2).get(ac) == null) && i > 0) {
             switch (i) {
                 case 13:
-                    if (bi[5] < 2 * maxDepth - 1){       // depth off ask
+                    if (bi[5] < 2 * maxDepth - 15){       // depth off ask
                         code2 = code1b + (1<<19);
                     }
                     break;
                 case 12:
-                    if (bi[4] < 2 * maxDepth - 1){ // depth off bid is bigger than 1
+                    if (bi[4] < 2 * maxDepth - 15){ // depth off bid is bigger than 1
                         code2 = code1b + (1<<23);
                     }
                     break;
@@ -1238,6 +1240,7 @@ public class Trader {
     }
 
     public void computeInitialBeliefs(double cf, double sb){
+        System.out.println("computing initial beliefs CFEE or SB");
         if (cf != 0.0){
             int[] occurrences = new int[nPayoffs];
             Iterator<Integer> iteratorActions;
@@ -1523,6 +1526,71 @@ System.out.println("problem");
 
             test[7] = ((code2 >> 14) == b);
             code2 = code2 - (b<<14);
+
+            test[8] = ((code2 >> 10) == P);
+            code2 = code2 - (P<<10);
+
+            test[9] = ((code2 >> 6) == q);
+            code2 = code2 - (q<<6);
+
+            test[10] = ((code2 >> 4) == x);
+            code2 = code2 - (x<<4);
+
+            test[11] = ((code2 >> 1) == a);
+            code2 = code2 - (a<<1);
+
+            test[12] = (code2 == l);
+            code2 = code2 - l;
+
+            test[13] = (code2 == 0);
+            for (int i = 0; i < 14; i++){
+                if (test[i] == false){
+                    System.out.println("testing hash code failed");
+                }
+            }*/         // tests
+        } else if (infoSize == 9){
+            long Bt = BookInfo[0];      // Best Bid position
+            long At = BookInfo[1];      // Best Ask position
+            long lBt = BookInfo[2] / 2;     // depth at best Bid
+            long lAt = BookInfo[3] / 2;     // depth at best Ask
+            long dBt = Math.min(15, BookInfo[4] / 3); // depth off Bid
+            long dSt = Math.min(15, BookInfo[5] / 3); // depth off Ask
+            int Pt = BookInfo[6];       // last transaction pricePosition position
+            int b = BookInfo[7];        // 1 if last transaction buy, 0 if sell
+            q = Math.min(15, q);
+            int a = pv;                 // private value zero(0), negative (1), positive (2)
+            int l = (isHFT) ? 1 : 0;    // arrival frequency slow (0), fast (1)
+            //System.out.println(Bt + " : " + lBt + " ; " + At + " : " + lAt);
+            /*Long code = (Bt<<50) + (At<<44) + (lBt<<40) + (lAt<<36) + (dBt<<29) + (dSt<<22) + (Pt<<16) + (b<<15) +
++ (P<<9) + (q<<5) + (x<<3) + (a<<1) + l;*/
+            code = (Bt<<42) + (At<<37) + (lBt<<33) + (lAt<<29) + (dBt<<25) + (dSt<<21) + (Pt<<16) + (b<<15) +
+                    + (P<<10) + (q<<6) + (x<<4) + (a<<1) + l;
+
+            /*long code2 = code;
+            boolean [] test = new boolean[14];
+            test[0] = ((code2 >> 42) == Bt);
+            code2 = code2 - (Bt<<42);
+
+            test[1] = ((code2 >> 37) == At);
+            code2 = code2 - (At<<37);
+
+            test[2] = ((code2 >> 33) == lBt);
+            code2 = code2 - (lBt<<33);
+
+            test[3] = ((code2 >> 29) == lAt);
+            code2 = code2 - (lAt<<29);
+
+            test[4] =((code2 >> 25) == dBt);
+            code2 = code2 - (dBt<<25);
+
+            test[5] = ((code2 >> 21) == dSt);
+            code2 = code2 - (dSt<<21);
+
+            test[6] = ((code2 >> 16) == Pt);
+            code2 = code2 - (Pt<<16);
+
+            test[7] = ((code2 >> 15) == b);
+            code2 = code2 - (b<<15);
 
             test[8] = ((code2 >> 10) == P);
             code2 = code2 - (P<<10);
@@ -2060,5 +2128,9 @@ System.out.println("problem");
 
     public static void setTraderCountNonHFT(int traderCountNonHFT) {
         TraderCountNonHFT = traderCountNonHFT;
+    }
+
+    public void setOrder(Order order) {
+        this.order = order;
     }
 }
