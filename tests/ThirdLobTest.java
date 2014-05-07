@@ -43,7 +43,7 @@ public class ThirdLobTest {
 
         SingleCase case2 = new SingleCase();
         params[0] = "_2baseCaseHFT41\\";   // folder
-        params[1] = "1";            // new HFTs
+        params[1] = "2";            // new HFTs
         params[2] = "1";            // # of positive PV slow traders
         params[3]= "2";             // # of zero PV slow traders
         params[4] = "1";            // # of negative PV slow traders
@@ -58,8 +58,8 @@ public class ThirdLobTest {
         params[13] = "30";          // max depth
         params[14] = "returning";   // model to use
         params[15] = "0.0";         // speed bump length
-        params[16] = "15";          // number of ticks
-        params[17] = "8";           // infoSize
+        params[16] = "31";          // number of ticks
+        params[17] = "9";           // infoSize
         case2.main(params);
         case2 = null;
 
@@ -289,7 +289,7 @@ public class ThirdLobTest {
         case11 = null;*/
 
         /*SingleCase case10 = new SingleCase();
-        params[0] = "_10baseCaseMT14trial\\";
+        params[0] = "_10baseCaseMTtrial3\\";
         params[1] = "2";            // new HFTs
         params[2] = "1";            // # of positive PV slow traders
         params[3]= "2";             // # of zero PV slow traders
@@ -297,20 +297,18 @@ public class ThirdLobTest {
         params[5] = "0.0";          // time in force
         params[6] = "0.0";          // TTAX
         params[7] = "0.0";          // CFEE
-        params[8] = "0.008";          // LO make fee
-        params[9] = "0.012";          // MO take fee
-        params[10] = "0.1";         // lambda of new arrivals
+        params[8] = "0.004";          // LO make fee
+        params[9] = "0.006";          // MO take fee
+        params[10] = "0.25";         // lambda of new arrivals
         params[11] = "0.05f";       // rho- impatience parameters
         params[12] = "0.125";       // arrival of changes in FV
         params[13] = "30";          // max depth
         params[14] = "returning";   // model to use
         params[15] = "0.0";         // speed bump length
-        params[16] = "15";          // number of ticks
-        params[17] = "8";           // infoSize
         case10.main(params);
-        case10 = null;*/
+        case10 = null;
 
-        /*SingleCase case12 = new SingleCase();
+        SingleCase case12 = new SingleCase();
         params[0] = "_10baseCaseMTtrial003\\";   // folder
         params[1] = "2";            // new HFTs
         params[2] = "1";            // # of positive PV slow traders
