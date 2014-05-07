@@ -44,7 +44,7 @@ public class SingleCase {
         int NewNonHFT = nNegativeNonHFT + nPositiveNonHFT + nZeroNonHFT;
         double lambdaArrival = Double.parseDouble(args[10]);             // arrival frequency, same for all
         double lambdaFV = Double.parseDouble(args[12]);                  // frequency of FV changes
-        double ReturnFrequencyHFT = 2.5;          // returning frequency of HFT
+        double ReturnFrequencyHFT = 2.0;          // returning frequency of HFT
         double ReturnFrequencyNonHFT = 0.25;     // returning frequency of NonHFT
         int maxDepth = Integer.parseInt(args[13]);// 0 to 7 which matter
         int FVpos = nP/2;                          // position of the fundamental value
