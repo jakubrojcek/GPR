@@ -18,7 +18,7 @@ import java.util.*;
 public class ThirdLobTest {
     public static void main(String[] args) {
         double timeStamp1 = System.currentTimeMillis();
-        String[] params = new String[16];
+        String[] params = new String[18];
 
         /*SingleCase case1 = new SingleCase();
         params[0] = "_1baseCase12\\";   // folder
@@ -42,8 +42,8 @@ public class ThirdLobTest {
         case1 = null;*/
 
         SingleCase case2 = new SingleCase();
-        params[0] = "_2baseCaseHFT24\\";   // folder
-        params[1] = "1";            // new HFTs
+        params[0] = "_2baseCaseHFT40\\";   // folder
+        params[1] = "2";            // new HFTs
         params[2] = "1";            // # of positive PV slow traders
         params[3]= "2";             // # of zero PV slow traders
         params[4] = "1";            // # of negative PV slow traders
@@ -52,12 +52,14 @@ public class ThirdLobTest {
         params[7] = "0.0";          // CFEE
         params[8] = "0.0";          // LO make fee
         params[9] = "0.0";          // MO take fee
-        params[10] = "0.5";        // lambda of new arrivals
+        params[10] = "0.1";        // lambda of new arrivals
         params[11] = "0.05f";       // rho- impatience parameters
         params[12] = "0.125";        // arrival of changes in FV
         params[13] = "30";          // max depth
         params[14] = "returning";   // model to use
         params[15] = "0.0";         // speed bump length
+        params[16] = "15";          // number of ticks
+        params[17] = "8";           // infoSize
         case2.main(params);
         case2 = null;
 
