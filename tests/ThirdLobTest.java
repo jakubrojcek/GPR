@@ -41,9 +41,9 @@ public class ThirdLobTest {
         case1.main(params);
         case1 = null;*/
 
-        /*SingleCase case2 = new SingleCase();
-        params[0] = "_2baseCaseHFT40\\";   // folder
-        params[1] = "2";            // new HFTs
+        SingleCase case2 = new SingleCase();
+        params[0] = "_2baseCaseHFT41\\";   // folder
+        params[1] = "1";            // new HFTs
         params[2] = "1";            // # of positive PV slow traders
         params[3]= "2";             // # of zero PV slow traders
         params[4] = "1";            // # of negative PV slow traders
@@ -61,7 +61,7 @@ public class ThirdLobTest {
         params[16] = "15";          // number of ticks
         params[17] = "8";           // infoSize
         case2.main(params);
-        case2 = null;*/
+        case2 = null;
 
         /*SingleCase case3 = new SingleCase();
         params[0] = "_3baseCaseHFTsameLambda4\\";
@@ -288,8 +288,8 @@ public class ThirdLobTest {
         case11.main(params);
         case11 = null;*/
 
-        SingleCase case10 = new SingleCase();
-        params[0] = "_10baseCaseMTtrial3\\";
+        /*SingleCase case10 = new SingleCase();
+        params[0] = "_10baseCaseMT14trial\\";
         params[1] = "2";            // new HFTs
         params[2] = "1";            // # of positive PV slow traders
         params[3]= "2";             // # of zero PV slow traders
@@ -308,7 +308,7 @@ public class ThirdLobTest {
         params[16] = "15";          // number of ticks
         params[17] = "8";           // infoSize
         case10.main(params);
-        case10 = null;
+        case10 = null;*/
 
         /*SingleCase case12 = new SingleCase();
         params[0] = "_10baseCaseMTtrial003\\";   // folder
