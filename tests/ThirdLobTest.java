@@ -18,32 +18,11 @@ import java.util.*;
 public class ThirdLobTest {
     public static void main(String[] args) {
         double timeStamp1 = System.currentTimeMillis();
-        String[] params = new String[18];
+        String[] params = new String[19];
 
         /*SingleCase case1 = new SingleCase();
-        params[0] = "_1baseCase12\\";   // folder
+        params[0] = "_1baseCase13\\";   // folder
         params[1] = "0";            // new HFTs
-        params[2] = "1";            // # of positive PV slow traders
-        params[3]= "2";             // # of zero PV slow traders
-        params[4] = "1";            // # of negative PV slow traders
-        params[5] = "0.0";          // time in force
-        params[6] = "0.0";          // TTAX
-        params[7] = "0.0";          // CFEE
-        params[8] = "0.0";          // LO make fee
-        params[9] = "0.0";          // MO take fee
-        params[10] = "0.25";          // lambda of new arrivals
-        params[11] = "0.05f";       // rho- impatience parameters
-        params[12] = "0.125";        // arrival of changes in FV
-        params[13] = "30";          // max depth
-        params[14] = "returning";   // model to use
-        params[15] = "0.0";         // speed bump length
-
-        case1.main(params);
-        case1 = null;*/
-
-        SingleCase case2 = new SingleCase();
-        params[0] = "_2baseCaseHFT41\\";   // folder
-        params[1] = "2";            // new HFTs
         params[2] = "1";            // # of positive PV slow traders
         params[3]= "2";             // # of zero PV slow traders
         params[4] = "1";            // # of negative PV slow traders
@@ -58,67 +37,123 @@ public class ThirdLobTest {
         params[13] = "30";          // max depth
         params[14] = "returning";   // model to use
         params[15] = "0.0";         // speed bump length
-        params[16] = "31";          // number of ticks
-        params[17] = "9";           // infoSize
-        case2.main(params);
-        case2 = null;
+        params[16] = "15";          // number of ticks
+        params[17] = "8";           // infoSize
 
-        /*SingleCase case3 = new SingleCase();
-        params[0] = "_3baseCaseHFTsameLambda4\\";
+        case1.main(params);
+        case1 = null;*/
+
+        /*SingleCase case2 = new SingleCase();
+        params[0] = "_2baseCaseHFT46\\";   // folder
         params[1] = "1";            // new HFTs
-        params[2] = "0";            // # of positive PV slow traders
-        params[3]= "1";             // # of zero PV slow traders
-        params[4] = "0";            // # of negative PV slow traders
+        params[2] = "1";            // # of positive PV slow traders
+        params[3]= "2";             // # of zero PV slow traders
+        params[4] = "1";            // # of negative PV slow traders
         params[5] = "0.0";          // time in force
         params[6] = "0.0";          // TTAX
         params[7] = "0.0";          // CFEE
         params[8] = "0.0";          // LO make fee
         params[9] = "0.0";          // MO take fee
-        params[10] = "0.5";          // lambda of new arrivals
+        params[10] = "0.1";        // lambda of new arrivals
         params[11] = "0.05f";       // rho- impatience parameters
         params[12] = "0.125";        // arrival of changes in FV
         params[13] = "30";          // max depth
+        params[14] = "returning";   // model to use
+        params[15] = "0.0";         // speed bump length
+        params[16] = "15";          // number of ticks
+        params[17] = "8";           // infoSize
+        params[18] = "2";           // private value volatility {4-> {-8,-4,0,4,8}, 2-> {-4,-2,0,2,4}}
+        case2.main(params);
+        case2 = null;*/
+
+        /*case2 = new SingleCase();
+        params[0] = "_2baseCaseHFT45\\";   // folder
+        params[1] = "4";            // new HFTs
+        params[2] = "1";            // # of positive PV slow traders
+        params[3]= "2";             // # of zero PV slow traders
+        params[4] = "1";            // # of negative PV slow traders
+        params[5] = "0.0";          // time in force
+        params[6] = "0.0";          // TTAX
+        params[7] = "0.0";          // CFEE
+        params[8] = "0.0";          // LO make fee
+        params[9] = "0.0";          // MO take fee
+        params[10] = "0.05";        // lambda of new arrivals
+        params[11] = "0.05f";       // rho- impatience parameters
+        params[12] = "0.125";        // arrival of changes in FV
+        params[13] = "30";          // max depth
+        params[14] = "returning";   // model to use
+        params[15] = "0.0";         // speed bump length
+        params[16] = "31";          // number of ticks
+        params[17] = "9";           // infoSize
+        params[18] = "4";           // private value volatility {4-> {-8,-4,0,4,8}, 2-> {-4,-2,0,2,4}}
+        case2.main(params);
+        case2 = null;*/
+
+        /*SingleCase case3 = new SingleCase();
+        params[0] = "_3baseCaseHFTsameLambda7\\";
+        params[1] = "4";            // new HFTs
+        params[2] = "1";            // # of positive PV slow traders
+        params[3]= "2";             // # of zero PV slow traders
+        params[4] = "1";            // # of negative PV slow traders
+        params[5] = "0.0";          // time in force
+        params[6] = "0.0";          // TTAX
+        params[7] = "0.0";          // CFEE
+        params[8] = "0.0";          // LO make fee
+        params[9] = "0.0";          // MO take fee
+        params[10] = "0.05";        // lambda of new arrivals
+        params[11] = "0.05f";       // rho- impatience parameters
+        params[12] = "0.125";        // arrival of changes in FV
+        params[13] = "30";          // max depth
+        params[14] = "returning";   // model to use
+        params[15] = "0.0";         // speed bump length
+        params[16] = "15";          // number of ticks
+        params[17] = "8";           // infoSize
         case3.main(params);
         case3 = null;*/
 
         /*SingleCase case4 = new SingleCase();
-        params[0] = "_4baseCaseHighVol4\\";
+        params[0] = "_4baseCaseHighVol5\\";
         params[1] = "0";            // new HFTs
-        params[2] = "0";            // # of positive PV slow traders
+        params[2] = "1";            // # of positive PV slow traders
         params[3]= "2";             // # of zero PV slow traders
-        params[4] = "0";            // # of negative PV slow traders
+        params[4] = "1";            // # of negative PV slow traders
         params[5] = "0.0";          // time in force
         params[6] = "0.0";          // TTAX
         params[7] = "0.0";          // CFEE
         params[8] = "0.0";          // LO make fee
         params[9] = "0.0";          // MO take fee
-        params[10] = "0.5";          // lambda of new arrivals
+        params[10] = "0.1";        // lambda of new arrivals
         params[11] = "0.05f";       // rho- impatience parameters
-        params[12] = "0.25";        // arrival of changes in FV
+        params[12] = "0.125";        // arrival of changes in FV
         params[13] = "30";          // max depth
         params[14] = "returning";   // model to use
         params[15] = "0.0";         // speed bump length
+        params[16] = "15";          // number of ticks
+        params[17] = "8";           // infoSize
 
         case4.main(params);
         case4 = null;*/
 
         /*SingleCase case5 = new SingleCase();
-        params[0] = "_5baseCaseHftHighVol4\\";
-        params[1] = "1";            // new HFTs
-        params[2] = "0";            // # of positive PV slow traders
+        params[0] = "_5baseCaseHftHighVol7\\";
+        params[1] = "2";            // new HFTs
+        params[2] = "1";            // # of positive PV slow traders
         params[3]= "2";             // # of zero PV slow traders
-        params[4] = "0";            // # of negative PV slow traders
+        params[4] = "1";            // # of negative PV slow traders
         params[5] = "0.0";          // time in force
         params[6] = "0.0";          // TTAX
         params[7] = "0.0";          // CFEE
         params[8] = "0.0";          // LO make fee
         params[9] = "0.0";          // MO take fee
-        params[10] = "0.5";          // lambda of new arrivals
+        params[10] = "0.1";        // lambda of new arrivals
         params[11] = "0.05f";       // rho- impatience parameters
         params[12] = "0.25";        // arrival of changes in FV
         params[13] = "30";          // max depth
         params[14] = "returning";   // model to use
         params[15] = "0.0";         // speed bump length
+        params[16] = "31";          // number of ticks
+        params[17] = "9";           // infoSize
+        params[18] = "4";           // private value volatility {4-> {-8,-4,0,4,8}, 2-> {-4,-2,0,2,4}}
 
         case5.main(params);
         case5 = null;*/
@@ -142,88 +177,115 @@ public class ThirdLobTest {
         case6 = null;*/
 
         /*SingleCase case7 = new SingleCase();
-        params[0] = "_7baseCaseHftTIF52\\";
+        params[0] = "_7baseCaseHftTIF27\\";
         params[1] = "1";            // new HFTs
-        params[2] = "0";            // # of positive PV slow traders
+        params[2] = "1";            // # of positive PV slow traders
         params[3]= "2";             // # of zero PV slow traders
-        params[4] = "0";            // # of negative PV slow traders
-        params[5] = "0.5";          // time in force
+        params[4] = "1";            // # of negative PV slow traders
+        params[5] = "0.2";          // time in force
         params[6] = "0.0";          // TTAX
         params[7] = "0.0";          // CFEE
         params[8] = "0.0";          // LO make fee
         params[9] = "0.0";          // MO take fee
-        params[10] = "0.5";          // lambda of new arrivals
+        params[10] = "0.1";        // lambda of new arrivals
         params[11] = "0.05f";       // rho- impatience parameters
         params[12] = "0.125";        // arrival of changes in FV
         params[13] = "30";          // max depth
         params[14] = "returning";   // model to use
         params[15] = "0.0";         // speed bump length
+        params[16] = "15";          // number of ticks
+        params[17] = "8";           // infoSize
+        params[18] = "2";           // private value volatility {4-> {-8,-4,0,4,8}, 2-> {-4,-2,0,2,4}}
         case7.main(params);
         case7 = null;*/
 
-        /*SingleCase case8 = new SingleCase();
-        params[0] = "_8baseCaseHftCFEE4\\";
+        SingleCase case8 = new SingleCase();
+        params[0] = "_8baseCaseHftCFEE11\\";
         params[1] = "1";            // new HFTs
-        params[2] = "0";            // # of positive PV slow traders
-        params[3]= "1";             // # of zero PV slow traders
-        params[4] = "0";            // # of negative PV slow traders
+        params[2] = "1";            // # of positive PV slow traders
+        params[3]= "2";             // # of zero PV slow traders
+        params[4] = "1";            // # of negative PV slow traders
         params[5] = "0.0";          // time in force
         params[6] = "0.0";          // TTAX
-        params[7] = "0.01";          // CFEE
+        params[7] = "0.00001";          // CFEE
         params[8] = "0.0";          // LO make fee
         params[9] = "0.0";          // MO take fee
-        params[10] = "0.5";          // lambda of new arrivals
+        params[10] = "0.1";        // lambda of new arrivals
         params[11] = "0.05f";       // rho- impatience parameters
         params[12] = "0.125";        // arrival of changes in FV
         params[13] = "30";          // max depth
         params[14] = "returning";   // model to use
         params[15] = "0.0";         // speed bump length
+        params[16] = "15";          // number of ticks
+        params[17] = "8";           // infoSize
+        params[18] = "2";           // private value volatility {4-> {-8,-4,0,4,8}, 2-> {-4,-2,0,2,4}}
 
         case8.main(params);
-        case8 = null;*/
+        case8 = null;
+
+        case8 = new SingleCase();
+        params[0] = "_8baseCaseHftCFEE12\\";
+        params[7] = "0.0001";          // CFEE
+
+        case8.main(params);
+        case8 = null;
+
+        case8 = new SingleCase();
+        params[0] = "_8baseCaseHftCFEE13\\";
+        params[7] = "1.0";          // CFEE
+
+        case8.main(params);
+        case8 = null;
 
         /*SingleCase case9 = new SingleCase();
-        params[0] = "_9baseCaseHftTTAX5\\";
+        params[0] = "_9baseCaseHftTTAX7\\";
         params[1] = "1";            // new HFTs
-        params[2] = "0";            // # of positive PV slow traders
+        params[2] = "1";            // # of positive PV slow traders
         params[3]= "2";             // # of zero PV slow traders
-        params[4] = "0";            // # of negative PV slow traders
+        params[4] = "1";            // # of negative PV slow traders
         params[5] = "0.0";          // time in force
         params[6] = "0.00375";      // TTAX
         params[7] = "0.0";          // CFEE
         params[8] = "0.0";          // LO make fee
         params[9] = "0.0";          // MO take fee
-        params[10] = "0.5";          // lambda of new arrivals
+        params[10] = "0.1";          // lambda of new arrivals
         params[11] = "0.05f";       // rho- impatience parameters
         params[12] = "0.125";        // arrival of changes in FV
         params[13] = "30";          // max depth
         params[14] = "returning";   // model to use
         params[15] = "0.0";         // speed bump length
+        params[16] = "15";          // number of ticks
+        params[17] = "8";           // infoSize
+        params[18] = "2";           // private value volatility {4-> {-8,-4,0,4,8}, 2-> {-4,-2,0,2,4}}
 
         case9.main(params);
         case9 = null;*/
 
 
 
-        /*SingleCase case11 = new SingleCase();
-        params[0] = "_10baseCaseMT11\\";
+        /*SingleCase case10 = new SingleCase();
+        params[0] = "_10baseCaseMT17\\";
         params[1] = "1";            // new HFTs
-        params[2] = "0";            // # of positive PV slow traders
+        params[2] = "1";            // # of positive PV slow traders
         params[3]= "2";             // # of zero PV slow traders
-        params[4] = "0";            // # of negative PV slow traders
+        params[4] = "1";            // # of negative PV slow traders
         params[5] = "0.0";          // time in force
         params[6] = "0.0";          // TTAX
         params[7] = "0.0";          // CFEE
-        params[8] = "0.012";          // LO make fee
-        params[9] = "0.018";          // MO take fee
-        params[10] = "0.5";         // lambda of new arrivals
+        params[8] = "0.008";          // LO make fee
+        params[9] = "0.012";         // MO take fee
+        params[10] = "0.1";          // lambda of new arrivals
         params[11] = "0.05f";       // rho- impatience parameters
         params[12] = "0.125";       // arrival of changes in FV
         params[13] = "30";          // max depth
         params[14] = "returning";   // model to use
         params[15] = "0.0";         // speed bump length
-        case11.main(params);
-        case11 = null;*/
+        params[16] = "15";          // number of ticks
+        params[17] = "8";           // infoSize
+        params[18] = "2";           // private value volatility {4-> {-8,-4,0,4,8}, 2-> {-4,-2,0,2,4}}
+
+        case10.main(params);
+        case10 = null;*/
 
         /*SingleCase case10 = new SingleCase();
         params[0] = "_8baseCaseHftCFEEnew\\";
@@ -269,8 +331,8 @@ public class ThirdLobTest {
         case11 = null;*/
 
         /*SingleCase case11 = new SingleCase();
-        params[0] = "_11trial3\\";   // folder
-        params[1] = "2";            // new HFTs
+        params[0] = "_11speedBump9\\";   // folder
+        params[1] = "1";            // new HFTs
         params[2] = "1";            // # of positive PV slow traders
         params[3]= "2";             // # of zero PV slow traders
         params[4] = "1";            // # of negative PV slow traders
@@ -279,12 +341,39 @@ public class ThirdLobTest {
         params[7] = "0.0";          // CFEE
         params[8] = "0.0";          // LO make fee
         params[9] = "0.0";          // MO take fee
-        params[10] = "0.25";          // lambda of new arrivals
+        params[10] = "0.1";        // lambda of new arrivals
         params[11] = "0.05f";       // rho- impatience parameters
         params[12] = "0.125";        // arrival of changes in FV
         params[13] = "30";          // max depth
         params[14] = "speedBump";   // model to use
-        params[15] = "0.2";         // speed bump length
+        params[15] = "0.1";         // speed bump length
+        params[16] = "15";          // number of ticks
+        params[17] = "8";           // infoSize
+
+        case11.main(params);
+        case11 = null;*/
+
+        /*SingleCase case11 = new SingleCase();
+
+        params[0] = "_11speedBump10\\";   // folder
+        params[1] = "1";            // new HFTs
+        params[2] = "1";            // # of positive PV slow traders
+        params[3]= "2";             // # of zero PV slow traders
+        params[4] = "1";            // # of negative PV slow traders
+        params[5] = "0.0";          // time in force
+        params[6] = "0.0";          // TTAX
+        params[7] = "0.0";          // CFEE
+        params[8] = "0.0";          // LO make fee
+        params[9] = "0.0";          // MO take fee
+        params[10] = "0.1";        // lambda of new arrivals
+        params[11] = "0.05f";       // rho- impatience parameters
+        params[12] = "0.125";        // arrival of changes in FV
+        params[13] = "30";          // max depth
+        params[14] = "speedBump";   // model to use
+        params[15] = "0.05";         // speed bump length
+        params[16] = "15";          // number of ticks
+        params[17] = "8";           // infoSize
+
         case11.main(params);
         case11 = null;*/
 
@@ -306,25 +395,29 @@ public class ThirdLobTest {
         params[14] = "returning";   // model to use
         params[15] = "0.0";         // speed bump length
         case10.main(params);
-        case10 = null;
+        case10 = null;*/
 
-        SingleCase case12 = new SingleCase();
-        params[0] = "_10baseCaseMTtrial003\\";   // folder
-        params[1] = "2";            // new HFTs
+        /*SingleCase case12 = new SingleCase();
+        params[0] = "_18baseCaseMTh\\";   // folder
+        params[1] = "4";            // new HFTs
         params[2] = "1";            // # of positive PV slow traders
         params[3]= "2";             // # of zero PV slow traders
         params[4] = "1";            // # of negative PV slow traders
         params[5] = "0.0";          // time in force
         params[6] = "0.0";          // TTAX
         params[7] = "0.0";          // CFEE
-        params[8] = "0.0000001";          // LO make fee
-        params[9] = "0.0000001";          // MO take fee
-        params[10] = "0.25";          // lambda of new arrivals
+        params[8] = "0.0";          // LO make fee
+        params[9] = "0.0";         // lambda of new arrivals
+        params[10] = "0.0625";         // lambda of new arrivals
         params[11] = "0.05f";       // rho- impatience parameters
-        params[12] = "0.125";        // arrival of changes in FV
+        params[12] = "1.0";       // arrival of changes in FV
         params[13] = "30";          // max depth
         params[14] = "returning";   // model to use
         params[15] = "0.0";         // speed bump length
+        params[16] = "15";          // number of ticks
+        params[17] = "8";           // infoSize
+        params[18] = "2";           // private value volatility {4-> {-8,-4,0,4,8}, 2-> {-4,-2,0,2,4}}
+
         case12.main(params);
         case12 = null;*/
 
