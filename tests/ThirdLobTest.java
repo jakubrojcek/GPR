@@ -21,7 +21,7 @@ public class ThirdLobTest {
         String[] params = new String[18];
 
         /*SingleCase case1 = new SingleCase();
-        params[0] = "_1baseCase12\\";   // folder
+        params[0] = "_1baseCase1\\";   // folder
         params[1] = "0";            // new HFTs
         params[2] = "1";            // # of positive PV slow traders
         params[3]= "2";             // # of zero PV slow traders
@@ -31,18 +31,20 @@ public class ThirdLobTest {
         params[7] = "0.0";          // CFEE
         params[8] = "0.0";          // LO make fee
         params[9] = "0.0";          // MO take fee
-        params[10] = "0.25";          // lambda of new arrivals
+        params[10] = "0.1";        // lambda of new arrivals
         params[11] = "0.05f";       // rho- impatience parameters
         params[12] = "0.125";        // arrival of changes in FV
         params[13] = "30";          // max depth
         params[14] = "returning";   // model to use
         params[15] = "0.0";         // speed bump length
+        params[16] = "15";          // number of ticks
+        params[17] = "8";
 
         case1.main(params);
         case1 = null;*/
 
-        SingleCase case2 = new SingleCase();
-        params[0] = "_2baseCaseHFT41\\";   // folder
+        /*SingleCase case2 = new SingleCase();
+        params[0] = "_2baseCaseHFT42\\";   // folder
         params[1] = "2";            // new HFTs
         params[2] = "1";            // # of positive PV slow traders
         params[3]= "2";             // # of zero PV slow traders
@@ -58,10 +60,10 @@ public class ThirdLobTest {
         params[13] = "30";          // max depth
         params[14] = "returning";   // model to use
         params[15] = "0.0";         // speed bump length
-        params[16] = "31";          // number of ticks
-        params[17] = "9";           // infoSize
+        params[16] = "15";          // number of ticks
+        params[17] = "8";           // infoSize
         case2.main(params);
-        case2 = null;
+        case2 = null;*/
 
         /*SingleCase case3 = new SingleCase();
         params[0] = "_3baseCaseHFTsameLambda4\\";
@@ -205,25 +207,28 @@ public class ThirdLobTest {
 
 
 
-        /*SingleCase case11 = new SingleCase();
-        params[0] = "_10baseCaseMT11\\";
+        SingleCase case11 = new SingleCase();
+
+        params[0] = "_10baseCaseMT16\\";
         params[1] = "1";            // new HFTs
-        params[2] = "0";            // # of positive PV slow traders
+        params[2] = "1";            // # of positive PV slow traders
         params[3]= "2";             // # of zero PV slow traders
-        params[4] = "0";            // # of negative PV slow traders
+        params[4] = "1";            // # of negative PV slow traders
         params[5] = "0.0";          // time in force
         params[6] = "0.0";          // TTAX
         params[7] = "0.0";          // CFEE
-        params[8] = "0.012";          // LO make fee
-        params[9] = "0.018";          // MO take fee
-        params[10] = "0.5";         // lambda of new arrivals
+        params[8] = "0.006";          // LO make fee
+        params[9] = "0.009";          // MO take fee
+        params[10] = "0.1";        // lambda of new arrivals
         params[11] = "0.05f";       // rho- impatience parameters
-        params[12] = "0.125";       // arrival of changes in FV
+        params[12] = "0.125";        // arrival of changes in FV
         params[13] = "30";          // max depth
         params[14] = "returning";   // model to use
         params[15] = "0.0";         // speed bump length
+        params[16] = "15";          // number of ticks
+        params[17] = "8";           // infoSize
         case11.main(params);
-        case11 = null;*/
+        case11 = null;
 
         /*SingleCase case10 = new SingleCase();
         params[0] = "_8baseCaseHftCFEEnew\\";
