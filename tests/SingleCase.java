@@ -44,13 +44,13 @@ public class SingleCase {
         int NewNonHFT = nNegativeNonHFT + nPositiveNonHFT + nZeroNonHFT;
         double lambdaArrival = Double.parseDouble(args[10]);             // arrival frequency, same for all
         double lambdaFV = Double.parseDouble(args[12]);                  // frequency of FV changes
-        double ReturnFrequencyHFT = 0.25;//8.3;          // returning frequency of HFT  // TODO: 5.0 before
-        double ReturnFrequencyNonHFT = 0.25;//1.67;     // returning frequency of NonHFT // TODO: 0.25 before
+        double ReturnFrequencyHFT = 2.0;//8.3;          // returning frequency of HFT  //
+        double ReturnFrequencyNonHFT = 0.25;//1.67;     // returning frequency of NonHFT //
         int maxDepth = Integer.parseInt(args[13]);// 0 to 7 which matter
         int FVpos = nP/2;                          // position of the fundamental value
         int range = (nP == 31) ?                    // range of prices on the grid +/-
                              6 : 3;
-        int HL = FVpos + range; // // TODO: +/- 3                 // Lowest  allowed limit order price.  LL + HL = nP-1 for allowed orders centered around E(v)
+        int HL = FVpos + range; //                 // Lowest  allowed limit order price.  LL + HL = nP-1 for allowed orders centered around E(v)
         int LL = FVpos - range; //                  // Highest allowed limit order price
         float tickSize = 0.125f;                // size of one tick
         int end = HL - LL + 1;                  // number of position on the grid for submitting LOs
@@ -71,6 +71,7 @@ public class SingleCase {
         double [] PVdistrb = {.15, .35, .65, .85, 1.0};
         //double [] PVdistrb = {.134, .311, .689, .866, 1.0};
         //double [] PVdistrb = {.0, .0, 1.0, 1.0, 1.0};
+        //double [] PVdistrb = {.2143, .5, .5, .7857, 1.0};
         /*double [] PVdistrb = new double[3];
         PVdistrb[0] = (double)nNegativeNonHFT / NewNonHFT;
         PVdistrb[1] = PVdistrb[0] + (double) nZeroNonHFT / NewNonHFT;
@@ -139,7 +140,7 @@ public class SingleCase {
         boolean purge = false;          // purge in this SingleRun?
         boolean nReset = false;         // reset n in this SingleRun?
         String convergence = "none";    // computing convergence, "none", "convergenceSecond.csv", "convergence.csv"?
-        trader.setPrTremble(0.0025);
+        trader.setPrTremble(0.005);
         trader.setWriteDec(false);
         trader.setWriteDiag(writeDiagnostics);
         trader.setWriteHist(writeHistogram);
@@ -163,7 +164,7 @@ public class SingleCase {
             writeHistogram = true; // write histogram
             purge = false;          // purge in this com.jakubrojcek.gpr2005a.SingleRun?
             nReset = true;         // reset n in this com.jakubrojcek.gpr2005a.SingleRun?
-            trader.setPrTremble(0.002);
+            trader.setPrTremble(0.0025);
             //trader.setWriteDec(false);
             trader.setWriteDiag(writeDiagnostics);
             trader.setWriteHist(writeHistogram);
@@ -182,7 +183,7 @@ public class SingleCase {
         writeHistogram = true; // write histogram
         purge = false;          // purge in this com.jakubrojcek.gpr2005a.SingleRun?
         nReset = false;         // reset n in this com.jakubrojcek.gpr2005a.SingleRun?
-        trader.setPrTremble(0.0017);
+        trader.setPrTremble(0.0018);
         //trader.setWriteDec(false);
         trader.setWriteDiag(writeDiagnostics);
         trader.setWriteHist(writeHistogram);
@@ -200,7 +201,7 @@ public class SingleCase {
         writeHistogram = true; // write histogram
         purge = false;          // purge in this com.jakubrojcek.gpr2005a.SingleRun?
         nReset = false;         // reset n in this com.jakubrojcek.gpr2005a.SingleRun?
-        trader.setPrTremble(0.0012);
+        trader.setPrTremble(0.0015);
         //trader.setWriteDec(false);
         trader.setWriteDiag(writeDiagnostics);
         trader.setWriteHist(writeHistogram);
@@ -218,6 +219,24 @@ public class SingleCase {
         writeHistogram = true; // write histogram
         purge = false;          // purge in this com.jakubrojcek.gpr2005a.SingleRun?
         nReset = true;         // reset n in this com.jakubrojcek.gpr2005a.SingleRun?
+        trader.setPrTremble(0.001);
+        //trader.setWriteDec(false);
+        trader.setWriteDiag(writeDiagnostics);
+        //trader.setWriteHist(writeHistogram);
+        RunOutcome =
+                sr.run(nEvents, nHFT, NewNonHFT, ReturningHFT, ReturningNonHFT, EventTime, FV,
+                        write, purge, nReset, writeDiagnostics, writeHistogram, convergence);
+        EventTime = RunOutcome[0];
+        FV = RunOutcome[1];
+        ReturningHFT = (int) RunOutcome[2];
+        ReturningNonHFT = (int) RunOutcome[3];
+
+        nEvents = 200000000;         // number of events
+        write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
+        writeDiagnostics = true;// write diagnostics controls diagnostics
+        writeHistogram = true; // write histogram
+        purge = false;          // purge in this com.jakubrojcek.gpr2005a.SingleRun?
+        nReset = true;         // reset n in this com.jakubrojcek.gpr2005a.SingleRun?
         trader.setPrTremble(0.0008);
         //trader.setWriteDec(false);
         trader.setWriteDiag(writeDiagnostics);
@@ -230,13 +249,13 @@ public class SingleCase {
         ReturningHFT = (int) RunOutcome[2];
         ReturningNonHFT = (int) RunOutcome[3];
 
-        /*nEvents = 200000000;         // number of events
+        nEvents = 200000000;         // number of events
         write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
         writeDiagnostics = true;// write diagnostics controls diagnostics
         writeHistogram = true; // write histogram
         purge = false;          // purge in this com.jakubrojcek.gpr2005a.SingleRun?
         nReset = true;         // reset n in this com.jakubrojcek.gpr2005a.SingleRun?
-        trader.setPrTremble(0.0006);
+        trader.setPrTremble(0.0004);
         //trader.setWriteDec(false);
         trader.setWriteDiag(writeDiagnostics);
         //trader.setWriteHist(writeHistogram);
@@ -246,15 +265,33 @@ public class SingleCase {
         EventTime = RunOutcome[0];
         FV = RunOutcome[1];
         ReturningHFT = (int) RunOutcome[2];
-        ReturningNonHFT = (int) RunOutcome[3];*/
+        ReturningNonHFT = (int) RunOutcome[3];
 
-        /*nEvents = 200000000;         // number of events
+        nEvents = 200000000;         // number of events
         write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
         writeDiagnostics = true;// write diagnostics controls diagnostics
         writeHistogram = true; // write histogram
         purge = false;          // purge in this com.jakubrojcek.gpr2005a.SingleRun?
         nReset = true;         // reset n in this com.jakubrojcek.gpr2005a.SingleRun?
-        trader.setPrTremble(0.00035);
+        trader.setPrTremble(0.0003);
+        //trader.setWriteDec(false);
+        trader.setWriteDiag(writeDiagnostics);
+        //trader.setWriteHist(writeHistogram);
+        RunOutcome =
+                sr.run(nEvents, nHFT, NewNonHFT, ReturningHFT, ReturningNonHFT, EventTime, FV,
+                        write, purge, nReset, writeDiagnostics, writeHistogram, convergence);
+        EventTime = RunOutcome[0];
+        FV = RunOutcome[1];
+        ReturningHFT = (int) RunOutcome[2];
+        ReturningNonHFT = (int) RunOutcome[3];
+
+        nEvents = 200000000;         // number of events
+        write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
+        writeDiagnostics = true;// write diagnostics controls diagnostics
+        writeHistogram = true; // write histogram
+        purge = false;          // purge in this com.jakubrojcek.gpr2005a.SingleRun?
+        nReset = true;         // reset n in this com.jakubrojcek.gpr2005a.SingleRun?
+        trader.setPrTremble(0.0002);
         //trader.setWriteDec(false);
         trader.setWriteDiag(writeDiagnostics);
         //trader.setWriteHist(writeHistogram);
@@ -278,7 +315,7 @@ public class SingleCase {
             }
             purge = false;
             nReset = true;         // reset n in this com.jakubrojcek.gpr2005a.SingleRun?
-            trader.setPrTremble(0.0012);
+            trader.setPrTremble(0.00015);
             //trader.setWriteDec(false);
             trader.setWriteDiag(writeDiagnostics);
             trader.setWriteHist(writeHistogram);
@@ -290,7 +327,7 @@ public class SingleCase {
             FV = RunOutcome[1];
             ReturningHFT = (int) RunOutcome[2];
             ReturningNonHFT = (int) RunOutcome[3];
-        }*/
+        }
 
 
         nEvents = 70000000;         // number of events
@@ -300,7 +337,7 @@ public class SingleCase {
         purge = false;          // purge in this com.jakubrojcek.gpr2005a.SingleRun?
         nReset = true;         // reset n in this com.jakubrojcek.gpr2005a.SingleRun?
         //trader.setPrTremble(0.0);
-        trader.setPrTremble(0.0007);
+        trader.setPrTremble(0.00012);
         //trader.setWriteDec(false);
         trader.setWriteDiag(writeDiagnostics);
         //trader.setWriteHist(writeHistogram);
@@ -329,6 +366,7 @@ public class SingleCase {
         FV = RunOutcome[1];
         ReturningHFT = (int) RunOutcome[2];
         ReturningNonHFT = (int) RunOutcome[3];*/
+
         // phase 2a) less extensive simulation, checking for convergence of type 1
         for (int i = 0; i < 2; i++){    // outer loop for convergence type 1
             nEvents = 80000000;         // number of events
@@ -338,7 +376,7 @@ public class SingleCase {
             purge = false;          // purge in this com.jakubrojcek.gpr2005a.SingleRun?
             nReset = false;         // reset n in this com.jakubrojcek.gpr2005a.SingleRun?
             convergence = "convergence.csv";    // computing convergence, "none", "convergenceSecond.csv", "convergence.csv"?
-            trader.setPrTremble(0.0006);
+            trader.setPrTremble(0.0001);
             //trader.setWriteDec(false);
             trader.setWriteDiag(writeDiagnostics);
             //trader.setWriteHist(writeHistogram);
@@ -355,7 +393,7 @@ public class SingleCase {
 
             // phase 2b) checking for convergence of type 2
             if (RunOutcome[4] < 0.01){          // type 1 converged, check for type 2
-                nEvents = 10000000;         // number of events
+                nEvents = 50000000;         // number of events
                 write = false;          // writeDecisions output in this SingleRun?
                 writeDiagnostics = true;// write diagnostics controls diagnostics
                 writeHistogram = true; // write histogram
@@ -391,7 +429,7 @@ public class SingleCase {
         nReset = true;         // reset n in this com.jakubrojcek.gpr2005a.SingleRun?
         convergence = "none";    // computing convergence, "none", "convergenceSecond.csv", "convergence.csv"?
         //trader.setPrTremble(0.0);
-        trader.setPrTremble(0.0004);
+        trader.setPrTremble(0.0001);
         //trader.setWriteDec(false);
         trader.setWriteDiag(writeDiagnostics);
         //trader.setWriteHist(writeHistogram);
@@ -414,7 +452,7 @@ public class SingleCase {
         nReset = true;         // reset n in this com.jakubrojcek.gpr2005a.SingleRun?
         convergence = "none";    // computing convergence, "none", "convergenceSecond.csv", "convergence.csv"?
         //trader.setPrTremble(0.0);
-        trader.setPrTremble(0.0002);
+        trader.setPrTremble(0.00005);
         //trader.setWriteDec(false);
         trader.setWriteDiag(writeDiagnostics);
         //trader.setWriteHist(writeHistogram);
@@ -445,7 +483,7 @@ public class SingleCase {
         trader.setWriteDiag(writeDiagnostics);
         trader.setWriteHist(writeHistogram);
         trader.setOnline(true);
-        trader.setFixedBeliefs(true);  // TODO: change back to true after debugging
+        trader.setFixedBeliefs(true);
         trader.setSimilar(true);       // controls if beliefs for a state not present, looks for similar state belief
 
         RunOutcome =

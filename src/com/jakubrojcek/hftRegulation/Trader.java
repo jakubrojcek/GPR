@@ -32,6 +32,7 @@ public class Trader {
     private double PriceFV;             // current fundamental value-> price at middle position
     private double EventTime = 0.0;     // event time
     private BeliefQ belief;             // reference to an old Belief, to be updated
+    private double BeliefnC = 0.0;             // reference to an old Belief, to be updated
     private Order order = null;         // reference to an old Order, to update the old Belief
     private short cancelCount = 0;      // how many times cancelled
 
@@ -389,7 +390,7 @@ public class Trader {
                                             ((breakPoint - i + end) * tickSize + privateValue - TTAX + MFEE));
                                 } else if (i == (2 * end)){
                                     p1 = ((Bt - fvPos) * tickSize - privateValue - TTAX - TFEE - slippageS[BookInfo[2]]); // payoff to sell market order
-                                } else if (i == (2 * end + 1)){                    // TODO: did this help?
+                                } else if (i == (2 * end + 1)){
                                     p1 = ((fvPos - At) * tickSize + privateValue - TTAX - TFEE - slippageB[BookInfo[3]]); // payoff to buy market order
                                 } else if (i == (2 * end + 2)){
                                     double Rt = (isHFT) ? 1.0 / ReturnFrequencyHFT
@@ -722,6 +723,7 @@ public class Trader {
                     states.put(code, tempQs);
                 }
             }
+            BeliefnC = maxNC;       //TODO: change back?
         }
 
 
@@ -769,7 +771,7 @@ public class Trader {
 
         if ((action == (2 * end)) || (action == (2 * end + 1))) {
             if (speedBump == 0.0){
-                isTraded = true; // isTraded set to true if submitting MOs      // TODO: can change back afterwards
+                isTraded = true; // isTraded set to true if submitting MOs
             }
             /*if (max < 0.0){
                 System.out.println("negative belief");
@@ -835,11 +837,11 @@ public class Trader {
                     alpha * Math.exp( - rho * (et - EventTime)) * payoff);
             if (CFEE != 0.0){
                 double previousNC = belief.getnC();
-                belief.setnC((1.0 - alpha) * previousNC);   // executed before cancelled, i.e. cancelled is zero
-                        //+ alpha * Math.exp( - rho * (et - EventTime)) * cancelCount);       // TODO: delete afterwards
-         }
+                belief.setnC((1.0 - alpha) * previousNC);
+                        //+ alpha * Math.exp( - rho * (et - EventTime)) * cancelCount);   // executed before cancelled, i.e. cancelled is zero
+                //if (writeDiagnostics){writeDiagnostics(belief.getnC() - previousNC);}
+                }
             if (writeDiagnostics){writeDiagnostics(belief.getQ() - previousQ);}
-            //if (writeDiagnostics){writeDiagnostics(belief.getnC() - previousNC);}
         }
         isTraded = true;
         order = null;
@@ -1237,7 +1239,11 @@ public class Trader {
     }
     private void writeDiagnostics(double diff){
         diag.addDiff(diff);
-        diag.addCancelCount(cancelCount, pv, isHFT);
+        if (CFEE == 0.0){
+            diag.addCancelCount(cancelCount, pv, isHFT);
+        } else {
+            diag.addCancelCount(cancelCount, pv, isHFT, BeliefnC);
+        }
     }
 
     public void computeInitialBeliefs(double cf, double sb){
@@ -1495,7 +1501,7 @@ System.out.println("problem");
             int b = BookInfo[7];        // 1 if last transaction buy, 0 if sell
             q = Math.min(15, q);
             int a = pv;                 // private value zero(0), negative (1), positive (2)
-            int l = 0;//(isHFT) ? 1 : 0;    // arrival frequency slow (0), fast (1)
+            int l = (isHFT) ? 1 : 0;    // arrival frequency slow (0), fast (1)
             //System.out.println(Bt + " : " + lBt + " ; " + At + " : " + lAt);
             /*Long code = (Bt<<50) + (At<<44) + (lBt<<40) + (lAt<<36) + (dBt<<29) + (dSt<<22) + (Pt<<16) + (b<<15) +
 + (P<<9) + (q<<5) + (x<<3) + (a<<1) + l;*/
@@ -2066,6 +2072,10 @@ System.out.println("problem");
 
     public short getCancelCount() {
         return cancelCount;
+    }
+
+    public double getBeliefnC() {
+        return BeliefnC;
     }
 
     public int getPv(){ return pv; }

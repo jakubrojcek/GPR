@@ -117,7 +117,7 @@ public class SingleRun {
                 System.out.println("negative event time, debug");
             }
             if (nReset){
-                trader.nReset((byte)3, (short) 100, purge);
+                trader.nReset((byte) 2, (short) 50, purge);
             }
             double prob1, prob2, prob3, prob4, prob5;
             double x1, x2, x3, x4, x5;
@@ -378,7 +378,7 @@ public class SingleRun {
                             /*if (write && (heldOrder.getPosition() != bi[1])){
                                 System.out.println("different position");
                             }*/
-                            if (heldOrder.getPosition() <= bi[1]){      // TODO: can change back afterwards
+                            if (heldOrder.getPosition() >= bi[1]){      // price, would pay more  // TODO: have to test new speedBump
                                 heldOrder.setPosition(bi[1]);   // buy MO sets the position to ask
                                 heldOrder.setTimeStamp(EventTime);
                             } else {
@@ -396,7 +396,7 @@ public class SingleRun {
                             /*if (write && (heldOrder.getPosition() != bi[0])){
                                 System.out.println("different position");
                             }*/
-                            if (heldOrder.getPosition() >= bi[0]){      // TODO: can change back afterwards
+                            if (heldOrder.getPosition() <= bi[0]){  // price, could get less      // TODO: can change back afterwards
                                 heldOrder.setPosition(bi[0]);   // buy MO sets the position to ask
                                 heldOrder.setTimeStamp(EventTime);
                             } else {
@@ -526,7 +526,7 @@ public class SingleRun {
                             book.transactionRule(ID , orders);
                         }
                     } else if (rn < x4){ // Returning nonHFT
-                        ID = traderIDsNonHFT.get((int) (Math.random() * traderIDsNonHFT.size()));
+                        ID = traderIDsNonHFT.get((int)(Math.random() * traderIDsNonHFT.size()));
                         ArrayList<Order> orders = traders.get(ID).decision(book.getBookSizes(), book.getBookInfo(), EventTime, FV);
                         if (!orders.isEmpty()){
                             ArrayList<Order> orders2hold = new ArrayList<Order>();

@@ -70,22 +70,22 @@ public class History {
                     sID, traders.get(sID).getPrivateValue(), traders.get(sID).getIsHFT(),
                     buy.getTimeStamp(), sell.getTimeStamp(),
                     traders.get(bID).getPriceFV(), traders.get(sID).getPriceFV(), timeTrade, price, fv,
-                    traders.get(bID).getCancelCount() * CFEE + TTAX, traders.get(sID).getCancelCount() * CFEE + TTAX));
+                    traders.get(bID).getBeliefnC() * CFEE + TTAX, traders.get(sID).getBeliefnC() * CFEE + TTAX));
         } else if (MFEE != 0.0){
             if (buy.getTimeStamp() < sell.getTimeStamp()){   // sell MO
                 history.add(new Trade(bID, traders.get(bID).getPrivateValue(), traders.get(bID).getIsHFT(),
                         sID, traders.get(sID).getPrivateValue(), traders.get(sID).getIsHFT(),
                         buy.getTimeStamp(), sell.getTimeStamp(),
                         traders.get(bID).getPriceFV(), traders.get(sID).getPriceFV(), timeTrade, price, fv,
-                        traders.get(bID).getCancelCount() * CFEE + TTAX - MFEE,
-                        traders.get(sID).getCancelCount() * CFEE + TTAX + TFEE));
+                        traders.get(bID).getBeliefnC() * CFEE + TTAX - MFEE,
+                        traders.get(sID).getBeliefnC() * CFEE + TTAX + TFEE));
             } else {                                        // buy MO
                 history.add(new Trade(bID, traders.get(bID).getPrivateValue(), traders.get(bID).getIsHFT(),
                         sID, traders.get(sID).getPrivateValue(), traders.get(sID).getIsHFT(),
                         buy.getTimeStamp(), sell.getTimeStamp(),
                         traders.get(bID).getPriceFV(), traders.get(sID).getPriceFV(), timeTrade, price, fv,
-                        traders.get(bID).getCancelCount() * CFEE + TTAX + TFEE,
-                        traders.get(sID).getCancelCount() * CFEE + TTAX - MFEE));
+                        traders.get(bID).getBeliefnC() * CFEE + TTAX + TFEE,
+                        traders.get(sID).getBeliefnC() * CFEE + TTAX - MFEE));
             }
         } else {
             history.add(new Trade(bID, traders.get(bID).getPrivateValue(), traders.get(bID).getIsHFT(),
