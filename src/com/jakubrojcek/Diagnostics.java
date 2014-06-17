@@ -16,6 +16,7 @@ public class Diagnostics {
     private int e;
     double diff;
     int[] cancelCount;
+    double[] expCancCount;
     int[] countC;
     int count;
     HashMap<Short, Integer> actions;
@@ -27,6 +28,7 @@ public class Diagnostics {
         diff = 0.0;
         count = 0;
         cancelCount = new int[6];
+        expCancCount = new double[6];
         countC = new int[6];
         actions = new HashMap<Short, Integer>(2 * e + 5);
         payoffs = new HashMap<Short, Double>(2 * e + 5);
@@ -47,6 +49,19 @@ public class Diagnostics {
             countC[5]++;
         } else {
             cancelCount[pv] += cc;
+            countC[pv]++;
+        }
+        countC[pv]++;
+    }
+
+    public void addCancelCount(int cc, int pv, boolean hft, double expCancel){
+        if (hft){
+            cancelCount[5] += cc;
+            expCancCount[5] += expCancel;
+            countC[5]++;
+        } else {
+            cancelCount[pv] += cc;
+            expCancCount[pv] += expCancel;
             countC[pv]++;
         }
         countC[pv]++;
@@ -104,6 +119,9 @@ public class Diagnostics {
         } else if (version == "cancellations"){
             for (int i = 0; i < 6; i++){
                 s = s + ((double)cancelCount[i] / Math.max(countC[i],1)) + ";";
+            }
+            for (int i = 0; i < 6; i++){
+                s = s + (expCancCount[i] / Math.max(countC[i],1)) + ";";
             }
             s = s + "\r";
         }

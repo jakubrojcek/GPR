@@ -201,8 +201,8 @@ public class LOB_LinkedHashMap {
     }
 
     public Integer transactionRule(Integer oID, ArrayList<Order> orders){
-        //hist.addQuotedSpread(BookInfo[1] - BookInfo[0]);    // quoted spread  // TODO: do I need this often?
-        //hist.addDepth(BookInfo);                            // quoted depths  // TODO: do I need this often?
+        //hist.addQuotedSpread(BookInfo[1] - BookInfo[0]);    // quoted spread
+        //hist.addDepth(BookInfo);                            // quoted depths
         int pos, size;
         for (Order o : orders){
             size = o.getSize();
