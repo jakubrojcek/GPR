@@ -836,6 +836,7 @@ public class Trader {
             if (CFEE != 0.0){
                 double previousNC = belief.getnC();
                 belief.setnC((1.0 - alpha) * previousNC);   // executed before cancelled, i.e. cancelled is zero
+                        //+ alpha * Math.exp( - rho * (et - EventTime)) * cancelCount);       // TODO: delete afterwards
          }
             if (writeDiagnostics){writeDiagnostics(belief.getQ() - previousQ);}
             //if (writeDiagnostics){writeDiagnostics(belief.getnC() - previousNC);}
@@ -1494,7 +1495,7 @@ System.out.println("problem");
             int b = BookInfo[7];        // 1 if last transaction buy, 0 if sell
             q = Math.min(15, q);
             int a = pv;                 // private value zero(0), negative (1), positive (2)
-            int l = (isHFT) ? 1 : 0;    // arrival frequency slow (0), fast (1)
+            int l = 0;//(isHFT) ? 1 : 0;    // arrival frequency slow (0), fast (1)
             //System.out.println(Bt + " : " + lBt + " ; " + At + " : " + lAt);
             /*Long code = (Bt<<50) + (At<<44) + (lBt<<40) + (lAt<<36) + (dBt<<29) + (dSt<<22) + (Pt<<16) + (b<<15) +
 + (P<<9) + (q<<5) + (x<<3) + (a<<1) + l;*/

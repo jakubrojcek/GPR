@@ -286,7 +286,7 @@ public class SingleRun {
                             }
                         }
                     } else if (rn < x4){ // Returning nonHFT
-                        ID = traderIDsNonHFT.get(((int) Math.random() * traderIDsNonHFT.size()));
+                        ID = traderIDsNonHFT.get((int) (Math.random() * traderIDsNonHFT.size()));
                         if (traders.get(ID).getOrder() != null &&
                                 ((EventTime - traders.get(ID).getOrder().getTimeStamp()) < tif)){
                             waitingTraders.put(traders.get(ID).getOrder().getTimeStamp() + tif, ID);
@@ -526,7 +526,7 @@ public class SingleRun {
                             book.transactionRule(ID , orders);
                         }
                     } else if (rn < x4){ // Returning nonHFT
-                        ID = traderIDsNonHFT.get(((int) Math.random() * traderIDsNonHFT.size()));
+                        ID = traderIDsNonHFT.get((int) (Math.random() * traderIDsNonHFT.size()));
                         ArrayList<Order> orders = traders.get(ID).decision(book.getBookSizes(), book.getBookInfo(), EventTime, FV);
                         if (!orders.isEmpty()){
                             ArrayList<Order> orders2hold = new ArrayList<Order>();
@@ -613,7 +613,8 @@ public class SingleRun {
                     }
                 }
             }
-            population.put(5, ReturningHFT);
+            int y = population.get(5);
+            population.put(5, y + ReturningHFT);
             keys = traderIDsNonHFT.iterator();
             while (keys.hasNext()){
                 key = (Integer) keys.next();
