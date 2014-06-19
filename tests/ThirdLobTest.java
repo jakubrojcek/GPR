@@ -430,7 +430,7 @@ public class ThirdLobTest {
         case11 = null;*/
 
         SingleCase case12 = new SingleCase();
-        params[0] = "_11speedBump15\\";   // folder
+        params[0] = "_11speedBump17\\";   // folder
         params[1] = "1";            // new HFTs
         params[2] = "1";            // # of positive PV slow traders
         params[3]= "2";             // # of zero PV slow traders
