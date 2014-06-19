@@ -45,8 +45,8 @@ public class ThirdLobTest {
         case1 = null;*/
 
         /*SingleCase case2 = new SingleCase();
-        params[0] = "_2baseCaseHFT84\\";   // folder
-        params[1] = "1";            // new HFTs
+        params[0] = "_2baseCaseHFT52\\";   // folder
+        params[1] = "4";            // new HFTs
         params[2] = "1";            // # of positive PV slow traders
         params[3]= "2";             // # of zero PV slow traders
         params[4] = "1";            // # of negative PV slow traders
@@ -203,7 +203,7 @@ public class ThirdLobTest {
         case7.main(params);
         case7 = null;*/
 
-        SingleCase case8 = new SingleCase();
+        /*SingleCase case8 = new SingleCase();
         params[0] = "_8baseCaseHftCFEE45\\";
         params[1] = "1";            // new HFTs
         params[2] = "1";            // # of positive PV slow traders
@@ -225,7 +225,7 @@ public class ThirdLobTest {
         params[18] = "2";           // private value volatility {4-> {-8,-4,0,4,8}, 2-> {-4,-2,0,2,4}}
 
         case8.main(params);
-        case8 = null;
+        case8 = null;*/
 
         /*SingleCase case8 = new SingleCase();
         params[0] = "_8baseCaseHftCFEE42\\";
@@ -314,7 +314,7 @@ public class ThirdLobTest {
         case8.main(params);
         case8 = null;*/
 
-        SingleCase case9 = new SingleCase();
+        /*SingleCase case9 = new SingleCase();
         params[0] = "_9baseCaseHftTTAX9\\";
         params[1] = "1";            // new HFTs
         params[2] = "1";            // # of positive PV slow traders
@@ -336,7 +336,7 @@ public class ThirdLobTest {
         params[18] = "2";           // private value volatility {4-> {-8,-4,0,4,8}, 2-> {-4,-2,0,2,4}}
 
         case9.main(params);
-        case9 = null;
+        case9 = null;*/
 
         /*SingleCase case9 = new SingleCase();
         params[0] = "_10baseCaseMT18\\";
@@ -362,7 +362,7 @@ public class ThirdLobTest {
         case9.main(params);
         case9 = null;*/
 
-        SingleCase case10 = new SingleCase();
+        /*SingleCase case10 = new SingleCase();
         params[0] = "_10baseCaseMT20\\";
         params[1] = "1";            // new HFTs
         params[2] = "1";            // # of positive PV slow traders
@@ -384,7 +384,7 @@ public class ThirdLobTest {
         params[18] = "2";           // private value volatility {4-> {-8,-4,0,4,8}, 2-> {-4,-2,0,2,4}}
 
         case10.main(params);
-        case10 = null;
+        case10 = null;*/
 
         /*SingleCase case10 = new SingleCase();
         params[0] = "_8baseCaseHftCFEEnew\\";

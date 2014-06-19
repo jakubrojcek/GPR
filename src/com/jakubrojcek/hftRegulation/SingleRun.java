@@ -190,7 +190,21 @@ public class SingleRun {
                     Integer ID;
                     double FVrealization;
                     if (rn < x1){ // New arrival HFT
-                        tr = new Trader(true, 0.0f);
+                        double rn2 = Math.random();
+                        FVrealization = 0.0;
+                        /*if (rn2 < DistributionPV[0]){
+                            FVrealization = FprivateValues[0];
+                        } else if (rn2 < DistributionPV[1]){
+                            FVrealization = FprivateValues[1];
+                        } else {
+                            FVrealization = FprivateValues[2];
+                        }*/
+                        /*if (rn2 < DistributionPV[0]){FVrealization = FprivateValues[0];}
+                        else if (rn2 < DistributionPV[1]){FVrealization = FprivateValues[1];}
+                        else if (rn2 < DistributionPV[2]){FVrealization = FprivateValues[2];}
+                        else if (rn2 < DistributionPV[3]){FVrealization = FprivateValues[3];}
+                        else {FVrealization = FprivateValues[4];}*/
+                        tr = new Trader(true, FVrealization);     // TODO: make a separate variable to fork here later
                         ID = tr.getTraderID();
                         traders.put(ID, tr);
                         ArrayList<Order> orders = tr.decision(book.getBookSizes(), book.getBookInfo(), EventTime, FV);
