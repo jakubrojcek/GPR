@@ -33,17 +33,20 @@ public class SingleRun {
     double ReturnFrequencyNonHFT;
     double tif;                                 // time in force
     double speedBump;                           // speed bump length
+    double infoDelay;                           // information delay of uninformed traders
     double sigma;
     float tickSize;
     double[] FprivateValues;
     double[] DistributionPV;
     double FVplus;
+    double FvLag;                               // lagged fundamental value, knowledge of uninformed traders
     int ReturningHFT = 0;
     int ReturningNonHFT = 0;
     double convergenceStat = 0.0;
     ArrayList<Integer> traderIDsHFT;            // holder for IDs of HFT traders
     ArrayList<Integer> traderIDsNonHFT;         // holder for IDs of nonHFT traders
     TreeMap<Double, Integer> waitingTraders;    // waiting traders, key is time, value is trader's ID
+    TreeMap<Double, Double> fundamentalValue;   // lagged fundamental value, key is the change in FV time
     HashMap<Integer, Trader> traders;
     History h;
     Trader trader;
@@ -69,7 +72,7 @@ public class SingleRun {
     public SingleRun(int m, double t,double lambdaArrival, double lambdaFV, double ReturnFrequencyHFT, double ReturnFrequencyNonHFT,
                      double [] FprivateValues, double[] PVdist, double sigma, float tickSize, double FVplus, boolean head,
                      LOB_LinkedHashMap b, HashMap<Integer, Trader> ts, History his, Trader TR, String stats,
-                     String trans, String bookd, double sb, int e){
+                     String trans, String bookd, double sb, int e, double d){
         for (int i = 0; i < 6; i++){
             tifCounts.put(i, 0);
             tifTimes.put(i,0.0);
@@ -88,6 +91,7 @@ public class SingleRun {
         this.tickSize = tickSize;
         this.FVplus = FVplus;
         this.end = e;
+        this.infoDelay = d;
         traders = ts;
         h = his;
         trader = TR;
@@ -99,6 +103,7 @@ public class SingleRun {
         traderIDsHFT = new ArrayList<Integer>();
         traderIDsNonHFT = new ArrayList<Integer>();
         waitingTraders = new TreeMap<Double, Integer>();
+        fundamentalValue = new TreeMap<Double, Double>();
     }
 
     public double[] run(int nEvents, int nHFT, int NewNonHFT, int rHFT,
@@ -111,6 +116,7 @@ public class SingleRun {
         writeHistogram = wh;
         purge = p;
         nReset = n;
+        FvLag = FV;
 
         if (model == 0){        // "returning" model
             if (EventTime < 0.0){
@@ -127,6 +133,10 @@ public class SingleRun {
                         + ReturningNonHFT * ReturnFrequencyNonHFT + lambdaFVchange;
                 EventTime += - Math.log(1.0 - Math.random()) / Lambda; // random exponential time
 
+                // updating the lagged fundamental value
+                while (!fundamentalValue.isEmpty() && EventTime > (fundamentalValue.firstKey() + infoDelay)){
+                    FvLag = fundamentalValue.remove(fundamentalValue.firstKey());
+                }
                 // number of all agents to trade
                 if (!waitingTraders.isEmpty() && (EventTime > waitingTraders.firstKey())){
                     Integer ID;
@@ -135,7 +145,7 @@ public class SingleRun {
                     ID = waitingTraders.remove(waitingTraders.firstKey());
                     if (traders.containsKey(ID)){
                         boolean isHFT = traders.get(ID).getIsHFT();
-                        ArrayList<Order> orders = traders.get(ID).decision(book.getBookSizes(), book.getBookInfo(), EventTime, FV);
+                        ArrayList<Order> orders = traders.get(ID).decision(book.getBookSizes(), book.getBookInfo(), EventTime, FV, FvLag);
                         if (!orders.isEmpty()){
                             Integer IDr = book.transactionRule(ID , orders);
                             if (ID.equals(IDr)) { // executed against fringe, remove ID trader
@@ -190,7 +200,6 @@ public class SingleRun {
                     Integer ID;
                     double FVrealization;
                     if (rn < x1){ // New arrival HFT
-                        double rn2 = Math.random();
                         FVrealization = 0.0;
                         /*if (rn2 < DistributionPV[0]){
                             FVrealization = FprivateValues[0];
@@ -199,15 +208,16 @@ public class SingleRun {
                         } else {
                             FVrealization = FprivateValues[2];
                         }*/
-                        /*if (rn2 < DistributionPV[0]){FVrealization = FprivateValues[0];}
+                        /*double rn2 = Math.random();
+                        if (rn2 < DistributionPV[0]){FVrealization = FprivateValues[0];}
                         else if (rn2 < DistributionPV[1]){FVrealization = FprivateValues[1];}
                         else if (rn2 < DistributionPV[2]){FVrealization = FprivateValues[2];}
                         else if (rn2 < DistributionPV[3]){FVrealization = FprivateValues[3];}
                         else {FVrealization = FprivateValues[4];}*/
-                        tr = new Trader(true, FVrealization);     // TODO: make a separate variable to fork here later
+                        tr = new Trader(true, true, FVrealization);     // TODO: make a separate variable to fork here later
                         ID = tr.getTraderID();
                         traders.put(ID, tr);
-                        ArrayList<Order> orders = tr.decision(book.getBookSizes(), book.getBookInfo(), EventTime, FV);
+                        ArrayList<Order> orders = tr.decision(book.getBookSizes(), book.getBookInfo(), EventTime, FV, FvLag);
                         if (!orders.isEmpty()){
                             Integer IDr = book.transactionRule(ID , orders);
                             if (IDr == null){ // order put to the book
@@ -245,10 +255,10 @@ public class SingleRun {
                         else if (rn2 < DistributionPV[3]){FVrealization = FprivateValues[3];}
                         else {FVrealization = FprivateValues[4];}
 
-                        tr = new Trader(false, FVrealization);
+                        tr = new Trader(false, false, FVrealization);
                         ID = tr.getTraderID();
                         traders.put(ID, tr);
-                        ArrayList<Order> orders = tr.decision(book.getBookSizes(), book.getBookInfo(), EventTime, FV);
+                        ArrayList<Order> orders = tr.decision(book.getBookSizes(), book.getBookInfo(), EventTime, FV, FvLag);
                         if (!orders.isEmpty()){
                             Integer IDr = book.transactionRule(ID , orders);
                             if (IDr == null){ // order put to the book
@@ -277,7 +287,7 @@ public class SingleRun {
                                 ((EventTime - traders.get(ID).getOrder().getTimeStamp()) < tif)){
                             waitingTraders.put(traders.get(ID).getOrder().getTimeStamp() + tif, ID);
                         } else {
-                            ArrayList<Order> orders = traders.get(ID).decision(book.getBookSizes(), book.getBookInfo(), EventTime, FV);
+                            ArrayList<Order> orders = traders.get(ID).decision(book.getBookSizes(), book.getBookInfo(), EventTime, FV, FvLag);
                             if (!orders.isEmpty()){
                                 Integer IDr = book.transactionRule(ID , orders);
                                 if (ID.equals(IDr)) { // executed against fringe, remove ID trader
@@ -305,7 +315,7 @@ public class SingleRun {
                                 ((EventTime - traders.get(ID).getOrder().getTimeStamp()) < tif)){
                             waitingTraders.put(traders.get(ID).getOrder().getTimeStamp() + tif, ID);
                         } else {
-                            ArrayList<Order> orders = traders.get(ID).decision(book.getBookSizes(), book.getBookInfo(), EventTime, FV);
+                            ArrayList<Order> orders = traders.get(ID).decision(book.getBookSizes(), book.getBookInfo(), EventTime, FV, FvLag);
                             if (!orders.isEmpty()){
                                 Integer IDr = book.transactionRule(ID , orders);
                                 if (ID.equals(IDr)){ // executed against fringe, remove ID trader
@@ -347,6 +357,7 @@ public class SingleRun {
                             }
                             traders.remove(trID);
                         }
+                        fundamentalValue.put(EventTime, FV);
                     }
                 }
 
@@ -368,7 +379,7 @@ public class SingleRun {
                 System.out.println("negative event time, debug");
             }
             if (nReset){
-                trader.nReset((byte)3, (short) 100, purge);
+                trader.nReset((byte)2, (short) 50, purge);
             }
             double prob1, prob2, prob3, prob4, prob5;
             double x1, x2, x3, x4, x5;
@@ -378,6 +389,10 @@ public class SingleRun {
                         + ReturningNonHFT * ReturnFrequencyNonHFT + lambdaFVchange;
                 EventTime += - Math.log(1.0 - Math.random()) / Lambda; // random exponential time
 
+                // updating the lagged fundamental value
+                while (!fundamentalValue.isEmpty() && EventTime > (fundamentalValue.firstKey() + infoDelay)){
+                    FvLag = fundamentalValue.remove(fundamentalValue.firstKey());
+                }
                 // number of all agents to trade
                 if (!waitingTraders.isEmpty() && (EventTime > waitingTraders.firstKey())){
                     Integer ID;
@@ -470,10 +485,10 @@ public class SingleRun {
                     Integer ID;
                     double FVrealization;
                     if (rn < x1){ // New arrival HFT
-                        tr = new Trader(true, 0.0f);
+                        tr = new Trader(true, true, 0.0f);
                         ID = tr.getTraderID();
                         traders.put(ID, tr);
-                        ArrayList<Order> orders = tr.decision(book.getBookSizes(), book.getBookInfo(), EventTime, FV);
+                        ArrayList<Order> orders = tr.decision(book.getBookSizes(), book.getBookInfo(), EventTime, FV, FvLag);
                         if (!orders.isEmpty()){
                             if ((orders.get(0).getAction() == 2 * end) || (orders.get(0).getAction() == 2 * end + 1)){
                                 waitingTraders.put((EventTime + speedBump), ID);
@@ -503,10 +518,10 @@ public class SingleRun {
                         else if (rn2 < DistributionPV[3]){FVrealization = FprivateValues[3];}
                         else {FVrealization = FprivateValues[4];}
 
-                        tr = new Trader(false, FVrealization);
+                        tr = new Trader(false, false, FVrealization);
                         ID = tr.getTraderID();
                         traders.put(ID, tr);
-                        ArrayList<Order> orders = tr.decision(book.getBookSizes(), book.getBookInfo(), EventTime, FV);
+                        ArrayList<Order> orders = tr.decision(book.getBookSizes(), book.getBookInfo(), EventTime, FV, FvLag);
                         if (!orders.isEmpty()){
                             if ((orders.get(0).getAction() == 2 * end) || (orders.get(0).getAction() == 2 * end + 1)){
                                 waitingTraders.put((EventTime + speedBump), ID);
@@ -523,7 +538,7 @@ public class SingleRun {
                         }
                     } else if (rn < x3){ // Returning HFT
                         ID = traderIDsHFT.get((int) (Math.random() * traderIDsHFT.size()));
-                        ArrayList<Order> orders = traders.get(ID).decision(book.getBookSizes(), book.getBookInfo(), EventTime, FV);
+                        ArrayList<Order> orders = traders.get(ID).decision(book.getBookSizes(), book.getBookInfo(), EventTime, FV, FvLag);
                         if (!orders.isEmpty()){
                             ArrayList<Order> orders2hold = new ArrayList<Order>();
                             for (Order o : orders){
@@ -541,7 +556,7 @@ public class SingleRun {
                         }
                     } else if (rn < x4){ // Returning nonHFT
                         ID = traderIDsNonHFT.get((int)(Math.random() * traderIDsNonHFT.size()));
-                        ArrayList<Order> orders = traders.get(ID).decision(book.getBookSizes(), book.getBookInfo(), EventTime, FV);
+                        ArrayList<Order> orders = traders.get(ID).decision(book.getBookSizes(), book.getBookInfo(), EventTime, FV, FvLag);
                         if (!orders.isEmpty()){
                             ArrayList<Order> orders2hold = new ArrayList<Order>();
                             for (Order o : orders){
@@ -579,6 +594,7 @@ public class SingleRun {
                             }
                             traders.remove(trID);
                         }
+                        fundamentalValue.put(EventTime, FV);
                     }
                 }
 
@@ -599,7 +615,7 @@ public class SingleRun {
 
         }
         if (convergence != "none"){
-            convergenceStat = trader.printConvergence(15, convergence, write);
+            convergenceStat = trader.printConvergence(20, convergence, write);
         }
         return new double[]{EventTime, FV, ReturningHFT, ReturningNonHFT, convergenceStat};
     }

@@ -44,6 +44,7 @@ public class SingleCase {
         int NewNonHFT = nNegativeNonHFT + nPositiveNonHFT + nZeroNonHFT;
         double lambdaArrival = Double.parseDouble(args[10]);             // arrival frequency, same for all
         double lambdaFV = Double.parseDouble(args[12]);                  // frequency of FV changes
+        double infoDelay = Double.parseDouble(args[19]);                 // information delay of uninformed traders
         double ReturnFrequencyHFT = 2.0;//8.3;          // returning frequency of HFT  //
         double ReturnFrequencyNonHFT = 0.25;//1.67;     // returning frequency of NonHFT //
         int maxDepth = Integer.parseInt(args[13]);// 0 to 7 which matter
@@ -128,10 +129,10 @@ public class SingleCase {
         book.makeBook(Prices);
         SingleRun sr = new SingleRun(model, tif, lambdaArrival, lambdaFV, ReturnFrequencyHFT, ReturnFrequencyNonHFT,
                 FprivateValues, PVdistrb, sigma, tickSize, FVplus, header, book, traders, h, trader, outputNameStatsData,
-                outputNameTransactions, outputNameBookData, sb, end);
+                outputNameTransactions, outputNameBookData, sb, end, infoDelay);
 
         // phase 1a) initialization
-        int nEvents = 50000000;         // number of events
+        int nEvents = 500000000;         // number of events
         int ReturningHFT = 0;           // # of returning HFT traders in the book
         int ReturningNonHFT = 0;        // # of returning nonHFT traders in the book
         boolean write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
@@ -177,7 +178,7 @@ public class SingleCase {
             ReturningNonHFT = (int) RunOutcome[3];
         }
 
-        nEvents = 100000000;         // number of events
+        nEvents = 1000000000;         // number of events
         write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
         writeDiagnostics = true;// write diagnostics controls diagnostics
         writeHistogram = true; // write histogram
@@ -195,7 +196,7 @@ public class SingleCase {
         ReturningHFT = (int) RunOutcome[2];
         ReturningNonHFT = (int) RunOutcome[3];
 
-        nEvents = 100000000;         // number of events
+        nEvents = 1000000000;         // number of events
         write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
         writeDiagnostics = true;// write diagnostics controls diagnostics
         writeHistogram = true; // write histogram
@@ -213,7 +214,7 @@ public class SingleCase {
         ReturningHFT = (int) RunOutcome[2];
         ReturningNonHFT = (int) RunOutcome[3];
 
-        nEvents = 100000000;         // number of events
+        nEvents = 1000000000;         // number of events
         write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
         writeDiagnostics = true;// write diagnostics controls diagnostics
         writeHistogram = true; // write histogram
@@ -231,7 +232,7 @@ public class SingleCase {
         ReturningHFT = (int) RunOutcome[2];
         ReturningNonHFT = (int) RunOutcome[3];
 
-        nEvents = 100000000;         // number of events
+        nEvents = 1000000000;         // number of events
         write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
         writeDiagnostics = true;// write diagnostics controls diagnostics
         writeHistogram = true; // write histogram
@@ -249,7 +250,7 @@ public class SingleCase {
         ReturningHFT = (int) RunOutcome[2];
         ReturningNonHFT = (int) RunOutcome[3];
 
-        nEvents = 100000000;         // number of events
+        nEvents = 1000000000;         // number of events
         write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
         writeDiagnostics = true;// write diagnostics controls diagnostics
         writeHistogram = true; // write histogram
@@ -267,7 +268,7 @@ public class SingleCase {
         ReturningHFT = (int) RunOutcome[2];
         ReturningNonHFT = (int) RunOutcome[3];
 
-        nEvents = 100000000;         // number of events
+        nEvents = 1000000000;         // number of events
         write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
         writeDiagnostics = true;// write diagnostics controls diagnostics
         writeHistogram = true; // write histogram
@@ -285,7 +286,7 @@ public class SingleCase {
         ReturningHFT = (int) RunOutcome[2];
         ReturningNonHFT = (int) RunOutcome[3];
 
-        nEvents = 100000000;         // number of events
+        nEvents = 1000000000;         // number of events
         write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
         writeDiagnostics = true;// write diagnostics controls diagnostics
         writeHistogram = true; // write histogram
@@ -304,7 +305,7 @@ public class SingleCase {
         ReturningNonHFT = (int) RunOutcome[3];
         // phase 1b) extensive simulation and learning
         for (int i = 0; i < 3; i++){
-            nEvents = 100000000;         // number of events
+            nEvents = 1000000000;         // number of events
             write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
             writeDiagnostics = true;// write diagnostics controls diagnostics
             writeHistogram = true; // write histogram
@@ -330,7 +331,7 @@ public class SingleCase {
         }
 
 
-        nEvents = 70000000;         // number of events
+        nEvents = 700000000;         // number of events
         write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
         writeDiagnostics = true;// write diagnostics controls diagnostics
         writeHistogram = true; // write histogram
@@ -369,7 +370,7 @@ public class SingleCase {
 
         // phase 2a) less extensive simulation, checking for convergence of type 1
         for (int i = 0; i < 2; i++){    // outer loop for convergence type 1
-            nEvents = 80000000;         // number of events
+            nEvents = 800000000;         // number of events
             write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
             writeDiagnostics = true;// write diagnostics controls diagnostics
             writeHistogram = true; // write histogram
@@ -377,7 +378,7 @@ public class SingleCase {
             nReset = false;         // reset n in this com.jakubrojcek.gpr2005a.SingleRun?
             convergence = "convergence.csv";    // computing convergence, "none", "convergenceSecond.csv", "convergence.csv"?
             trader.setPrTremble(0.0001);
-            //trader.setWriteDec(false);
+            trader.setWriteDec(true);
             trader.setWriteDiag(writeDiagnostics);
             //trader.setWriteHist(writeHistogram);
             trader.setOnline(true);         // controls updating for returning trader
@@ -421,7 +422,7 @@ public class SingleCase {
             }
         }
 
-        nEvents = 10000000;         // number of events
+        nEvents = 1000000000;         // number of events
         write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
         writeDiagnostics = true;// write diagnostics controls diagnostics
         writeHistogram = true; // write histogram
@@ -444,7 +445,7 @@ public class SingleCase {
         ReturningHFT = (int) RunOutcome[2];
         ReturningNonHFT = (int) RunOutcome[3];
 
-        nEvents = 10000000;         // number of events
+        nEvents = 100000000;         // number of events
         write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
         writeDiagnostics = true;// write diagnostics controls diagnostics
         writeHistogram = true; // write histogram
@@ -531,6 +532,7 @@ public class SingleCase {
             writer.write("model:" + ";" + model + ";" + "\r");
             writer.write("CFEE:" + ";" + CFEE + ";" + "\r");
             writer.write("pvSigma:" + ";" + PVsigma + ";" + "\r");
+            writer.write("delay:" + ";" + infoDelay + ";" + "\r");
             writer.close();
         }
         catch (Exception e){

@@ -16,6 +16,10 @@ public class BeliefD {
         this.n = n;
     }
 
+    public void increaseN(){
+        n++;
+    }
+
     public void setD(float d) {
         this.d = d;
     }

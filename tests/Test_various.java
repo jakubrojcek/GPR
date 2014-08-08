@@ -1,5 +1,6 @@
 import com.jakubrojcek.Belief;
 import com.jakubrojcek.BeliefQ;
+import com.jakubrojcek.hftRegulation.BeliefD;
 import com.jakubrojcek.hftRegulation.previousStates;
 import java.io.*;
 
@@ -19,12 +20,30 @@ public class Test_various {
 
         double timeStamp1 = System.nanoTime();
 
-        int maxDepth = 31;
+
+        int n;
+        double realized = 1.0;
+        double expected = 1.5;
+        double alpha;
+        for (int i = 1; i < 1000; i++){
+            n = Math.max(i,100);
+            alpha = (double) 1 / (1 + n);
+            expected = expected * (1 - alpha) + realized * alpha;
+            System.out.println(expected - realized);
+        }
+        /*HashMap<Integer, BeliefD> Deltas = new HashMap<Integer, BeliefD>();
+        BeliefD delta = new BeliefD((short) 1, 0.5f);
+        Deltas.put(123, delta);
+        delta = Deltas.get(123);
+
+        System.out.println("delta is: " + delta.getD() + ", n is: " + delta.getN());*/
+
+        /*int maxDepth = 31;
         int sz = (maxDepth) / 2;
         System.out.println(sz);
         for (int i = 0; i < sz; i++){
             System.out.println(i);
-        }
+        }*/
         /*for (int i = 0; i < 100000000; i++){
             int j = 10;
             while (j > 0){
