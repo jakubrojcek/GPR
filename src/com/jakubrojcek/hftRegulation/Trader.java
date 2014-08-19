@@ -33,7 +33,7 @@ public class Trader {
     private double PriceFV;             // current fundamental value-> price at middle position
     private double EventTime = 0.0;     // event time
     private BeliefQ belief;             // reference to an old Belief, to be updated
-    private double BeliefnC = 0.0;             // reference to an old Belief, to be updated
+    private double BeliefnC = 0.0;      // reference to an old Belief, to be updated
     private Order order = null;         // reference to an old Order, to update the old Belief
     private short cancelCount = 0;      // how many times cancelled
 
@@ -205,6 +205,7 @@ public class Trader {
         orders = new ArrayList<Order>();
         PriceFV = priceFV;              // get price of the fundamental value = fundamental value
         Integer codeDelta = HashCode(BookInfo);
+        int maxCancelled = 0;
         double d = 0.0;
         if (!isInformed){                                        // TODO: isHFT replace with isInformed, 2 flags, combine different cases
             BeliefD delta;
@@ -318,7 +319,7 @@ public class Trader {
                         } else {
                             maxQ = (discountFactorS.get(action - end)[Math.abs(q)] *
                                     ((breakPoint - action + end) * tickSize + privateValue - TTAX + MFEE + d));
-                            maxNC = discountFactorS.get(action - end)[Math.abs(q)] * (numberOfCancels[action]);
+                            maxNC = numberOfCancels[action];
                             max = maxQ - maxNC * CFEE;
                         }
                     }
@@ -351,7 +352,7 @@ public class Trader {
                         } else {
                             maxQ = (discountFactorB.get(action)[Math.abs(q)] *
                                     ((action - breakPoint) * tickSize - privateValue - TTAX + MFEE - d));
-                            maxNC = discountFactorB.get(action)[Math.abs(q)] * (numberOfCancels[action]);
+                            maxNC = numberOfCancels[action];
                             max = maxQ - maxNC * CFEE;
                         }
                     }
@@ -537,6 +538,7 @@ public class Trader {
                 }
                 for(int i = b; i < nPayoffs; i++){ // searching for best payoff
                     p1 = -1.0;
+                    cancelled = false;
                     if (i != oldAction && i != forbiddenMarketOrder){
                         if (tempQs.containsKey(i)){
                             Q = tempQs.get(i).getQ();
@@ -551,7 +553,7 @@ public class Trader {
                             if (i < end){ // payoff to sell limit order
                                 Q = (discountFactorB.get(i)[Math.abs(BookSizes[LL + i])] *
                                         ((i - breakPoint) * tickSize - privateValue - TTAX + MFEE - d));
-                                nC = discountFactorB.get(i)[Math.abs(BookSizes[LL + i])] * numberOfCancels[i];
+                                nC = numberOfCancels[i];
                                 p1 = Q - nC * CFEE;
                                 payoffArray = new Double[3];
                                 payoffArray[0] = p1;
@@ -561,7 +563,7 @@ public class Trader {
                             } else if (i < a) { // payoff to buy limit order
                                 Q = (discountFactorS.get(i - end)[Math.abs(BookSizes[LL + i - end])] *
                                         ((breakPoint - i + end) * tickSize + privateValue - TTAX + MFEE + d));
-                                nC = discountFactorS.get(i - end)[Math.abs(BookSizes[LL + i - end])] * numberOfCancels[i];
+                                nC = numberOfCancels[i];
                                 p1 = Q - nC * CFEE;
                                 payoffArray = new Double[3];
                                 payoffArray[0] = p1;
@@ -615,11 +617,8 @@ public class Trader {
                             }
                             if (cancelled && oldAction != -1){
                                 p1 -= CFEE;
-                                nC += 1.0;
                                 payoffArray[0] -= CFEE;
-                                payoffArray[2] += 1.0;
                             }
-                            cancelled = false;
                         }
                         if (p1 >= 0){
                             nLO++;
@@ -637,6 +636,7 @@ public class Trader {
             } else {                                // get the best payoff
                 for(int i = b; i < nPayoffs; i++){  // searching for best payoff
                     p1 = -1.0f;
+                    cancelled = false;
                     if (i != oldAction && i != forbiddenMarketOrder){
                         if (tempQs.containsKey(i)){
                             if (i < end){
@@ -673,12 +673,12 @@ public class Trader {
                                 if (i < end){ // payoff to sell limit order
                                     Q = (discountFactorB.get(i)[Math.abs(BookSizes[LL + i])] *
                                             ((i - breakPoint) * tickSize - privateValue - TTAX + MFEE - d));
-                                    nC = discountFactorB.get(i)[Math.abs(BookSizes[LL + i])] * numberOfCancels[i];
+                                    nC = numberOfCancels[i];
                                     p1 = Q - nC * CFEE;
                                 } else if (i < a) { // payoff to buy limit order
                                     Q = (discountFactorS.get(i - end)[Math.abs(BookSizes[LL + i - end])] *
                                             ((breakPoint - i + end) * tickSize + privateValue - TTAX + MFEE + d));
-                                    nC = discountFactorS.get(i - end)[Math.abs(BookSizes[LL + i - end])] * numberOfCancels[i];
+                                    nC = numberOfCancels[i];
                                     p1 = Q - nC * CFEE;
                                 } else if (i == (2 * end)){
                                     Q = ((Bt - fvPos) * tickSize - privateValue - TTAX - TFEE - d); // payoff to sell market order
@@ -700,7 +700,7 @@ public class Trader {
                         if (isReturning && order != null){
                             if (i >= (2 * end) && i <= (2 * end + 2)){                        // no action or MO
                                 cancelled = true;
-                            } else{
+                            } else {
                                 if (i >= end){
                                     buyO = true;
                                     pPosition = i + LL - end;
@@ -713,9 +713,9 @@ public class Trader {
                             }
                             if (cancelled && oldAction != -1){
                                 p1 -= CFEE;
-                                nC += 1.0;
+                            } else {
+                                cancelled = false;
                             }
-                            cancelled = false;
                         }
                         if (p1 >= 0.0){
                             nLO++;
@@ -725,6 +725,7 @@ public class Trader {
                                 max = p1;
                                 maxQ = Q;
                                 maxNC = nC;
+                                maxCancelled = (cancelled) ? 1 : 0;
                                 action = i;
                             }
                         }
@@ -741,7 +742,7 @@ public class Trader {
                             belief.setDiff((1.0 - alpha) * previousDiff +
                                     alpha * Math.exp( - rho * (et - EventTime)) * maxQ);
                             updatedTraders.add(traderID);                   // one-step ahead stored
-                            if (writeDiagnostics){writeDiagnostics(previousDiff - Math.exp(-  rho * (et - EventTime)) * maxQ);}
+                            if (writeDiagnostics){writeDiagnostics(previousDiff - Math.exp(- rho * (et - EventTime)) * maxQ);}
                         }
                     } else {
                         if(belief.getN() < nResetMax) {
@@ -751,10 +752,10 @@ public class Trader {
                         double previousQ = belief.getQ();
                         double previousNC = belief.getnC();
                         belief.setQ((1.0 - alpha) * previousQ +
-                                alpha * Math.exp( - rho * (et - EventTime)) * maxQ);
+                                alpha * Math.exp(- rho * (et - EventTime)) * maxQ);
                         belief.setnC((1.0 - alpha) * previousNC +
-                                alpha * Math.exp(-rho * (et - EventTime)) * maxNC);
-                        if (writeDiagnostics){writeDiagnostics(previousQ - Math.exp(-  rho * (et - EventTime)) * maxQ);}
+                                alpha * Math.exp(- rho * (et - EventTime)) * maxCancelled);
+                        if (writeDiagnostics){writeDiagnostics(previousQ - Math.exp(- rho * (et - EventTime)) * maxQ);}
                     }
                 }
             }
@@ -785,9 +786,7 @@ public class Trader {
                     states.put(code, tempQs);
                 }
             }
-            BeliefnC = maxNC;       //TODO: change back?
         }
-
 
 
         // creating an order
@@ -829,16 +828,20 @@ public class Trader {
             order = currentOrder;
             orders.add(currentOrder);
         }
-        if (cancelled && oldAction != -1.0){cancelCount++;}
+        if (cancelled && oldAction != -1.0){
+            cancelCount++;
+            maxCancelled = 1;
+        }
+        BeliefnC = maxNC + maxCancelled;
 
-        if ((action == (2 * end)) || (action == (2 * end + 1))) {
+        /*if ((action == (2 * end)) || (action == (2 * end + 1))) {
             if (speedBump == 0.0){
                 isTraded = true; // isTraded set to true if submitting MOs
             }
-            /*if (max < 0.0){
+            *//*if (max < 0.0){
                 System.out.println("negative belief");
-            }*/
-        }
+            }*//*
+        }*/
         isReturning = true;
         if (writeDecisions){writeDecision(BookInfo, (short)action, cancelled);} // printing data for output tables
         //if (writeHistogram){writeHistogram(BookSizes);}
