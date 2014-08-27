@@ -1910,9 +1910,9 @@ System.out.println("problem");
     public void printDiagnostics(){
         try{
             String outputFileName = folder + "diagnostics1.csv";
-            FileWriter writer = new FileWriter(outputFileName, true);
-            writer.write(diag.printDiagnostics("diffs"));
-            writer.close();
+            FileWriter writer1 = new FileWriter(outputFileName, true);
+            writer1.write(diag.printDiagnostics("diffs"));
+            writer1.close();
         }
         catch (Exception e){
             e.printStackTrace();
@@ -1920,9 +1920,9 @@ System.out.println("problem");
         }
         try{
             String outputFileName = folder + "diagnostics2.csv";
-            FileWriter writer = new FileWriter(outputFileName, true);
-            writer.write(diag.printDiagnostics("actions"));
-            writer.close();
+            FileWriter writer2 = new FileWriter(outputFileName, true);
+            writer2.write(diag.printDiagnostics("actions"));
+            writer2.close();
         }
         catch (Exception e){
             e.printStackTrace();
@@ -1931,9 +1931,9 @@ System.out.println("problem");
 
         try{
             String outputFileName = folder + "diagnostics3.csv";
-            FileWriter writer = new FileWriter(outputFileName, true);
-            writer.write(diag.printDiagnostics("cancellations"));
-            writer.close();
+            FileWriter writer3 = new FileWriter(outputFileName, true);
+            writer3.write(diag.printDiagnostics("cancellations"));
+            writer3.close();
         }
         catch (Exception e){
             e.printStackTrace();
@@ -1942,9 +1942,9 @@ System.out.println("problem");
 
         try{
             String outputFileName = folder + "diagnostics4.csv";
-            FileWriter writer = new FileWriter(outputFileName, true);
-            writer.write(diag.printDiagnostics("diffFVs"));
-            writer.close();
+            FileWriter writer4 = new FileWriter(outputFileName, true);
+            writer4.write(diag.printDiagnostics("diffFVs"));
+            writer4.close();
         }
         catch (Exception e){
             e.printStackTrace();
@@ -1953,9 +1953,9 @@ System.out.println("problem");
 
         try{
             String outputFileName = folder + "diagnostics5.csv";
-            FileWriter writer = new FileWriter(outputFileName, true);
-            writer.write(diag.printDiagnostics("tickDiffs"));
-            writer.close();
+            FileWriter writer5 = new FileWriter(outputFileName, true);
+            writer5.write(diag.printDiagnostics("tickDiffs"));
+            writer5.close();
         }
         catch (Exception e){
             e.printStackTrace();
