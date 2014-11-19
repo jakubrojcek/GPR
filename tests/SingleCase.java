@@ -30,18 +30,56 @@ public class SingleCase {
         int infoSize = Integer.parseInt(args[17]); // 2-bid, ask, 5- GPR 2005, 6-depth at bid,ask, 8-depth off bid,ask
         double prTremble = 0.0;                 // probability of trembling
         byte nP = Byte.parseByte(args[16]);     // number of prices tracked by the book, 8 in the base case, 6/11 in tick size experiment
-        int nHFT = Integer.parseInt(args[1]);   // # of HFT's fast traders, fixed
-        int nPositiveNonHFT = Integer.parseInt(args[2]);                // # of positive PV slow traders
-        int nZeroNonHFT = Integer.parseInt(args[3]);                    // # of zero PV slow traders
-        int nNegativeNonHFT = Integer.parseInt(args[4]);                // # of negative PV slow traders
+
+        /*double nHFT = Double.parseDouble(args[1]);   // % of HFTs from 0 PV traders
+        double nPositiveNonHFT = Double.parseDouble(args[2]);   // % of |0 PV| traders
+        double nZeroNonHFT = Double.parseDouble(args[3]);   // % of |2 PV| traders
+        double nNegativeNonHFT = Double.parseDouble(args[4]);   // % of |4 PV| traders
+        double [] PVdistrb = {.15, .35, .65, .85, 1.0};*/
+
+        double PercHFT = Double.parseDouble(args[1]);   // % of HFTs from 0 PV traders
+        double Perc0PV = Double.parseDouble(args[2]);   // % of |0 PV| traders
+        double Perc2PV = Double.parseDouble(args[3]);   // % of |2 PV| traders
+        double Perc4PV = Double.parseDouble(args[4]);   // % of |4 PV| traders
+
+        /*double nHFT = 1.0;   // % of HFTs from 0 PV traders
+        double nPositiveNonHFT = 1.0;   // % of |0 PV| traders
+        double nZeroNonHFT = 2.0;   // % of |2 PV| traders
+        double nNegativeNonHFT = 1.0;   // % of |4 PV| traders*/
+        double nHFT = Math.round(PercHFT * Perc0PV * 100000000.0)/ 100000000.0;            // # of HFT's fast traders, fixed
+        double nPositiveNonHFT = Math.round((Perc2PV + Perc4PV) / 2.0 * 100000000.0)/ 100000000.0;           // # of positive PV slow traders
+        double nZeroNonHFT = Math.round(Perc0PV * (1 - PercHFT) * 100000000.0)/ 100000000.0;               // # of zero PV slow traders
+        double nNegativeNonHFT = Math.round((Perc2PV + Perc4PV) / 2.0 * 100000000.0)/ 100000000.0;                // # of negative PV slow traders
+
+        double [] PVdistrb = new double[5];
+        double xFactor = Math.round(1.0 / (Perc0PV * (1.0 - PercHFT) + Perc2PV + Perc4PV) * 100000000.0)/100000000.0; // brings nonHFT PVdistrib back to 1.0
+        PVdistrb[0] = Math.round(xFactor * Perc4PV / 2.0 * 100000000.0)/100000000.0;
+        PVdistrb[1] = PVdistrb[0] + Math.round(xFactor * Perc2PV / 2.0 * 100000000.0)/100000000.0;
+        PVdistrb[4] = 1.0;
+        PVdistrb[3] = 1.0 - PVdistrb[0];
+        PVdistrb[2] = 1.0 - PVdistrb[1];
+
+        /*double nHFT = PercHFT * Perc0PV * 5.0;            // # of HFT's fast traders, fixed
+        double nPositiveNonHFT = (Perc2PV + Perc4PV) / 2.0 * 5.0;           // # of positive PV slow traders
+        double nZeroNonHFT = Perc0PV * (1 - PercHFT) * 5.0;               // # of zero PV slow traders
+        double nNegativeNonHFT = (Perc2PV + Perc4PV) / 2.0 * 5.0;                // # of negative PV slow traders
+
+        double [] PVdistrb = new double[5];
+        double xFactor = 1.0 / (Perc0PV * (1.0 - PercHFT) + Perc2PV + Perc4PV); // brings nonHFT PVdistrib back to 1.0
+        PVdistrb[0] = xFactor * Perc4PV / 2;
+        PVdistrb[1] = PVdistrb[0] + xFactor * Perc2PV / 2;
+        PVdistrb[2] = PVdistrb[1] + xFactor * Perc0PV * (1 - PercHFT);
+        PVdistrb[3] = PVdistrb[2] + xFactor * Perc2PV / 2;
+        PVdistrb[4] = PVdistrb[3] + xFactor * Perc4PV / 2;*/
+
         double tif = Double.parseDouble(args[5]);                       // time if force
-        double TTAX = Double.parseDouble(args[6]);                         // transaction tax
-        double CFEE = Double.parseDouble(args[7]);                         // cancellation fee
-        double MFEE = Double.parseDouble(args[8]);                         // LO make fee
-        double TFEE = Double.parseDouble(args[9]);                         // MO take fee
+        double TTAX = Double.parseDouble(args[6]);                      // transaction tax
+        double CFEE = Double.parseDouble(args[7]);                      // cancellation fee
+        double MFEE = Double.parseDouble(args[8]);                      // LO make fee
+        double TFEE = Double.parseDouble(args[9]);                      // MO take fee
         float rho = Float.parseFloat(args[11]);                         // impatience parameter
         double sb = Double.parseDouble(args[15]);                       // speed bump length
-        int NewNonHFT = nNegativeNonHFT + nPositiveNonHFT + nZeroNonHFT;
+        double NewNonHFT = nNegativeNonHFT + nPositiveNonHFT + nZeroNonHFT;
         double lambdaArrival = Double.parseDouble(args[10]);             // arrival frequency, same for all
         double lambdaFV = Double.parseDouble(args[12]);                  // frequency of FV changes
         double infoDelay = Double.parseDouble(args[19]);                 // information delay of uninformed traders
@@ -69,7 +107,7 @@ public class SingleCase {
         //float [] FprivateValues = {- PVsigma * tickSize, 0, PVsigma * tickSize};// distribution over private values
         double  [] FprivateValues = {- 2 * PVsigma * tickSize, - PVsigma * tickSize, 0,
                 PVsigma * tickSize, 2 * PVsigma * tickSize};// distribution over private values
-        double [] PVdistrb = {.15, .35, .65, .85, 1.0};
+
         //double [] PVdistrb = {.134, .311, .689, .866, 1.0};
         //double [] PVdistrb = {.0, .0, 1.0, 1.0, 1.0};
         //double [] PVdistrb = {.2143, .5, .5, .7857, 1.0};
@@ -84,8 +122,8 @@ public class SingleCase {
         /* expected time until the arrival of a new seller for whom picking up
         the LO yields non-negative payoff */
         for (int i = 0; i < end; i++){
-            int denomB = 0; // denominator buyers
-            int denomS = 0; // denominator sellers
+            double denomB = 0.0; // denominator buyers
+            double denomS = 0.0; // denominator sellers
             // buyers
             if (0 <= breakPoint - i - PVsigma){  // add negative value traders
                 denomB += nNegativeNonHFT;
@@ -454,6 +492,29 @@ public class SingleCase {
         convergence = "none";    // computing convergence, "none", "convergenceSecond.csv", "convergence.csv"?
         //trader.setPrTremble(0.0);
         trader.setPrTremble(0.00005);
+        //trader.setWriteDec(false);
+        trader.setWriteDiag(writeDiagnostics);
+        //trader.setWriteHist(writeHistogram);
+        trader.setOnline(true);         // controls updating for returning trader
+        trader.setFixedBeliefs(false);  // controls updating. if fixed beliefs => no updating
+        trader.setSimilar(false);
+        RunOutcome =
+                sr.run(nEvents, nHFT, NewNonHFT, ReturningHFT, ReturningNonHFT, EventTime, FV,
+                        write, purge, nReset, writeDiagnostics, writeHistogram, convergence);
+        EventTime = RunOutcome[0];
+        FV = RunOutcome[1];
+        ReturningHFT = (int) RunOutcome[2];
+        ReturningNonHFT = (int) RunOutcome[3];
+
+        nEvents = 100000000;         // number of events
+        write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
+        writeDiagnostics = true;// write diagnostics controls diagnostics
+        writeHistogram = true; // write histogram
+        purge = false;          // purge in this com.jakubrojcek.gpr2005a.SingleRun?
+        nReset = true;         // reset n in this com.jakubrojcek.gpr2005a.SingleRun?
+        convergence = "none";    // computing convergence, "none", "convergenceSecond.csv", "convergence.csv"?
+        //trader.setPrTremble(0.0);
+        trader.setPrTremble(0.000025);
         //trader.setWriteDec(false);
         trader.setWriteDiag(writeDiagnostics);
         //trader.setWriteHist(writeHistogram);

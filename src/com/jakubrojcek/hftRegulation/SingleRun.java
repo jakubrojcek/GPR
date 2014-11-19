@@ -106,7 +106,7 @@ public class SingleRun {
         fundamentalValue = new TreeMap<Double, Double>();
     }
 
-    public double[] run(int nEvents, int nHFT, int NewNonHFT, int rHFT,
+    public double[] run(int nEvents, double nHFT, double NewNonHFT, int rHFT,
                         int rNonHFT, double EventTime, double FV, boolean w,
                         boolean p, boolean n, boolean wd, boolean wh, String convergence){
         ReturningHFT = rHFT;
@@ -130,7 +130,7 @@ public class SingleRun {
             for (int i = 0; i < nEvents; i ++){
                 // LAMBDA -> overall event frequency
                 Lambda = (nHFT + NewNonHFT) * lambdaArrival + ReturningHFT * ReturnFrequencyHFT +
-                        + ReturningNonHFT * ReturnFrequencyNonHFT + lambdaFVchange;
+                        + ReturningNonHFT * ReturnFrequencyNonHFT + lambdaFVchange;  // TODO: kill (nHFT + NewNonHFT)
                 EventTime += - Math.log(1.0 - Math.random()) / Lambda; // random exponential time
 
                 // updating the lagged fundamental value
