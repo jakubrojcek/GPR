@@ -3,7 +3,11 @@ import com.jakubrojcek.hftRegulation.LOB_LinkedHashMap;
 import com.jakubrojcek.hftRegulation.SingleRun;
 import com.jakubrojcek.hftRegulation.Trader;
 
+import java.io.File;
 import java.io.FileWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 
 /**
@@ -20,8 +24,21 @@ public class SingleCase {
         } else if (mode.equals("speedBump")) {
             model = 1;
         }
+        //System.out.println("Working Directory = " + System.getProperty("user.dir"));
+        Path dir = Paths.get(".." + File.separator + args[0]);
+        if (Files.exists(dir)){
+            System.out.println("Directory already exists");
+            return false;
+        } else {
+            try {
+                Files.createDirectory(dir);
+            } catch (Exception e){
+                System.out.println("Could not create directory");
+            }
+        }
+        String folder = dir.getParent()  + File.separator + args[0];
+        //String folder = "D:\\_paper1 HFT, MM, rebates and market quality\\Matlab Analysis\\" + args[0];
 
-        String folder = "D:\\_paper1 HFT, MM, rebates and market quality\\Matlab Analysis\\" + args[0];
         String outputNameTransactions = "Transactions8.csv";  // output file name
         String outputNameBookData = "effSpread.csv";   // output file name
         String outputNameStatsData = "stats8.csv";   // output file name
@@ -72,6 +89,7 @@ public class SingleCase {
         PVdistrb[3] = PVdistrb[2] + xFactor * Perc2PV / 2;
         PVdistrb[4] = PVdistrb[3] + xFactor * Perc4PV / 2;*/
 
+        int eventScale = Integer.parseInt(args[20]);                    // 1000-> 15bn, 100-> 1.5bn, 10-> 150m, 1->15m events
         double tif = Double.parseDouble(args[5]);                       // time if force
         double TTAX = Double.parseDouble(args[6]);                      // transaction tax
         double CFEE = Double.parseDouble(args[7]);                      // cancellation fee
@@ -170,7 +188,7 @@ public class SingleCase {
                 outputNameTransactions, outputNameBookData, sb, end, infoDelay);
 
         // phase 1a) initialization
-        int nEvents = 500000000;         // number of events
+        int nEvents = 500000 * eventScale;         // number of events
         int ReturningHFT = 0;           // # of returning HFT traders in the book
         int ReturningNonHFT = 0;        // # of returning nonHFT traders in the book
         boolean write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
@@ -197,7 +215,7 @@ public class SingleCase {
 
         if (CFEE != 0.0 || sb != 0.0){               // collect initial beliefs and restart
             trader.computeInitialBeliefs(CFEE, sb);
-            nEvents = 100000000;         // number of events
+            nEvents = 100000 * eventScale;         // number of events
             write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
             writeDiagnostics = true;// write diagnostics controls diagnostics
             writeHistogram = true; // write histogram
@@ -216,7 +234,7 @@ public class SingleCase {
             ReturningNonHFT = (int) RunOutcome[3];
         }
 
-        nEvents = 1000000000;         // number of events
+        nEvents = 1000000 * eventScale;         // number of events
         write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
         writeDiagnostics = true;// write diagnostics controls diagnostics
         writeHistogram = true; // write histogram
@@ -234,7 +252,7 @@ public class SingleCase {
         ReturningHFT = (int) RunOutcome[2];
         ReturningNonHFT = (int) RunOutcome[3];
 
-        nEvents = 1000000000;         // number of events
+        nEvents = 1000000 * eventScale;         // number of events
         write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
         writeDiagnostics = true;// write diagnostics controls diagnostics
         writeHistogram = true; // write histogram
@@ -252,7 +270,7 @@ public class SingleCase {
         ReturningHFT = (int) RunOutcome[2];
         ReturningNonHFT = (int) RunOutcome[3];
 
-        nEvents = 1000000000;         // number of events
+        nEvents = 1000000 * eventScale;         // number of events
         write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
         writeDiagnostics = true;// write diagnostics controls diagnostics
         writeHistogram = true; // write histogram
@@ -270,7 +288,7 @@ public class SingleCase {
         ReturningHFT = (int) RunOutcome[2];
         ReturningNonHFT = (int) RunOutcome[3];
 
-        nEvents = 1000000000;         // number of events
+        nEvents = 1000000 * eventScale;         // number of events
         write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
         writeDiagnostics = true;// write diagnostics controls diagnostics
         writeHistogram = true; // write histogram
@@ -288,7 +306,7 @@ public class SingleCase {
         ReturningHFT = (int) RunOutcome[2];
         ReturningNonHFT = (int) RunOutcome[3];
 
-        nEvents = 1000000000;         // number of events
+        nEvents = 1000000 * eventScale;         // number of events
         write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
         writeDiagnostics = true;// write diagnostics controls diagnostics
         writeHistogram = true; // write histogram
@@ -306,7 +324,7 @@ public class SingleCase {
         ReturningHFT = (int) RunOutcome[2];
         ReturningNonHFT = (int) RunOutcome[3];
 
-        nEvents = 1000000000;         // number of events
+        nEvents = 1000000 * eventScale;         // number of events
         write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
         writeDiagnostics = true;// write diagnostics controls diagnostics
         writeHistogram = true; // write histogram
@@ -324,7 +342,7 @@ public class SingleCase {
         ReturningHFT = (int) RunOutcome[2];
         ReturningNonHFT = (int) RunOutcome[3];
 
-        nEvents = 1000000000;         // number of events
+        nEvents = 1000000 * eventScale;         // number of events
         write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
         writeDiagnostics = true;// write diagnostics controls diagnostics
         writeHistogram = true; // write histogram
@@ -343,7 +361,7 @@ public class SingleCase {
         ReturningNonHFT = (int) RunOutcome[3];
         // phase 1b) extensive simulation and learning
         for (int i = 0; i < 3; i++){
-            nEvents = 1000000000;         // number of events
+            nEvents = 1000000 * eventScale;         // number of events
             write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
             writeDiagnostics = true;// write diagnostics controls diagnostics
             writeHistogram = true; // write histogram
@@ -369,7 +387,7 @@ public class SingleCase {
         }
 
 
-        nEvents = 700000000;         // number of events
+        nEvents = 700000 * eventScale;         // number of events
         write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
         writeDiagnostics = true;// write diagnostics controls diagnostics
         writeHistogram = true; // write histogram
@@ -408,7 +426,7 @@ public class SingleCase {
 
         // phase 2a) less extensive simulation, checking for convergence of type 1
         for (int i = 0; i < 2; i++){    // outer loop for convergence type 1
-            nEvents = 800000000;         // number of events
+            nEvents = 800000 * eventScale;         // number of events
             write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
             writeDiagnostics = true;// write diagnostics controls diagnostics
             writeHistogram = true; // write histogram
@@ -432,7 +450,7 @@ public class SingleCase {
 
             // phase 2b) checking for convergence of type 2
             if (RunOutcome[4] < 0.01){          // type 1 converged, check for type 2
-                nEvents = 30000000;         // number of events
+                nEvents = 30000 * eventScale;         // number of events
                 write = false;          // writeDecisions output in this SingleRun?
                 writeDiagnostics = true;// write diagnostics controls diagnostics
                 writeHistogram = true; // write histogram
@@ -460,7 +478,7 @@ public class SingleCase {
             }
         }
 
-        nEvents = 1000000000;         // number of events
+        nEvents = 1000000 * eventScale;         // number of events
         write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
         writeDiagnostics = true;// write diagnostics controls diagnostics
         writeHistogram = true; // write histogram
@@ -483,7 +501,7 @@ public class SingleCase {
         ReturningHFT = (int) RunOutcome[2];
         ReturningNonHFT = (int) RunOutcome[3];
 
-        nEvents = 100000000;         // number of events
+        nEvents = 100000 * eventScale;         // number of events
         write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
         writeDiagnostics = true;// write diagnostics controls diagnostics
         writeHistogram = true; // write histogram
@@ -506,7 +524,7 @@ public class SingleCase {
         ReturningHFT = (int) RunOutcome[2];
         ReturningNonHFT = (int) RunOutcome[3];
 
-        nEvents = 100000000;         // number of events
+        nEvents = 100000 * eventScale;         // number of events
         write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
         writeDiagnostics = true;// write diagnostics controls diagnostics
         writeHistogram = true; // write histogram
@@ -533,7 +551,7 @@ public class SingleCase {
         int traderCountStart = trader.getTraderCount();
         int traderCountHFTstart = trader.getTraderCountHFT();
         int traderCountNonHFTstart = trader.getTraderCountNonHFT();
-        nEvents = 30000000;         // number of events
+        nEvents = 30000 * eventScale;         // number of events
         write = true;          // writeDecisions output in this SingleRun?
         writeDiagnostics = true;// write diagnostics controls diagnostics
         writeHistogram = true; // write histogram

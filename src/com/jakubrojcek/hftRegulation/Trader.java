@@ -1909,8 +1909,8 @@ System.out.println("problem");
     // prints diagnostics collected from data in decisions
     public void printDiagnostics(){
         try{
-            String outputFileName = folder + "diagnostics1.csv";
-            FileWriter writer1 = new FileWriter(outputFileName, true);
+            String outputFileName1 = folder + "diagnostics1.csv";
+            FileWriter writer1 = new FileWriter(outputFileName1, true);
             writer1.write(diag.printDiagnostics("diffs"));
             writer1.close();
         }
@@ -1919,8 +1919,8 @@ System.out.println("problem");
             System.exit(1);
         }
         try{
-            String outputFileName = folder + "diagnostics2.csv";
-            FileWriter writer2 = new FileWriter(outputFileName, true);
+            String outputFileName2 = folder + "diagnostics2.csv";
+            FileWriter writer2 = new FileWriter(outputFileName2, true);
             writer2.write(diag.printDiagnostics("actions"));
             writer2.close();
         }
@@ -1930,8 +1930,8 @@ System.out.println("problem");
         }
 
         try{
-            String outputFileName = folder + "diagnostics3.csv";
-            FileWriter writer3 = new FileWriter(outputFileName, true);
+            String outputFileName3 = folder + "diagnostics3.csv";
+            FileWriter writer3 = new FileWriter(outputFileName3, true);
             writer3.write(diag.printDiagnostics("cancellations"));
             writer3.close();
         }
@@ -1941,8 +1941,8 @@ System.out.println("problem");
         }
 
         try{
-            String outputFileName = folder + "diagnostics4.csv";
-            FileWriter writer4 = new FileWriter(outputFileName, true);
+            String outputFileName4 = folder + "diagnostics4.csv";
+            FileWriter writer4 = new FileWriter(outputFileName4, true);
             writer4.write(diag.printDiagnostics("diffFVs"));
             writer4.close();
         }
@@ -1952,8 +1952,8 @@ System.out.println("problem");
         }
 
         try{
-            String outputFileName = folder + "diagnostics5.csv";
-            FileWriter writer5 = new FileWriter(outputFileName, true);
+            String outputFileName5 = folder + "diagnostics5.csv";
+            FileWriter writer5 = new FileWriter(outputFileName5, true);
             writer5.write(diag.printDiagnostics("tickDiffs"));
             writer5.close();
         }
@@ -1990,7 +1990,7 @@ System.out.println("problem");
 
 
     public double printConvergence(int t2, String convergenceType, boolean write){
-        if (convergenceType != "convergenceSecond.csv"){
+        if (!convergenceType.equals("convergenceSecond.csv")){
             return 0.0;                                     // right now, I don't need first convergence
         }
         long code;
@@ -2010,7 +2010,7 @@ System.out.println("problem");
         BeliefQ currentBelief;
         BeliefQ previousBelief;
         Iterator keys;
-        if (convergenceType == "convergenceSecond.csv"){
+        if (convergenceType.equals("convergenceSecond.csv")){
             keys = convergenceStates.keySet().iterator();
             previousStates = states;
         } else {
@@ -2129,9 +2129,9 @@ System.out.println("problem");
 
         try{
             String outputFileName = folder + "decisionsHFT.csv";
-            FileWriter writer = new FileWriter(outputFileName, true);
-            writer.write(decisionHFT.printDecision("simple"));
-            writer.close();
+            FileWriter writer1 = new FileWriter(outputFileName, true);
+            writer1.write(decisionHFT.printDecision("simple"));
+            writer1.close();
         }
         catch (Exception e){
             e.printStackTrace();
@@ -2140,9 +2140,9 @@ System.out.println("problem");
 
         try{
             String outputFileName = folder + "decisions_4.csv";
-            FileWriter writer = new FileWriter(outputFileName, true);
-            writer.write(decision_4.printDecision("simple"));
-            writer.close();
+            FileWriter writer2 = new FileWriter(outputFileName, true);
+            writer2.write(decision_4.printDecision("simple"));
+            writer2.close();
         }
         catch (Exception e){
             e.printStackTrace();
@@ -2151,9 +2151,9 @@ System.out.println("problem");
 
         try{
             String outputFileName = folder + "decisions_2.csv";
-            FileWriter writer = new FileWriter(outputFileName, true);
-            writer.write(decision_2.printDecision("simple"));
-            writer.close();
+            FileWriter writer3 = new FileWriter(outputFileName, true);
+            writer3.write(decision_2.printDecision("simple"));
+            writer3.close();
         }
         catch (Exception e){
             e.printStackTrace();
@@ -2162,9 +2162,9 @@ System.out.println("problem");
 
         try{
             String outputFileName = folder + "decisions0.csv";
-            FileWriter writer = new FileWriter(outputFileName, true);
-            writer.write(decision0.printDecision("simple"));
-            writer.close();
+            FileWriter writer4 = new FileWriter(outputFileName, true);
+            writer4.write(decision0.printDecision("simple"));
+            writer4.close();
         }
         catch (Exception e){
             e.printStackTrace();
@@ -2173,9 +2173,9 @@ System.out.println("problem");
 
         try{
             String outputFileName = folder + "decisions2.csv";
-            FileWriter writer = new FileWriter(outputFileName, true);
-            writer.write(decision2.printDecision("simple"));
-            writer.close();
+            FileWriter writer5 = new FileWriter(outputFileName, true);
+            writer5.write(decision2.printDecision("simple"));
+            writer5.close();
         }
         catch (Exception e){
             e.printStackTrace();
@@ -2184,9 +2184,9 @@ System.out.println("problem");
 
         try{
             String outputFileName = folder + "decisions4.csv";
-            FileWriter writer = new FileWriter(outputFileName, true);
-            writer.write(decision4.printDecision("simple"));
-            writer.close();
+            FileWriter writer6 = new FileWriter(outputFileName, true);
+            writer6.write(decision4.printDecision("simple"));
+            writer6.close();
         }
         catch (Exception e){
             e.printStackTrace();
@@ -2195,9 +2195,9 @@ System.out.println("problem");
 
         try{
             String outputFileName2 = folder + "decisionsLiquidity.csv";
-            FileWriter writer2 = new FileWriter(outputFileName2, true);
-            writer2.write(decision.printDecisionLiquidity());
-            writer2.close();
+            FileWriter writer7 = new FileWriter(outputFileName2, true);
+            writer7.write(decision.printDecisionLiquidity());
+            writer7.close();
         }
         catch (Exception e){
             e.printStackTrace();
