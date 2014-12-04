@@ -21,6 +21,31 @@ public class ThirdLobTest {
         double timeStamp1 = System.currentTimeMillis();
         String[] params = new String[21];
 
+        SingleCase case10a = new SingleCase();
+        params[0] = "_10baseCaseMT24aaa"  + File.separator;
+        params[1] = "0.5";            // % of HFTs from 0 PV traders
+        params[2] = "0.4";            // % of |0 PV| traders
+        params[3]= "0.3428571";             // % of |2 PV| traders
+        params[4] = "0.2571429";            // % of |4 PV| traders
+        params[5] = "0.0";          // time in force
+        params[6] = "0.0";          // TTAX
+        params[7] = "0.0";          // CFEE
+        params[8] = "0.006";          // LO make fee
+        params[9] = "0.009";          // MO take fee
+        params[10] = "0.25";        // lambda of new arrivals
+        params[11] = "0.03f";       // rho- impatience parameters
+        params[12] = "0.1";        // arrival of changes in FV
+        params[13] = "30";          // max depth
+        params[14] = "returning";   // model to use
+        params[15] = "0.0";         // speed bump length
+        params[16] = "15";          // number of ticks
+        params[17] = "8";           // infoSize
+        params[18] = "2";           // private value volatility {4-> {-8,-4,0,4,8}, 2-> {-4,-2,0,2,4}}
+        params[19] = "0.0";         // information delay of uninformed traders
+        params[20] = "1000";        // 1000-> 15bn, 100-> 1.5bn, 10-> 150m, 1->15m events
+        case10a.main(params);
+        case10a = null;
+
         /*SingleCase case2 = new SingleCase();
         params[0] = "_2baseCaseHFT190b\\";   // folder
         *//*params[1] = "1.0";            // % of HFTs from 0 PV traders
@@ -1139,7 +1164,7 @@ public class ThirdLobTest {
         case9.main(params);
         case9 = null;*/
 
-        SingleCase case10a = new SingleCase();
+        /*SingleCase case10a = new SingleCase();
         params[0] = "_10baseCaseMT24aaa"  + File.separator;
         params[1] = "0.5";            // % of HFTs from 0 PV traders
         params[2] = "0.4";            // % of |0 PV| traders
@@ -1162,7 +1187,7 @@ public class ThirdLobTest {
         params[19] = "0.0";         // information delay of uninformed traders
         params[20] = "1000";        // 1000-> 15bn, 100-> 1.5bn, 10-> 150m, 1->15m events
         case10a.main(params);
-        case10a = null;
+        case10a = null;*/
 
         /*SingleCase case10b = new SingleCase();
         params[0] = "_10baseCaseMT24bb\\";
