@@ -11,11 +11,11 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 
 /**
- * Created by rojcek on 20.12.13.
+ * Created by rojcek on 10.12.2014.
  */
-public class SingleCase {
+public class SingleCaseDirect {
 
-    public boolean main(String[] args) {
+    public static void main(String[] args) {
         double timeStamp1 = System.nanoTime();
         String mode = args[14];
         int model = 0;
@@ -25,10 +25,11 @@ public class SingleCase {
             model = 1;
         }
 
-        Path dir = Paths.get("D:\\_paper1 HFT, MM, rebates and market quality\\Matlab Analysis" + File.separator + args[0]);
+        Path dir = Paths.get(args[0]);
+        //Path dir = Paths.get("D:\\_paper1 HFT, MM, rebates and market quality\\Matlab Analysis" + File.separator + args[0]);
         if (Files.exists(dir)){
             System.out.println("Directory already exists");
-            return false;
+            return;
         } else {
             try {
                 Files.createDirectory(dir);
@@ -36,9 +37,7 @@ public class SingleCase {
                 System.out.println("Could not create directory");
             }
         }
-        String folder = dir.getParent()  + File.separator + args[0];
-        //String folder = "D:\\_paper1 HFT, MM, rebates and market quality\\Matlab Analysis\\" + args[0];
-
+        String folder = dir.toString() + File.separator;
         String outputNameTransactions = "Transactions8.csv";  // output file name
         String outputNameBookData = "effSpread.csv";   // output file name
         String outputNameStatsData = "stats8.csv";   // output file name
@@ -106,7 +105,7 @@ public class SingleCase {
         int maxDepth = Integer.parseInt(args[13]);// 0 to 7 which matter
         int FVpos = nP/2;                          // position of the fundamental value
         int range = (nP == 31) ?                    // range of prices on the grid +/-
-                             6 : 3;
+                6 : 3;
         int HL = FVpos + range; //                 // Lowest  allowed limit order price.  LL + HL = nP-1 for allowed orders centered around E(v)
         int LL = FVpos - range; //                  // Highest allowed limit order price
         float tickSize = 0.125f;                // size of one tick
@@ -618,7 +617,5 @@ public class SingleCase {
             e.printStackTrace();
             System.exit(1);
         }
-        return true;    // returns true when finished
-
     }
 }

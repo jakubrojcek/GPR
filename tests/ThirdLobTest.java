@@ -22,7 +22,7 @@ public class ThirdLobTest {
         String[] params = new String[21];
 
 
-        SingleCase case7a = new SingleCase();
+        /*SingleCase case7a = new SingleCase();
         params[0] = "_7baseCaseHftTIF250a35" + File.separator;
         params[1] = "0.5";            // % of HFTs from 0 PV traders
         params[2] = "0.35";            // % of |0 PV| traders
@@ -2420,10 +2420,10 @@ public class ThirdLobTest {
         params[19] = "2.0";         // information delay of uninformed traders
         params[20] = "1000";        // 1000-> 15bn, 100-> 1.5bn, 10-> 150m, 1->15m events
         case12p.main(params);
-        case12p = null;
+        case12p = null;*/
 
         /*SingleCase case10a = new SingleCase();
-        params[0] = "_10baseCaseMT24aaa"  + File.separator;
+        params[0] = "_10baseCaseMT26aa"  + File.separator;
         params[1] = "0.5";            // % of HFTs from 0 PV traders
         params[2] = "0.4";            // % of |0 PV| traders
         params[3]= "0.3428571";             // % of |2 PV| traders
@@ -2431,8 +2431,8 @@ public class ThirdLobTest {
         params[5] = "0.0";          // time in force
         params[6] = "0.0";          // TTAX
         params[7] = "0.0";          // CFEE
-        params[8] = "0.006";          // LO make fee
-        params[9] = "0.009";          // MO take fee
+        params[8] = "0.01";          // LO make fee
+        params[9] = "0.015";          // MO take fee
         params[10] = "0.25";        // lambda of new arrivals
         params[11] = "0.03f";       // rho- impatience parameters
         params[12] = "0.1";        // arrival of changes in FV
@@ -2445,7 +2445,32 @@ public class ThirdLobTest {
         params[19] = "0.0";         // information delay of uninformed traders
         params[20] = "1000";        // 1000-> 15bn, 100-> 1.5bn, 10-> 150m, 1->15m events
         case10a.main(params);
-        case10a = null;*/
+        case10a = null;
+
+        SingleCase case10b = new SingleCase();
+        params[0] = "_10baseCaseMT26bb"  + File.separator;
+        params[1] = "0.5";            // % of HFTs from 0 PV traders
+        params[2] = "0.4";            // % of |0 PV| traders
+        params[3]= "0.3428571";             // % of |2 PV| traders
+        params[4] = "0.2571429";            // % of |4 PV| traders
+        params[5] = "0.0";          // time in force
+        params[6] = "0.0";          // TTAX
+        params[7] = "0.0";          // CFEE
+        params[8] = "0.01";          // LO make fee
+        params[9] = "0.015";          // MO take fee
+        params[10] = "0.25";        // lambda of new arrivals
+        params[11] = "0.03f";       // rho- impatience parameters
+        params[12] = "0.1";        // arrival of changes in FV
+        params[13] = "30";          // max depth
+        params[14] = "returning";   // model to use
+        params[15] = "0.0";         // speed bump length
+        params[16] = "15";          // number of ticks
+        params[17] = "8";           // infoSize
+        params[18] = "2";           // private value volatility {4-> {-8,-4,0,4,8}, 2-> {-4,-2,0,2,4}}
+        params[19] = "2.0";         // information delay of uninformed traders
+        params[20] = "1000";        // 1000-> 15bn, 100-> 1.5bn, 10-> 150m, 1->15m events
+        case10b.main(params);
+        case10b = null;*/
 
         /*SingleCase case2 = new SingleCase();
         params[0] = "_2baseCaseHFT190b\\";   // folder
@@ -2499,12 +2524,12 @@ public class ThirdLobTest {
         case3.main(params);
         case3 = null;*/
 
-        /*SingleCase case2a = new SingleCase();
-        params[0] = "_2baseCaseHFT224a\\";   // folder
-        params[1] = "0.5";            // % of HFTs from 0 PV traders
-        params[2] = "0.375";            // % of |0 PV| traders
-        params[3]= "0.3571429";             // % of |2 PV| traders
-        params[4] = "0.2678571";            // % of |4 PV| traders
+
+        params[0] = "D:\\_paper1 HFT, MM, rebates and market quality\\Matlab Analysis\\_7baseCaseHftTIF250b35";   // folder
+        params[1] = "0.0";            // % of HFTs from 0 PV traders
+        params[2] = "0.3";            // % of |0 PV| traders
+        params[3]= "0.4";             // % of |2 PV| traders
+        params[4] = "0.3";            // % of |4 PV| traders
         params[5] = "0.0";          // time in force
         params[6] = "0.0";          // TTAX
         params[7] = "0.0";          // CFEE
@@ -2520,15 +2545,167 @@ public class ThirdLobTest {
         params[17] = "8";           // infoSize
         params[18] = "2";           // private value volatility {4-> {-8,-4,0,4,8}, 2-> {-4,-2,0,2,4}}
         params[19] = "0.0";         // information delay of uninformed traders
+        params[20] = "1000";        // 1000-> 15bn, 100-> 1.5bn, 10-> 150m, 1->15m events
+        SingleCaseDirect case0a = new SingleCaseDirect();
+        case0a.main(params);
+        case0a = null;
+
+        /*SingleCase case0a = new SingleCase();
+        params[0] = "_2baseCaseHFT208aaa\\";   // folder
+        params[1] = "0.0";            // % of HFTs from 0 PV traders
+        params[2] = "0.3";            // % of |0 PV| traders
+        params[3]= "0.4";             // % of |2 PV| traders
+        params[4] = "0.3";            // % of |4 PV| traders
+        params[5] = "0.0";          // time in force
+        params[6] = "0.0";          // TTAX
+        params[7] = "0.0";          // CFEE
+        params[8] = "0.0";          // LO make fee
+        params[9] = "0.0";          // MO take fee
+        params[10] = "0.25";        // lambda of new arrivals
+        params[11] = "0.03f";       // rho- impatience parameters
+        params[12] = "0.1";        // arrival of changes in FV
+        params[13] = "30";          // max depth
+        params[14] = "returning";   // model to use
+        params[15] = "0.0";         // speed bump length
+        params[16] = "15";          // number of ticks
+        params[17] = "8";           // infoSize
+        params[18] = "2";           // private value volatility {4-> {-8,-4,0,4,8}, 2-> {-4,-2,0,2,4}}
+        params[19] = "0.0";         // information delay of uninformed traders
+        params[20] = "1000";        // 1000-> 15bn, 100-> 1.5bn, 10-> 150m, 1->15m events
+        case0a.main(params);
+        case0a = null;
+
+        SingleCase case0b = new SingleCase();
+        params[0] = "_2baseCaseHFT208bbb\\";   // folder
+        params[1] = "0.0";            // % of HFTs from 0 PV traders
+        params[2] = "0.3";            // % of |0 PV| traders
+        params[3]= "0.4";             // % of |2 PV| traders
+        params[4] = "0.3";            // % of |4 PV| traders
+        params[5] = "0.0";          // time in force
+        params[6] = "0.0";          // TTAX
+        params[7] = "0.0";          // CFEE
+        params[8] = "0.0";          // LO make fee
+        params[9] = "0.0";          // MO take fee
+        params[10] = "0.25";        // lambda of new arrivals
+        params[11] = "0.03f";       // rho- impatience parameters
+        params[12] = "0.1";        // arrival of changes in FV
+        params[13] = "30";          // max depth
+        params[14] = "returning";   // model to use
+        params[15] = "0.0";         // speed bump length
+        params[16] = "15";          // number of ticks
+        params[17] = "8";           // infoSize
+        params[18] = "2";           // private value volatility {4-> {-8,-4,0,4,8}, 2-> {-4,-2,0,2,4}}
+        params[19] = "2.0";         // information delay of uninformed traders
+        params[20] = "1000";        // 1000-> 15bn, 100-> 1.5bn, 10-> 150m, 1->15m events
+        case0b.main(params);
+        case0b = null;
+
+        SingleCase case1a = new SingleCase();
+        params[0] = "_2baseCaseHFT217aaa\\";   // folder
+        params[1] = "0.25";            // % of HFTs from 0 PV traders
+        params[2] = "0.3";            // % of |0 PV| traders
+        params[3]= "0.4";             // % of |2 PV| traders
+        params[4] = "0.3";            // % of |4 PV| traders
+        params[5] = "0.0";          // time in force
+        params[6] = "0.0";          // TTAX
+        params[7] = "0.0";          // CFEE
+        params[8] = "0.0";          // LO make fee
+        params[9] = "0.0";          // MO take fee
+        params[10] = "0.25";        // lambda of new arrivals
+        params[11] = "0.03f";       // rho- impatience parameters
+        params[12] = "0.1";        // arrival of changes in FV
+        params[13] = "30";          // max depth
+        params[14] = "returning";   // model to use
+        params[15] = "0.0";         // speed bump length
+        params[16] = "15";          // number of ticks
+        params[17] = "8";           // infoSize
+        params[18] = "2";           // private value volatility {4-> {-8,-4,0,4,8}, 2-> {-4,-2,0,2,4}}
+        params[19] = "0.0";         // information delay of uninformed traders
+        params[20] = "1000";        // 1000-> 15bn, 100-> 1.5bn, 10-> 150m, 1->15m events
+        case1a.main(params);
+        case1a = null;
+
+        SingleCase case1b = new SingleCase();
+        params[0] = "_2baseCaseHFT217bbb\\";   // folder
+        params[1] = "0.25";            // % of HFTs from 0 PV traders
+        params[2] = "0.3";            // % of |0 PV| traders
+        params[3]= "0.4";             // % of |2 PV| traders
+        params[4] = "0.3";            // % of |4 PV| traders
+        params[5] = "0.0";          // time in force
+        params[6] = "0.0";          // TTAX
+        params[7] = "0.0";          // CFEE
+        params[8] = "0.0";          // LO make fee
+        params[9] = "0.0";          // MO take fee
+        params[10] = "0.25";        // lambda of new arrivals
+        params[11] = "0.03f";       // rho- impatience parameters
+        params[12] = "0.1";        // arrival of changes in FV
+        params[13] = "30";          // max depth
+        params[14] = "returning";   // model to use
+        params[15] = "0.0";         // speed bump length
+        params[16] = "15";          // number of ticks
+        params[17] = "8";           // infoSize
+        params[18] = "2";           // private value volatility {4-> {-8,-4,0,4,8}, 2-> {-4,-2,0,2,4}}
+        params[19] = "2.0";         // information delay of uninformed traders
+        params[20] = "1000";        // 1000-> 15bn, 100-> 1.5bn, 10-> 150m, 1->15m events
+        case1b.main(params);
+        case1b = null;
+
+        SingleCase case2a = new SingleCase();
+        params[0] = "_2baseCaseHFT218aaa\\";   // folder
+        params[1] = "0.75";            // % of HFTs from 0 PV traders
+        params[2] = "0.3";            // % of |0 PV| traders
+        params[3]= "0.4";             // % of |2 PV| traders
+        params[4] = "0.3";            // % of |4 PV| traders
+        params[5] = "0.0";          // time in force
+        params[6] = "0.0";          // TTAX
+        params[7] = "0.0";          // CFEE
+        params[8] = "0.0";          // LO make fee
+        params[9] = "0.0";          // MO take fee
+        params[10] = "0.25";        // lambda of new arrivals
+        params[11] = "0.03f";       // rho- impatience parameters
+        params[12] = "0.1";        // arrival of changes in FV
+        params[13] = "30";          // max depth
+        params[14] = "returning";   // model to use
+        params[15] = "0.0";         // speed bump length
+        params[16] = "15";          // number of ticks
+        params[17] = "8";           // infoSize
+        params[18] = "2";           // private value volatility {4-> {-8,-4,0,4,8}, 2-> {-4,-2,0,2,4}}
+        params[19] = "0.0";         // information delay of uninformed traders
+        params[20] = "1000";        // 1000-> 15bn, 100-> 1.5bn, 10-> 150m, 1->15m events
         case2a.main(params);
         case2a = null;
 
+        SingleCase case2b = new SingleCase();
+        params[0] = "_2baseCaseHFT218bbb\\";   // folder
+        params[1] = "0.75";            // % of HFTs from 0 PV traders
+        params[2] = "0.3";            // % of |0 PV| traders
+        params[3]= "0.4";             // % of |2 PV| traders
+        params[4] = "0.3";            // % of |4 PV| traders
+        params[5] = "0.0";          // time in force
+        params[6] = "0.0";          // TTAX
+        params[7] = "0.0";          // CFEE
+        params[8] = "0.0";          // LO make fee
+        params[9] = "0.0";          // MO take fee
+        params[10] = "0.25";        // lambda of new arrivals
+        params[11] = "0.03f";       // rho- impatience parameters
+        params[12] = "0.1";        // arrival of changes in FV
+        params[13] = "30";          // max depth
+        params[14] = "returning";   // model to use
+        params[15] = "0.0";         // speed bump length
+        params[16] = "15";          // number of ticks
+        params[17] = "8";           // infoSize
+        params[18] = "2";           // private value volatility {4-> {-8,-4,0,4,8}, 2-> {-4,-2,0,2,4}}
+        params[19] = "2.0";         // information delay of uninformed traders
+        params[20] = "1000";        // 1000-> 15bn, 100-> 1.5bn, 10-> 150m, 1->15m events
+        case2b.main(params);
+        case2b = null;
+
         SingleCase case3a = new SingleCase();
-        params[0] = "_2baseCaseHFT225a\\";   // folder
-        params[1] = "0.5";            // % of HFTs from 0 PV traders
-        params[2] = "0.425";            // % of |0 PV| traders
-        params[3]= "0.3285714";             // % of |2 PV| traders
-        params[4] = "0.2464286";            // % of |4 PV| traders
+        params[0] = "_2baseCaseHFT209aaa\\";   // folder
+        params[1] = "1.0";            // % of HFTs from 0 PV traders
+        params[2] = "0.3";            // % of |0 PV| traders
+        params[3]= "0.4";             // % of |2 PV| traders
+        params[4] = "0.3";            // % of |4 PV| traders
         params[5] = "0.0";          // time in force
         params[6] = "0.0";          // TTAX
         params[7] = "0.0";          // CFEE
@@ -2544,11 +2721,62 @@ public class ThirdLobTest {
         params[17] = "8";           // infoSize
         params[18] = "2";           // private value volatility {4-> {-8,-4,0,4,8}, 2-> {-4,-2,0,2,4}}
         params[19] = "0.0";         // information delay of uninformed traders
+        params[20] = "1000";        // 1000-> 15bn, 100-> 1.5bn, 10-> 150m, 1->15m events
         case3a.main(params);
         case3a = null;
 
+        SingleCase case3b = new SingleCase();
+        params[0] = "_2baseCaseHFT209bbb\\";   // folder
+        params[1] = "1.0";            // % of HFTs from 0 PV traders
+        params[2] = "0.3";            // % of |0 PV| traders
+        params[3]= "0.4";             // % of |2 PV| traders
+        params[4] = "0.3";            // % of |4 PV| traders
+        params[5] = "0.0";          // time in force
+        params[6] = "0.0";          // TTAX
+        params[7] = "0.0";          // CFEE
+        params[8] = "0.0";          // LO make fee
+        params[9] = "0.0";          // MO take fee
+        params[10] = "0.25";        // lambda of new arrivals
+        params[11] = "0.03f";       // rho- impatience parameters
+        params[12] = "0.1";        // arrival of changes in FV
+        params[13] = "30";          // max depth
+        params[14] = "returning";   // model to use
+        params[15] = "0.0";         // speed bump length
+        params[16] = "15";          // number of ticks
+        params[17] = "8";           // infoSize
+        params[18] = "2";           // private value volatility {4-> {-8,-4,0,4,8}, 2-> {-4,-2,0,2,4}}
+        params[19] = "2.0";         // information delay of uninformed traders
+        params[20] = "1000";        // 1000-> 15bn, 100-> 1.5bn, 10-> 150m, 1->15m events
+        case3b.main(params);
+        case3b = null;*/
+
+        /*SingleCase case1a = new SingleCase();
+        params[0] = "_2baseCaseHFT223aaa\\";   // folder
+        params[1] = "0.5";            // % of HFTs from 0 PV traders
+        params[2] = "0.325";            // % of |0 PV| traders
+        params[3]= "0.3857143";             // % of |2 PV| traders
+        params[4] = "0.2892857";            // % of |4 PV| traders
+        params[5] = "0.0";          // time in force
+        params[6] = "0.0";          // TTAX
+        params[7] = "0.0";          // CFEE
+        params[8] = "0.0";          // LO make fee
+        params[9] = "0.0";          // MO take fee
+        params[10] = "0.25";        // lambda of new arrivals
+        params[11] = "0.03f";       // rho- impatience parameters
+        params[12] = "0.1";        // arrival of changes in FV
+        params[13] = "30";          // max depth
+        params[14] = "returning";   // model to use
+        params[15] = "0.0";         // speed bump length
+        params[16] = "15";          // number of ticks
+        params[17] = "8";           // infoSize
+        params[18] = "2";           // private value volatility {4-> {-8,-4,0,4,8}, 2-> {-4,-2,0,2,4}}
+        params[19] = "0.0";         // information delay of uninformed traders
+        params[20] = "1000";        // 1000-> 15bn, 100-> 1.5bn, 10-> 150m, 1->15m events
+        case1a.main(params);
+        case1a = null;
+
         SingleCase case1b = new SingleCase();
-        params[0] = "_2baseCaseHFT223b\\";   // folder
+        params[0] = "_2baseCaseHFT223bbb\\";   // folder
         params[1] = "0.5";            // % of HFTs from 0 PV traders
         params[2] = "0.325";            // % of |0 PV| traders
         params[3]= "0.3857143";             // % of |2 PV| traders
@@ -2568,11 +2796,87 @@ public class ThirdLobTest {
         params[17] = "8";           // infoSize
         params[18] = "2";           // private value volatility {4-> {-8,-4,0,4,8}, 2-> {-4,-2,0,2,4}}
         params[19] = "2.0";         // information delay of uninformed traders
+        params[20] = "1000";        // 1000-> 15bn, 100-> 1.5bn, 10-> 150m, 1->15m events
         case1b.main(params);
         case1b = null;
 
+        SingleCase case25a = new SingleCase();
+        params[0] = "_2baseCaseHFT219aaa\\";   // folder
+        params[1] = "0.5";            // % of HFTs from 0 PV traders
+        params[2] = "0.35";            // % of |0 PV| traders
+        params[3]= "0.3714286";             // % of |2 PV| traders
+        params[4] = "0.2785714";            // % of |4 PV| traders
+        params[5] = "0.0";          // time in force
+        params[6] = "0.0";          // TTAX
+        params[7] = "0.0";          // CFEE
+        params[8] = "0.0";          // LO make fee
+        params[9] = "0.0";          // MO take fee
+        params[10] = "0.25";        // lambda of new arrivals
+        params[11] = "0.03f";       // rho- impatience parameters
+        params[12] = "0.1";        // arrival of changes in FV
+        params[13] = "30";          // max depth
+        params[14] = "returning";   // model to use
+        params[15] = "0.0";         // speed bump length
+        params[16] = "15";          // number of ticks
+        params[17] = "8";           // infoSize
+        params[18] = "2";           // private value volatility {4-> {-8,-4,0,4,8}, 2-> {-4,-2,0,2,4}}
+        params[19] = "0.0";         // information delay of uninformed traders
+        params[20] = "1000";        // 1000-> 15bn, 100-> 1.5bn, 10-> 150m, 1->15m events
+        case25a.main(params);
+        case25a = null;
+
+        SingleCase case25b = new SingleCase();
+        params[0] = "_2baseCaseHFT219bbb\\";   // folder
+        params[1] = "0.5";            // % of HFTs from 0 PV traders
+        params[2] = "0.35";            // % of |0 PV| traders
+        params[3]= "0.3714286";             // % of |2 PV| traders
+        params[4] = "0.2785714";            // % of |4 PV| traders
+        params[5] = "0.0";          // time in force
+        params[6] = "0.0";          // TTAX
+        params[7] = "0.0";          // CFEE
+        params[8] = "0.0";          // LO make fee
+        params[9] = "0.0";          // MO take fee
+        params[10] = "0.25";        // lambda of new arrivals
+        params[11] = "0.03f";       // rho- impatience parameters
+        params[12] = "0.1";        // arrival of changes in FV
+        params[13] = "30";          // max depth
+        params[14] = "returning";   // model to use
+        params[15] = "0.0";         // speed bump length
+        params[16] = "15";          // number of ticks
+        params[17] = "8";           // infoSize
+        params[18] = "2";           // private value volatility {4-> {-8,-4,0,4,8}, 2-> {-4,-2,0,2,4}}
+        params[19] = "2.0";         // information delay of uninformed traders
+        params[20] = "1000";        // 1000-> 15bn, 100-> 1.5bn, 10-> 150m, 1->15m events
+        case25b.main(params);
+        case25b = null;
+
+        SingleCase case2a = new SingleCase();
+        params[0] = "_2baseCaseHFT224aa\\";   // folder
+        params[1] = "0.5";            // % of HFTs from 0 PV traders
+        params[2] = "0.375";            // % of |0 PV| traders
+        params[3]= "0.3571429";             // % of |2 PV| traders
+        params[4] = "0.2678571";            // % of |4 PV| traders
+        params[5] = "0.0";          // time in force
+        params[6] = "0.0";          // TTAX
+        params[7] = "0.0";          // CFEE
+        params[8] = "0.0";          // LO make fee
+        params[9] = "0.0";          // MO take fee
+        params[10] = "0.25";        // lambda of new arrivals
+        params[11] = "0.03f";       // rho- impatience parameters
+        params[12] = "0.1";        // arrival of changes in FV
+        params[13] = "30";          // max depth
+        params[14] = "returning";   // model to use
+        params[15] = "0.0";         // speed bump length
+        params[16] = "15";          // number of ticks
+        params[17] = "8";           // infoSize
+        params[18] = "2";           // private value volatility {4-> {-8,-4,0,4,8}, 2-> {-4,-2,0,2,4}}
+        params[19] = "0.0";         // information delay of uninformed traders
+        params[20] = "1000";        // 1000-> 15bn, 100-> 1.5bn, 10-> 150m, 1->15m events
+        case2a.main(params);
+        case2a = null;
+
         SingleCase case2b = new SingleCase();
-        params[0] = "_2baseCaseHFT224b\\";   // folder
+        params[0] = "_2baseCaseHFT224bb\\";   // folder
         params[1] = "0.5";            // % of HFTs from 0 PV traders
         params[2] = "0.375";            // % of |0 PV| traders
         params[3]= "0.3571429";             // % of |2 PV| traders
@@ -2592,13 +2896,37 @@ public class ThirdLobTest {
         params[17] = "8";           // infoSize
         params[18] = "2";           // private value volatility {4-> {-8,-4,0,4,8}, 2-> {-4,-2,0,2,4}}
         params[19] = "2.0";         // information delay of uninformed traders
+        params[20] = "1000";        // 1000-> 15bn, 100-> 1.5bn, 10-> 150m, 1->15m events
         case2b.main(params);
         case2b = null;
 
-
+        SingleCase case3a = new SingleCase();
+        params[0] = "_2baseCaseHFT225aa\\";   // folder
+        params[1] = "0.5";            // % of HFTs from 0 PV traders
+        params[2] = "0.425";            // % of |0 PV| traders
+        params[3]= "0.3285714";             // % of |2 PV| traders
+        params[4] = "0.2464286";            // % of |4 PV| traders
+        params[5] = "0.0";          // time in force
+        params[6] = "0.0";          // TTAX
+        params[7] = "0.0";          // CFEE
+        params[8] = "0.0";          // LO make fee
+        params[9] = "0.0";          // MO take fee
+        params[10] = "0.25";        // lambda of new arrivals
+        params[11] = "0.03f";       // rho- impatience parameters
+        params[12] = "0.1";        // arrival of changes in FV
+        params[13] = "30";          // max depth
+        params[14] = "returning";   // model to use
+        params[15] = "0.0";         // speed bump length
+        params[16] = "15";          // number of ticks
+        params[17] = "8";           // infoSize
+        params[18] = "2";           // private value volatility {4-> {-8,-4,0,4,8}, 2-> {-4,-2,0,2,4}}
+        params[19] = "0.0";         // information delay of uninformed traders
+        params[20] = "1000";        // 1000-> 15bn, 100-> 1.5bn, 10-> 150m, 1->15m events
+        case3a.main(params);
+        case3a = null;
 
         SingleCase case3b = new SingleCase();
-        params[0] = "_2baseCaseHFT225b\\";   // folder
+        params[0] = "_2baseCaseHFT225bb\\";   // folder
         params[1] = "0.5";            // % of HFTs from 0 PV traders
         params[2] = "0.425";            // % of |0 PV| traders
         params[3]= "0.3285714";             // % of |2 PV| traders
@@ -2618,11 +2946,12 @@ public class ThirdLobTest {
         params[17] = "8";           // infoSize
         params[18] = "2";           // private value volatility {4-> {-8,-4,0,4,8}, 2-> {-4,-2,0,2,4}}
         params[19] = "2.0";         // information delay of uninformed traders
+        params[20] = "1000";        // 1000-> 15bn, 100-> 1.5bn, 10-> 150m, 1->15m events
         case3b.main(params);
-        case3b = null;*/
+        case3b = null;
 
-        /*SingleCase case4a = new SingleCase();
-        params[0] = "_2baseCaseHFT221aa\\";   // folder
+        SingleCase case4a = new SingleCase();
+        params[0] = "_2baseCaseHFT221aaa\\";   // folder
         params[1] = "0.5";            // % of HFTs from 0 PV traders
         params[2] = "0.45";            // % of |0 PV| traders
         params[3]= "0.3142857";             // % of |2 PV| traders
@@ -2642,11 +2971,12 @@ public class ThirdLobTest {
         params[17] = "8";           // infoSize
         params[18] = "2";           // private value volatility {4-> {-8,-4,0,4,8}, 2-> {-4,-2,0,2,4}}
         params[19] = "0.0";         // information delay of uninformed traders
+        params[20] = "1000";        // 1000-> 15bn, 100-> 1.5bn, 10-> 150m, 1->15m events
         case4a.main(params);
-        case4a = null;*/
+        case4a = null;
 
-        /*SingleCase case4b = new SingleCase();
-        params[0] = "_2baseCaseHFT221bb\\";   // folder
+        SingleCase case4b = new SingleCase();
+        params[0] = "_2baseCaseHFT221bbb\\";   // folder
         params[1] = "0.5";            // % of HFTs from 0 PV traders
         params[2] = "0.45";            // % of |0 PV| traders
         params[3]= "0.3142857";             // % of |2 PV| traders
@@ -2666,11 +2996,62 @@ public class ThirdLobTest {
         params[17] = "8";           // infoSize
         params[18] = "2";           // private value volatility {4-> {-8,-4,0,4,8}, 2-> {-4,-2,0,2,4}}
         params[19] = "2.0";         // information delay of uninformed traders
+        params[20] = "1000";        // 1000-> 15bn, 100-> 1.5bn, 10-> 150m, 1->15m events
         case4b.main(params);
         case4b = null;
 
+        SingleCase case6a = new SingleCase();
+        params[0] = "_2baseCaseHFT226a\\";   // folder
+        params[1] = "0.5";            // % of HFTs from 0 PV traders
+        params[2] = "0.475";            // % of |0 PV| traders
+        params[3]= "0.3";             // % of |2 PV| traders
+        params[4] = "0.225";            // % of |4 PV| traders
+        params[5] = "0.0";          // time in force
+        params[6] = "0.0";          // TTAX
+        params[7] = "0.0";          // CFEE
+        params[8] = "0.0";          // LO make fee
+        params[9] = "0.0";          // MO take fee
+        params[10] = "0.25";        // lambda of new arrivals
+        params[11] = "0.03f";       // rho- impatience parameters
+        params[12] = "0.1";        // arrival of changes in FV
+        params[13] = "30";          // max depth
+        params[14] = "returning";   // model to use
+        params[15] = "0.0";         // speed bump length
+        params[16] = "15";          // number of ticks
+        params[17] = "8";           // infoSize
+        params[18] = "2";           // private value volatility {4-> {-8,-4,0,4,8}, 2-> {-4,-2,0,2,4}}
+        params[19] = "0.0";         // information delay of uninformed traders
+        params[20] = "1000";        // 1000-> 15bn, 100-> 1.5bn, 10-> 150m, 1->15m events
+        case6a.main(params);
+        case6a = null;
+
+        SingleCase case6b = new SingleCase();
+        params[0] = "_2baseCaseHFT226b\\";   // folder
+        params[1] = "0.5";            // % of HFTs from 0 PV traders
+        params[2] = "0.475";            // % of |0 PV| traders
+        params[3]= "0.3";             // % of |2 PV| traders
+        params[4] = "0.225";            // % of |4 PV| traders
+        params[5] = "0.0";          // time in force
+        params[6] = "0.0";          // TTAX
+        params[7] = "0.0";          // CFEE
+        params[8] = "0.0";          // LO make fee
+        params[9] = "0.0";          // MO take fee
+        params[10] = "0.25";        // lambda of new arrivals
+        params[11] = "0.03f";       // rho- impatience parameters
+        params[12] = "0.1";        // arrival of changes in FV
+        params[13] = "30";          // max depth
+        params[14] = "returning";   // model to use
+        params[15] = "0.0";         // speed bump length
+        params[16] = "15";          // number of ticks
+        params[17] = "8";           // infoSize
+        params[18] = "2";           // private value volatility {4-> {-8,-4,0,4,8}, 2-> {-4,-2,0,2,4}}
+        params[19] = "2.0";         // information delay of uninformed traders
+        params[20] = "1000";        // 1000-> 15bn, 100-> 1.5bn, 10-> 150m, 1->15m events
+        case6b.main(params);
+        case6b = null;
+
         SingleCase case5a = new SingleCase();
-        params[0] = "_2baseCaseHFT222aa\\";   // folder
+        params[0] = "_2baseCaseHFT222aaa\\";   // folder
         params[1] = "0.5";            // % of HFTs from 0 PV traders
         params[2] = "0.5";            // % of |0 PV| traders
         params[3]= "0.2857143";             // % of |2 PV| traders
@@ -2690,11 +3071,12 @@ public class ThirdLobTest {
         params[17] = "8";           // infoSize
         params[18] = "2";           // private value volatility {4-> {-8,-4,0,4,8}, 2-> {-4,-2,0,2,4}}
         params[19] = "0.0";         // information delay of uninformed traders
+        params[20] = "1000";        // 1000-> 15bn, 100-> 1.5bn, 10-> 150m, 1->15m events
         case5a.main(params);
         case5a = null;
 
         SingleCase case5b = new SingleCase();
-        params[0] = "_2baseCaseHFT222bb\\";   // folder
+        params[0] = "_2baseCaseHFT222bbb\\";   // folder
         params[1] = "0.5";            // % of HFTs from 0 PV traders
         params[2] = "0.5";            // % of |0 PV| traders
         params[3]= "0.2857143";             // % of |2 PV| traders
@@ -2714,9 +3096,9 @@ public class ThirdLobTest {
         params[17] = "8";           // infoSize
         params[18] = "2";           // private value volatility {4-> {-8,-4,0,4,8}, 2-> {-4,-2,0,2,4}}
         params[19] = "2.0";         // information delay of uninformed traders
+        params[20] = "1000";        // 1000-> 15bn, 100-> 1.5bn, 10-> 150m, 1->15m events
         case5b.main(params);
         case5b = null;*/
-
 
         /*SingleCase case2c = new SingleCase();
         params[0] = "_2baseCaseHFT215b\\";   // folder
