@@ -2525,7 +2525,7 @@ public class ThirdLobTest {
         case3 = null;*/
 
 
-        params[0] = "D:\\_paper1 HFT, MM, rebates and market quality\\Matlab Analysis\\_7baseCaseHftTIF250b35";   // folder
+        /*params[0] = "D:\\_paper1 HFT, MM, rebates and market quality\\Matlab Analysis\\_7baseCaseHftTIF250b35";   // folder
         params[1] = "0.0";            // % of HFTs from 0 PV traders
         params[2] = "0.3";            // % of |0 PV| traders
         params[3]= "0.4";             // % of |2 PV| traders
@@ -2548,7 +2548,7 @@ public class ThirdLobTest {
         params[20] = "1000";        // 1000-> 15bn, 100-> 1.5bn, 10-> 150m, 1->15m events
         SingleCaseDirect case0a = new SingleCaseDirect();
         case0a.main(params);
-        case0a = null;
+        case0a = null;*/
 
         /*SingleCase case0a = new SingleCase();
         params[0] = "_2baseCaseHFT208aaa\\";   // folder
@@ -3950,18 +3950,18 @@ public class ThirdLobTest {
         case8f.main(params);
         case8f = null;*/
 
-        /*SingleCase case9 = new SingleCase();
-        params[0] = "_9baseCaseHftTTAX2b\\";
-        params[1] = "1";            // new HFTs
-        params[2] = "1";            // # of positive PV slow traders
-        params[3]= "2";             // # of zero PV slow traders
-        params[4] = "1";            // # of negative PV slow traders
+        SingleCaseDirect case9 = new SingleCaseDirect();
+        params[0] = "_9baseCaseHftTTAX3aa" + File.separator;
+        params[1] = "0.5";            // % of HFTs from 0 PV traders
+        params[2] = "0.4";            // % of |0 PV| traders
+        params[3]= "0.3428571";             // % of |2 PV| traders
+        params[4] = "0.2571429";            // % of |4 PV| traders
         params[5] = "0.0";          // time in force
         params[6] = "0.001945";      // TTAX
         params[7] = "0.0";          // CFEE
         params[8] = "0.0";          // LO make fee
         params[9] = "0.0";          // MO take fee
-        params[10] = "0.02";          // lambda of new arrivals
+        params[10] = "0.25";          // lambda of new arrivals
         params[11] = "0.03f";       // rho- impatience parameters
         params[12] = "0.03";        // arrival of changes in FV
         params[13] = "30";          // max depth
@@ -3970,11 +3970,12 @@ public class ThirdLobTest {
         params[16] = "15";          // number of ticks
         params[17] = "8";           // infoSize
         params[18] = "2";           // private value volatility {4-> {-8,-4,0,4,8}, 2-> {-4,-2,0,2,4}}
-        params[19] = "2.0";         // information delay of uninformed traders
+        params[19] = "0.0";         // information delay of uninformed traders
+        params[20] = "1000";        // 1000-> 15bn, 100-> 1.5bn, 10-> 150m, 1->15m events
 
 
         case9.main(params);
-        case9 = null;*/
+        case9 = null;
 
         /*SingleCase case10a = new SingleCase();
         params[0] = "_10baseCaseMT24aaa"  + File.separator;
