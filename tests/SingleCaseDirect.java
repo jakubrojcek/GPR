@@ -100,6 +100,7 @@ public class SingleCaseDirect {
         double lambdaArrival = Double.parseDouble(args[10]);             // arrival frequency, same for all
         double lambdaFV = Double.parseDouble(args[12]);                  // frequency of FV changes
         double infoDelay = Double.parseDouble(args[19]);                 // information delay of uninformed traders
+        double transparencyPeriod = Double.parseDouble(args[21]);        // period for transparency
         double ReturnFrequencyHFT = 4.0;//8.3;          // returning frequency of HFT  //
         double ReturnFrequencyNonHFT = 1.0;//1.67;     // returning frequency of NonHFT //
         int maxDepth = Integer.parseInt(args[13]);// 0 to 7 which matter
@@ -184,7 +185,7 @@ public class SingleCaseDirect {
         book.makeBook(Prices);
         SingleRun sr = new SingleRun(model, tif, lambdaArrival, lambdaFV, ReturnFrequencyHFT, ReturnFrequencyNonHFT,
                 FprivateValues, PVdistrb, sigma, tickSize, FVplus, header, book, traders, h, trader, outputNameStatsData,
-                outputNameTransactions, outputNameBookData, sb, end, infoDelay);
+                outputNameTransactions, outputNameBookData, sb, end, infoDelay, transparencyPeriod);
 
         // phase 1a) initialization
         int nEvents = 500000 * eventScale;         // number of events
