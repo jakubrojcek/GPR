@@ -201,7 +201,7 @@ public class Trader {
 
     // decision about the price is made here, so far random
     public ArrayList<Order> decision(int[] BookSizes, int[] BookInfo,
-                                     double et, double priceFV, double priceFvLag){
+                                     double et, double priceFV, double priceFvLag, double lastUpdated){
         orders = new ArrayList<Order>();
         PriceFV = priceFV;              // get price of the fundamental value = fundamental value
         Integer codeDelta = HashCode(BookInfo);
