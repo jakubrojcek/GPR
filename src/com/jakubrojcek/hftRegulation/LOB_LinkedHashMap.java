@@ -206,6 +206,7 @@ public class LOB_LinkedHashMap {
         int pos, size;
         for (Order o : orders){
             size = o.getSize();
+            // TODO: does an old order get cancelled in "transparency" model? due to pos
             if (o.isCancelled()){
                 oID = null;
                 int Q = o.getQ();
@@ -225,7 +226,6 @@ public class LOB_LinkedHashMap {
                         traders.get(CPid).execution(FV, o.getTimeStamp());
                         o.setPosition(pos + positionShift);
                         traders.get(o.getTraderID()).execution(FV, o.getTimeStamp());
-
                         ActiveOrders.remove(cp);
                         Pt = pos; // sets last transaction position
                         b = 1; // sets last transaction direction, buy = 1

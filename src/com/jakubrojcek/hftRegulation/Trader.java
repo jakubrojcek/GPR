@@ -1356,9 +1356,9 @@ public class Trader {
         if (model == 2){
             int tid = (int) (8.0 * infoDelay / transparencyPeriod);
             if (tid == 0){
-                decisionTID0.addDecisionLiquidity(ac, isHFT, cancelled);    
+                decisionTID0.addDecisionLiquidity(ac, isHFT, cancelled);
             } else if (tid == 7){
-                decisionTID7.addDecisionLiquidity(ac, isHFT, cancelled);    
+                decisionTID7.addDecisionLiquidity(ac, isHFT, cancelled);
             }
         }
     }
@@ -2478,7 +2478,7 @@ System.out.println("problem");
             e.printStackTrace();
             System.exit(1);
         }
-        
+
         if (model == 2){
             try{
                 String outputFileName2 = folder + "decisionsLiquidityTID0.csv";
