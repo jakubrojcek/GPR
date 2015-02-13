@@ -27,8 +27,8 @@ public class SingleCase {
             model = 2;
         }
 
-        //Path dir = Paths.get("D:\\_paper1 HFT, MM, rebates and market quality\\Matlab Analysis" + File.separator + args[0]);
-        Path dir = Paths.get("." + File.separator + args[0]);
+        Path dir = Paths.get("D:\\_paper1 HFT, MM, rebates and market quality\\Matlab Analysis" + File.separator + args[0]);
+        //Path dir = Paths.get("." + File.separator + args[0]);
         if (Files.exists(dir)){
             System.out.println("Directory already exists");
             return false;
