@@ -80,12 +80,23 @@ public class Trader {
     static boolean online = false;              // updates beliefs also for returning trader
     static String folder;
     static Decision decision;                   // decisions of all nonHFT and liquidity provision
+    static Decision decisionTID0;                   // decisions of all nonHFT and liquidity provision
+    static Decision decisionTID7;                   // decisions of all nonHFT and liquidity provision
     static Decision decision_4;                 // decisions of PV -4
     static Decision decision_2;                 // decisions of PV -2
     static Decision decision0;                  // decisions of PV 0
     static Decision decision2;                  // decisions of PV +2
     static Decision decision4;                  // decisions of PV +4
     static Decision decisionHFT;                // decisions of HFTs
+    static Decision decisionHFT0;                // decisions of HFTs
+    static Decision decisionHFT1;                // decisions of HFTs
+    static Decision decisionHFT2;                // decisions of HFTs
+    static Decision decisionHFT3;                // decisions of HFTs
+    static Decision decisionHFT4;                // decisions of HFTs
+    static Decision decisionHFT5;                // decisions of HFTs
+    static Decision decisionHFT6;                // decisions of HFTs
+    static Decision decisionHFT7;                // decisions of HFTs
+
 
     static Diagnostics diag;
     static int[] bookSizesHistory;
@@ -101,6 +112,7 @@ public class Trader {
     static double TFEE = 0.0;                   // MO take fee
     static float rho;                           // trading "impatience" parameter
     static double speedBump;                    // value of speed bump
+    static double transparencyPeriod;           // period for transparency
 
 
 
@@ -129,7 +141,7 @@ public class Trader {
     // constructor of the main trader- loads parameters from main
     public Trader(int is, double[] tb, double[] ts, byte numberPrices, int FVpos, double tickS, double rFast, double rSlow,
                   int ll, int hl, int e, int md, int bp, int hti, double pt, String f, LOB_LinkedHashMap b,
-                  double [] PVs, float r, double tt, double cf, double mf, double tf, int m, double sb){
+                  double [] PVs, float r, double tt, double cf, double mf, double tf, int m, double sb, double tp){
         states = new HashMap<Long, HashMap<Integer, BeliefQ>>(hti);
         previousStates = new HashMap<Long, HashMap<Integer, BeliefQ>>();
         convergenceStates = new HashMap<Long, HashMap<Integer, BeliefQ>>();
@@ -172,6 +184,16 @@ public class Trader {
         decision2 = new Decision(numberPrices, FVpos, e, bp, LL);
         decision4 = new Decision(numberPrices, FVpos, e, bp, LL);
         decisionHFT = new Decision(numberPrices, FVpos, e, bp, LL);
+        if (m == 2){
+            decisionHFT0 = new Decision(numberPrices, FVpos, e, bp, LL);
+            decisionHFT1 = new Decision(numberPrices, FVpos, e, bp, LL);
+            decisionHFT2 = new Decision(numberPrices, FVpos, e, bp, LL);
+            decisionHFT3 = new Decision(numberPrices, FVpos, e, bp, LL);
+            decisionHFT4 = new Decision(numberPrices, FVpos, e, bp, LL);
+            decisionHFT5 = new Decision(numberPrices, FVpos, e, bp, LL);
+            decisionHFT6 = new Decision(numberPrices, FVpos, e, bp, LL);
+            decisionHFT7 = new Decision(numberPrices, FVpos, e, bp, LL);
+        }
         diag = new Diagnostics(numberPrices, e);
         bookSizesHistory = new int[2 * nP + 1];
         bookSizesHistory[0] = 0;
@@ -195,19 +217,20 @@ public class Trader {
         statesCount = 0;
         model = m;
         speedBump = sb;
+        transparencyPeriod = tp;
         slippageS = new double[maxDepth + 1];
         slippageB = new double[maxDepth + 1];
     }
 
     // decision about the price is made here, so far random
     public ArrayList<Order> decision(int[] BookSizes, int[] BookInfo,
-                                     double et, double priceFV, double priceFvLag){
+                                     double et, double priceFV, double priceFvLag, double lastUpdated){
         orders = new ArrayList<Order>();
         PriceFV = priceFV;              // get price of the fundamental value = fundamental value
         Integer codeDelta = HashCode(BookInfo);
         int maxCancelled = 0;
         double d = 0.0;
-        if (!isInformed){                                        // TODO: isHFT replace with isInformed, 2 flags, combine different cases
+        if (!isInformed){
             BeliefD delta;
             if (Deltas.containsKey(codeDelta)){
                 delta = Deltas.get(codeDelta);
@@ -281,7 +304,7 @@ public class Trader {
             }
         }
 
-        Long code = HashCode(oldPos, q, x, BookInfo, BookSizes);
+        Long code = HashCode(oldPos, q, x, BookInfo, BookSizes, et - lastUpdated);
         tempQs = states.containsKey(code) ? states.get(code)
                                           : new HashMap<Integer, BeliefQ>();
         int action = -1, nLO = 0;
@@ -387,7 +410,7 @@ public class Trader {
                                 p1 = ((Bt - fvPos) * tickSize - privateValue - TTAX - TFEE - slippageS[BookInfo[2]] - d);
                                 p.put(i, p1); // payoff to sell market order
                             } else if (i == (2 * end + 1)){
-                                p1 = ((fvPos - At) * tickSize + privateValue - TTAX -TFEE - slippageB[BookInfo[3]] + d);
+                                p1 = ((fvPos - At) * tickSize + privateValue - TTAX - TFEE - slippageB[BookInfo[3]] + d);
                                 p.put(i, p1); // payoff to buy market order
                             } else if (i == (2 * end + 2)){
                                 double Rt = (isHFT) ? 1.0 / ReturnFrequencyHFT
@@ -843,10 +866,9 @@ public class Trader {
             }*//*
         }*/
         isReturning = true;
-        if (writeDecisions){writeDecision(BookInfo, (short)action, cancelled);} // printing data for output tables
+        if (writeDecisions){writeDecision(BookInfo, (short)action, cancelled, et - lastUpdated);} // printing data for output tables
         //if (writeHistogram){writeHistogram(BookSizes);}
         if (writeDiagnostics){writeDiagnostics((short)action);}
-
         EventTime = et;
         return orders;
     }
@@ -1294,10 +1316,31 @@ public class Trader {
         previousTraderAction[2] = BookInfo[1];
     }
 
-    private void writeDecision(int[] BookInfo, short ac, boolean cancelled){
+    private void writeDecision(int[] BookInfo, short ac, boolean cancelled, double infoDelay){
         // Aggressiveness, cancellations and liquidity provision tables
         if (isHFT){
             decisionHFT.addDecision(BookInfo, ac, cancelled);
+            if (model == 2){
+                int tid = (int) (8.0 * infoDelay / transparencyPeriod);
+                switch (tid){
+                    case 0:  decisionHFT0.addDecision(BookInfo, ac, cancelled);
+                        break;
+                    case 1:  decisionHFT1.addDecision(BookInfo, ac, cancelled);;
+                        break;
+                    case 2:  decisionHFT2.addDecision(BookInfo, ac, cancelled);;
+                        break;
+                    case 3:  decisionHFT3.addDecision(BookInfo, ac, cancelled);;
+                        break;
+                    case 4:  decisionHFT4.addDecision(BookInfo, ac, cancelled);;
+                        break;
+                    case 5:  decisionHFT5.addDecision(BookInfo, ac, cancelled);;
+                        break;
+                    case 6:  decisionHFT6.addDecision(BookInfo, ac, cancelled);;
+                        break;
+                    case 7:  decisionHFT7.addDecision(BookInfo, ac, cancelled);;
+                        break;
+                }
+            }
         } else if (pv == 0) {
             decision_4.addDecision(BookInfo, ac, cancelled);
         } else if (pv == 1) {
@@ -1310,6 +1353,14 @@ public class Trader {
             decision4.addDecision(BookInfo, ac, cancelled);
         }
         decision.addDecisionLiquidity(ac, isHFT, cancelled);
+        if (model == 2){
+            int tid = (int) (8.0 * infoDelay / transparencyPeriod);
+            if (tid == 0){
+                decisionTID0.addDecisionLiquidity(ac, isHFT, cancelled);
+            } else if (tid == 7){
+                decisionTID7.addDecisionLiquidity(ac, isHFT, cancelled);
+            }
+        }
     }
 
     private void writeDecision(int[] BookInfo, int[] BookSizes, Short action, boolean cancelled){
@@ -1368,7 +1419,7 @@ public class Trader {
     }
 
     public void computeInitialBeliefs(double cf, double sb){
-        System.out.println("computing initial beliefs CFEE or SB");
+        System.out.println("computing initial beliefs  for CFEE or SB or ultra transparency");
         if (cf != 0.0){
             int[] occurrences = new int[nPayoffs];
             Iterator<Integer> iteratorActions;
@@ -1390,67 +1441,133 @@ public class Trader {
                 numberOfCancels[i] = (double)(numberOfCancels[i] / Math.max(occurrences[i], 1));
             }
         }
-        if (sb != 0.0){
+        if (sb != 0.0 || model == 2){
             int[] slippageScount = new int[maxDepth + 1];
             int[] slippageBcount = new int[maxDepth + 1];
             Iterator<Integer> iteratorActions;
             HashMap<Integer, BeliefQ> beliefQs;
             Iterator<Long> iteratorStates = states.keySet().iterator();
             Long code;
-            while (iteratorStates.hasNext()){
-                code = iteratorStates.next();
-                beliefQs = states.get(code);
-                long code2 = code;
-                long Bt = (code2 >> 39);
-                code2 = code2 - (Bt << 39);
+            if (model == 2){
+                while (iteratorStates.hasNext()){
+                    code = iteratorStates.next();
+                    beliefQs = states.get(code);
+                    long code2 = code;
+                    long Bt = (code2 >> 42);
+                    code2 = code2 - (Bt << 42);
 
-                long At = (code2 >> 35);
-                code2 = code2 - (At << 35);
+                    long At = (code2 >> 38);
+                    code2 = code2 - (At << 38);
 
-                long lBt = (code2 >> 31);
-                code2 = code2 - (lBt << 31);
+                    long lBt = (code2 >> 34);
+                    code2 = code2 - (lBt << 34);
 
-                long lAt = (code2 >> 27);
-                code2 = code2 - (lAt<<27);
+                    long lAt = (code2 >> 30);
+                    code2 = code2 - (lAt<<30);
 
-                long dBt = (code2 >> 23);
-                code2 = code2 - (dBt<<23);
+                    long dBt = (code2 >> 26);
+                    code2 = code2 - (dBt<<26);
 
-                long dSt = (code2 >> 19);
-                code2 = code2 - (dSt<<19);
+                    long dSt = (code2 >> 22);
+                    code2 = code2 - (dSt<<22);
 
-                long Pt = (code2 >> 15);
-                code2 = code2 - (Pt<<15);
+                    long Pt = (code2 >> 18);
+                    code2 = code2 - (Pt<<18);
 
-                long b = (code2 >> 14);
-                code2 = code2 - (b<<14);
+                    long b = (code2 >> 17);
+                    code2 = code2 - (b<<17);
 
-                long P = (code2 >> 10);
-                code2 = code2 - (P<<10);
+                    long P = (code2 >> 13);
+                    code2 = code2 - (P<<13);
 
-                long q = (code2 >> 6);
-                code2 = code2 - (q<<6);
+                    long q = (code2 >> 9);
+                    code2 = code2 - (q<<9);
 
-                long x = (code2 >> 4);
-                code2 = code2 - (x<<4);
+                    long x = (code2 >> 7);
+                    code2 = code2 - (x<<7);
 
-                long a = (code2 >> 1);
-                code2 = code2 - (a<<1);
+                    long a = (code2 >> 4);
+                    code2 = code2 - (a<<4);
 
-                long l = code2;
-                code2 = code2 - l;
-                if (code2 != 0){
-                    System.out.println("code not 0");
+                    long l = (code2 >> 3);
+                    code2 = code2 - (l<<3);
+
+                    long tid = code2;
+                    code2 = code2 - tid;
+                    if (code2 != 0){
+                        System.out.println("code not 0");
+                    }
+                    if (beliefQs.containsKey(2 * end)){
+                        double p1 = (Bt - fvPos) * tickSize - FprivateValues[(int)a] - TTAX - TFEE; // payoff to sell market order
+                        slippageS[2 * (int)lBt] += p1 - beliefQs.get(2 * end).getQ();
+                        slippageScount[2 * (int)lBt]++;
+                        /*slippageS[(int) tid] += p1 - beliefQs.get(2 * end).getQ();
+                        slippageScount[(int) tid]++;*/
+                    }
+                    if (beliefQs.containsKey(2 *  end + 1)){
+                        double p1 = (fvPos - At) * tickSize + FprivateValues[(int)a] - TTAX - TFEE;
+                        slippageB[2 * (int)lAt] += p1 - beliefQs.get(2 * end + 1).getQ();
+                        slippageBcount[2 * (int)lAt]++;
+                        /*slippageB[(int) tid] += p1 - beliefQs.get(2 * end + 1).getQ();
+                        slippageBcount[(int) tid]++;*/
+                    }
                 }
-                if (beliefQs.containsKey(2 * end)){
-                    double p1 = (Bt - fvPos) * tickSize - FprivateValues[(int)a] - TTAX - TFEE; // payoff to sell market order
-                    slippageS[2 * (int)lBt] += p1 - beliefQs.get(2 * end).getQ();
-                    slippageScount[2 * (int)lBt]++;
-                }
-                if (beliefQs.containsKey(2 *  end + 1)){
-                    double p1 = (fvPos - At) * tickSize + FprivateValues[(int)a] - TTAX - TFEE;
-                    slippageB[2 * (int)lAt] += p1 - beliefQs.get(2 * end + 1).getQ();
-                    slippageBcount[2 * (int)lAt]++;
+            } else if (sb != 0.0){
+                while (iteratorStates.hasNext()){
+                    code = iteratorStates.next();
+                    beliefQs = states.get(code);
+                    long code2 = code;
+                    long Bt = (code2 >> 39);
+                    code2 = code2 - (Bt << 39);
+
+                    long At = (code2 >> 35);
+                    code2 = code2 - (At << 35);
+
+                    long lBt = (code2 >> 31);
+                    code2 = code2 - (lBt << 31);
+
+                    long lAt = (code2 >> 27);
+                    code2 = code2 - (lAt<<27);
+
+                    long dBt = (code2 >> 23);
+                    code2 = code2 - (dBt<<23);
+
+                    long dSt = (code2 >> 19);
+                    code2 = code2 - (dSt<<19);
+
+                    long Pt = (code2 >> 15);
+                    code2 = code2 - (Pt<<15);
+
+                    long b = (code2 >> 14);
+                    code2 = code2 - (b<<14);
+
+                    long P = (code2 >> 10);
+                    code2 = code2 - (P<<10);
+
+                    long q = (code2 >> 6);
+                    code2 = code2 - (q<<6);
+
+                    long x = (code2 >> 4);
+                    code2 = code2 - (x<<4);
+
+                    long a = (code2 >> 1);
+                    code2 = code2 - (a<<1);
+
+                    long l = code2;
+                    code2 = code2 - l;
+                    if (code2 != 0){
+                        System.out.println("code not 0");
+                    }
+                    if (beliefQs.containsKey(2 * end)){
+                        double p1 = (Bt - fvPos) * tickSize - FprivateValues[(int)a] - TTAX - TFEE; // payoff to sell market order
+                        slippageS[2 * (int)lBt] += p1 - beliefQs.get(2 * end).getQ();
+                        slippageScount[2 * (int)lBt]++;
+                    }
+                    if (beliefQs.containsKey(2 *  end + 1)){
+                        double p1 = (fvPos - At) * tickSize + FprivateValues[(int)a] - TTAX - TFEE;
+                        slippageB[2 * (int)lAt] += p1 - beliefQs.get(2 * end + 1).getQ();
+                        slippageBcount[2 * (int)lAt]++;
+                    }
                 }
             }
             int sz = maxDepth / 2;
@@ -1509,7 +1626,7 @@ public class Trader {
         }*/
         return ((Bt<<27) + (At<<22) + (lBt<<18) + (lAt<<14) + (dBt<<10) + (dSt<<6) + (Pt<<1) + b);
     }
-    public Long HashCode(int P, int q, int x, int[] BookInfo, int [] BS){
+    public Long HashCode(int P, int q, int x, int[] BookInfo, int [] BS, double infoDelay){
 
         long code = (long) 0;
         if (infoSize == 2){
@@ -1561,6 +1678,75 @@ if (code2 !=0){
 System.out.println("problem");
 }*/ // tests
 
+        }else if (infoSize == 4){
+            int tid = (int) (8.0 * infoDelay / transparencyPeriod);
+            long Bt = BookInfo[0];      // Best Bid position
+            long At = BookInfo[1];      // Best Ask position
+            long lBt = BookInfo[2] / 2;     // depth at best Bid
+            long lAt = BookInfo[3] / 2;     // depth at best Ask
+            long dBt = Math.min(15, BookInfo[4] / 3); // depth off Bid
+            long dSt = Math.min(15, BookInfo[5] / 3); // depth off Ask
+            int Pt = BookInfo[6];       // last transaction pricePosition position
+            int b = BookInfo[7];        // 1 if last transaction buy, 0 if sell
+            q = Math.min(15, q);
+            int a = pv;                 // private value zero(0), negative (1), positive (2)
+            int l = (isHFT) ? 1 : 0;    // arrival frequency slow (0), fast (1)
+            //System.out.println(Bt + " : " + lBt + " ; " + At + " : " + lAt);
+            /*Long code = (Bt<<50) + (At<<44) + (lBt<<40) + (lAt<<36) + (dBt<<29) + (dSt<<22) + (Pt<<16) + (b<<15) +
++ (P<<9) + (q<<5) + (x<<3) + (a<<1) + l;*/
+            code = (Bt<<42) + (At<<38) + (lBt<<34) + (lAt<<30) + (dBt<<26) + (dSt<<22) + (Pt<<18) + (b<<17) +
+                    + (P<<13) + (q<<9) + (x<<7) + (a<<4) + (l<<3) + tid;
+
+            /*long code2 = code;
+            boolean [] test = new boolean[15];
+            test[0] = ((code2 >> 42) == Bt);
+            code2 = code2 - (Bt<<42);
+
+            test[1] = ((code2 >> 38) == At);
+            code2 = code2 - (At<<38);
+
+            test[2] = ((code2 >> 34) == lBt);
+            code2 = code2 - (lBt<<34);
+
+            test[3] = ((code2 >> 30) == lAt);
+            code2 = code2 - (lAt<<30);
+
+            test[4] =((code2 >> 26) == dBt);
+            code2 = code2 - (dBt<<26);
+
+            test[5] = ((code2 >> 22) == dSt);
+            code2 = code2 - (dSt<<22);
+
+            test[6] = ((code2 >> 18) == Pt);
+            code2 = code2 - (Pt<<18);
+
+            test[7] = ((code2 >> 17) == b);
+            code2 = code2 - (b<<17);
+
+            test[8] = ((code2 >> 13) == P);
+            code2 = code2 - (P<<13);
+
+            test[9] = ((code2 >> 9) == q);
+            code2 = code2 - (q<<9);
+
+            test[10] = ((code2 >> 7) == x);
+            code2 = code2 - (x<<7);
+
+            test[11] = ((code2 >> 4) == a);
+            code2 = code2 - (a<<4);
+
+            test[12] = ((code2 >> 3) == l);
+            code2 = code2 - (l<<3);
+
+            test[13] = (code2 == tid);
+            code2 = code2 - tid;
+
+            test[14] = (code2 == 0);
+            for (int i = 0; i < 15; i++){
+                if (!test[i]){
+                    System.out.println("testing hash code failed");
+                }
+            }*/         // tests
         } else if (infoSize == 5) { // GPR 2005 state space
             long tempCode;
             int buy;
@@ -2137,6 +2323,95 @@ System.out.println("problem");
             e.printStackTrace();
             System.exit(1);
         }
+        if (model == 2){
+            try{
+                String outputFileName = folder + "decisionsHFT0.csv";
+                FileWriter writer0h = new FileWriter(outputFileName, true);
+                writer0h.write(decisionHFT0.printDecision("simple"));
+                writer0h.close();
+            }
+            catch (Exception e){
+                e.printStackTrace();
+                System.exit(1);
+            }
+
+            try{
+                String outputFileName = folder + "decisionsHFT1.csv";
+                FileWriter writer1h = new FileWriter(outputFileName, true);
+                writer1h.write(decisionHFT1.printDecision("simple"));
+                writer1h.close();
+            }
+            catch (Exception e){
+                e.printStackTrace();
+                System.exit(1);
+            }
+
+            try{
+                String outputFileName = folder + "decisionsHFT2.csv";
+                FileWriter writer2h = new FileWriter(outputFileName, true);
+                writer2h.write(decisionHFT2.printDecision("simple"));
+                writer2h.close();
+            }
+            catch (Exception e){
+                e.printStackTrace();
+                System.exit(1);
+            }
+
+            try{
+                String outputFileName = folder + "decisionsHFT3.csv";
+                FileWriter writer3h = new FileWriter(outputFileName, true);
+                writer3h.write(decisionHFT3.printDecision("simple"));
+                writer3h.close();
+            }
+            catch (Exception e){
+                e.printStackTrace();
+                System.exit(1);
+            }
+
+            try{
+                String outputFileName = folder + "decisionsHFT4.csv";
+                FileWriter writer4h = new FileWriter(outputFileName, true);
+                writer4h.write(decisionHFT4.printDecision("simple"));
+                writer4h.close();
+            }
+            catch (Exception e){
+                e.printStackTrace();
+                System.exit(1);
+            }
+
+            try{
+                String outputFileName = folder + "decisionsHFT5.csv";
+                FileWriter writer5h = new FileWriter(outputFileName, true);
+                writer5h.write(decisionHFT5.printDecision("simple"));
+                writer5h.close();
+            }
+            catch (Exception e){
+                e.printStackTrace();
+                System.exit(1);
+            }
+
+            try{
+                String outputFileName = folder + "decisionsHFT6.csv";
+                FileWriter writer6h = new FileWriter(outputFileName, true);
+                writer6h.write(decisionHFT6.printDecision("simple"));
+                writer6h.close();
+            }
+            catch (Exception e){
+                e.printStackTrace();
+                System.exit(1);
+            }
+
+            try{
+                String outputFileName = folder + "decisionsHFT7.csv";
+                FileWriter writer7h = new FileWriter(outputFileName, true);
+                writer7h.write(decisionHFT7.printDecision("simple"));
+                writer7h.close();
+            }
+            catch (Exception e){
+                e.printStackTrace();
+                System.exit(1);
+            }
+        }
 
         try{
             String outputFileName = folder + "decisions_4.csv";
@@ -2203,6 +2478,29 @@ System.out.println("problem");
             e.printStackTrace();
             System.exit(1);
         }
+
+        if (model == 2){
+            try{
+                String outputFileName2 = folder + "decisionsLiquidityTID0.csv";
+                FileWriter writer70 = new FileWriter(outputFileName2, true);
+                writer70.write(decisionTID0.printDecisionLiquidity());
+                writer70.close();
+            }
+            catch (Exception e){
+                e.printStackTrace();
+                System.exit(1);
+            }
+            try{
+                String outputFileName2 = folder + "decisionsLiquidityTID7.csv";
+                FileWriter writer77 = new FileWriter(outputFileName2, true);
+                writer77.write(decisionTID7.printDecisionLiquidity());
+                writer77.close();
+            }
+            catch (Exception e){
+                e.printStackTrace();
+                System.exit(1);
+            }
+        }
     }
 
     // resets com.jakubrojcek.Decision history, memory management
@@ -2214,6 +2512,18 @@ System.out.println("problem");
         decision2 = new Decision(nP, fvPos, end, breakPoint, LL);
         decision4 = new Decision(nP, fvPos, end, breakPoint, LL);
         decisionHFT = new Decision(nP, fvPos, end, breakPoint, LL);
+        if (model == 2){
+            decisionHFT0 = new Decision(nP, fvPos, end, breakPoint, LL);
+            decisionHFT1 = new Decision(nP, fvPos, end, breakPoint, LL);
+            decisionHFT2 = new Decision(nP, fvPos, end, breakPoint, LL);
+            decisionHFT3 = new Decision(nP, fvPos, end, breakPoint, LL);
+            decisionHFT4 = new Decision(nP, fvPos, end, breakPoint, LL);
+            decisionHFT5 = new Decision(nP, fvPos, end, breakPoint, LL);
+            decisionHFT6 = new Decision(nP, fvPos, end, breakPoint, LL);
+            decisionHFT7 = new Decision(nP, fvPos, end, breakPoint, LL);
+            decisionTID0 = new Decision(nP, fvPos, end, breakPoint, LL);
+            decisionTID7 = new Decision(nP, fvPos, end, breakPoint, LL);
+        }
     }
 
     public void resetDiagnostics(){

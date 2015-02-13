@@ -4869,7 +4869,7 @@ public class ThirdLobTest {
         params[14] = "transparency";   // model to use
         params[15] = "0.0";         // speed bump length
         params[16] = "15";          // number of ticks
-        params[17] = "8";           // infoSize
+        params[17] = "4";           // infoSize
         params[18] = "2";           // private value volatility {4-> {-8,-4,0,4,8}, 2-> {-4,-2,0,2,4}}
         params[19] = "0.0";         // information delay of uninformed traders
         params[20] = "1000";        // 1000-> 15bn, 100-> 1.5bn, 10-> 150m, 1->15m events

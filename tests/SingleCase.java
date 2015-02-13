@@ -23,9 +23,12 @@ public class SingleCase {
             model = 0;
         } else if (mode.equals("speedBump")) {
             model = 1;
+        } else if (mode.equals("transparency")) {
+            model = 2;
         }
 
-        Path dir = Paths.get("D:\\_paper1 HFT, MM, rebates and market quality\\Matlab Analysis" + File.separator + args[0]);
+        //Path dir = Paths.get("D:\\_paper1 HFT, MM, rebates and market quality\\Matlab Analysis" + File.separator + args[0]);
+        Path dir = Paths.get("." + File.separator + args[0]);
         if (Files.exists(dir)){
             System.out.println("Directory already exists");
             return false;
@@ -101,6 +104,7 @@ public class SingleCase {
         double lambdaArrival = Double.parseDouble(args[10]);             // arrival frequency, same for all
         double lambdaFV = Double.parseDouble(args[12]);                  // frequency of FV changes
         double infoDelay = Double.parseDouble(args[19]);                 // information delay of uninformed traders
+        double transparencyPeriod = Double.parseDouble(args[21]);        // period for transparency
         double ReturnFrequencyHFT = 4.0;//8.3;          // returning frequency of HFT  //
         double ReturnFrequencyNonHFT = 1.0;//1.67;     // returning frequency of NonHFT //
         int maxDepth = Integer.parseInt(args[13]);// 0 to 7 which matter
@@ -181,14 +185,14 @@ public class SingleCase {
         LOB_LinkedHashMap book = new LOB_LinkedHashMap(model, FV, FVpos, maxDepth, end, tickSize, nP, h, traders);
         Trader trader = new Trader(infoSize, tauB, tauS, nP, FVpos, tickSize, ReturnFrequencyHFT,
                 ReturnFrequencyNonHFT, LL, HL, end, maxDepth, breakPoint, hti, prTremble, folder, book, FprivateValues,
-                rho, TTAX, CFEE, MFEE, TFEE, model, sb);
+                rho, TTAX, CFEE, MFEE, TFEE, model, sb, transparencyPeriod);
         book.makeBook(Prices);
         SingleRun sr = new SingleRun(model, tif, lambdaArrival, lambdaFV, ReturnFrequencyHFT, ReturnFrequencyNonHFT,
                 FprivateValues, PVdistrb, sigma, tickSize, FVplus, header, book, traders, h, trader, outputNameStatsData,
-                outputNameTransactions, outputNameBookData, sb, end, infoDelay);
+                outputNameTransactions, outputNameBookData, sb, end, infoDelay, transparencyPeriod);
 
         // phase 1a) initialization
-        int nEvents = 500000 * eventScale;         // number of events
+        int nEvents = 5000 * eventScale;         // number of events
         int ReturningHFT = 0;           // # of returning HFT traders in the book
         int ReturningNonHFT = 0;        // # of returning nonHFT traders in the book
         boolean write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
@@ -213,7 +217,7 @@ public class SingleCase {
         ReturningHFT = (int) RunOutcome[2];
         ReturningNonHFT = (int) RunOutcome[3];
 
-        if (CFEE != 0.0 || sb != 0.0){               // collect initial beliefs and restart
+        if (CFEE != 0.0 || sb != 0.0 || model == 2){               // collect initial beliefs and restart
             trader.computeInitialBeliefs(CFEE, sb);
             nEvents = 100000 * eventScale;         // number of events
             write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
