@@ -185,7 +185,7 @@ public class SingleCase {
         LOB_LinkedHashMap book = new LOB_LinkedHashMap(model, FV, FVpos, maxDepth, end, tickSize, nP, h, traders);
         Trader trader = new Trader(infoSize, tauB, tauS, nP, FVpos, tickSize, ReturnFrequencyHFT,
                 ReturnFrequencyNonHFT, LL, HL, end, maxDepth, breakPoint, hti, prTremble, folder, book, FprivateValues,
-                rho, TTAX, CFEE, MFEE, TFEE, model, sb);
+                rho, TTAX, CFEE, MFEE, TFEE, model, sb, transparencyPeriod);
         book.makeBook(Prices);
         SingleRun sr = new SingleRun(model, tif, lambdaArrival, lambdaFV, ReturnFrequencyHFT, ReturnFrequencyNonHFT,
                 FprivateValues, PVdistrb, sigma, tickSize, FVplus, header, book, traders, h, trader, outputNameStatsData,
@@ -217,7 +217,7 @@ public class SingleCase {
         ReturningHFT = (int) RunOutcome[2];
         ReturningNonHFT = (int) RunOutcome[3];
 
-        if (CFEE != 0.0 || sb != 0.0){               // collect initial beliefs and restart
+        if (CFEE != 0.0 || sb != 0.0 || model == 2){               // collect initial beliefs and restart
             trader.computeInitialBeliefs(CFEE, sb);
             nEvents = 100000 * eventScale;         // number of events
             write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
