@@ -192,7 +192,7 @@ public class SingleCase {
                 outputNameTransactions, outputNameBookData, sb, end, infoDelay, transparencyPeriod);
 
         // phase 1a) initialization
-        int nEvents = 5000 * eventScale;         // number of events
+        int nEvents = 500000 * eventScale;         // number of events
         int ReturningHFT = 0;           // # of returning HFT traders in the book
         int ReturningNonHFT = 0;        // # of returning nonHFT traders in the book
         boolean write = false;          // writeDecisions output in this com.jakubrojcek.gpr2005a.SingleRun?
