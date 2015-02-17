@@ -4852,7 +4852,7 @@ public class ThirdLobTest {
         case11ae = null;*/
 
         SingleCase case11bb = new SingleCase();
-        params[0] = "_transparency2000TID\\";   // folder
+        params[0] = "_transparency2000TIDfvLag\\";   // folder
         params[1] = "0.5";            // % of HFTs from 0 PV traders
         params[2] = "0.3";            // % of |0 PV| traders
         params[3]= "0.4";             // % of |2 PV| traders
