@@ -636,15 +636,19 @@ public class SingleRun {
                 EventTime += - Math.log(1.0 - Math.random()) / Lambda; // random exponential time
 
                 // updating the lagged fundamental value
-                while (!fundamentalValue.isEmpty() && EventTime > (fundamentalValue.firstKey() + infoDelay)){
+                /*while (!fundamentalValue.isEmpty() && EventTime > (fundamentalValue.firstKey() + infoDelay)){
                     FvLag = fundamentalValue.remove(fundamentalValue.firstKey());
-                }
+                }*/
+                // TODO: uncomment here and at the end where the fundamental value changes
 
                 if (EventTime > lastUpdateTime + transparencyPeriod){
                     BookInfo = book.getBookInfo();
                     BookSizes = book.getBookSizes();
                     lastUpdateTime = ((int) (EventTime / transparencyPeriod)) * transparencyPeriod;
-                    FvLag = FV; // TODO: change the first FvLag to FV after tested for all trader events.
+                    FvLag = FV; // TODO: change the first FvLag to FV after tested for all trader events, make slow uninformed again
+                }
+                if (FvLag != FV){
+                    System.out.println("not equal");
                 }
                 // number of all agents to trade
                 prob1 = (double) (nHFT) * lambdaArrival / Lambda;
@@ -720,7 +724,7 @@ public class SingleRun {
                     else if (rn2 < DistributionPV[3]){FVrealization = FprivateValues[3];}
                     else {FVrealization = FprivateValues[4];}
 
-                    tr = new Trader(false, false, FVrealization);
+                    tr = new Trader(false, true, FVrealization);
                     ID = tr.getTraderID();
                     traders.put(ID, tr);
                     ArrayList<Order> orders = tr.decision(BookSizes, BookInfo, EventTime, FvLag, FvLag, lastUpdateTime);
@@ -852,7 +856,7 @@ public class SingleRun {
                         }
                         traders.remove(trID);
                     }
-                    fundamentalValue.put(EventTime, FV);
+                    //fundamentalValue.put(EventTime, FV);
                 }
 
                 if (ReturningHFT != traderIDsHFT.size() || ReturningNonHFT != traderIDsNonHFT.size()){
