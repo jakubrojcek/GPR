@@ -193,6 +193,8 @@ public class Trader {
             decisionHFT5 = new Decision(numberPrices, FVpos, e, bp, LL);
             decisionHFT6 = new Decision(numberPrices, FVpos, e, bp, LL);
             decisionHFT7 = new Decision(numberPrices, FVpos, e, bp, LL);
+            decisionTID0 = new Decision(numberPrices, FVpos, e, bp, LL);
+            decisionTID7 = new Decision(numberPrices, FVpos, e, bp, LL);
         }
         diag = new Diagnostics(numberPrices, e);
         bookSizesHistory = new int[2 * nP + 1];
