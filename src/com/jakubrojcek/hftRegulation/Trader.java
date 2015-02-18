@@ -1755,7 +1755,7 @@ System.out.println("problem");
 }*/ // tests
 
         }else if (infoSize == 4){
-            int tid = (int) (8.0 * infoDelay / transparencyPeriod);
+            int tid = (int) (2.0 * infoDelay / transparencyPeriod);
             long Bt = BookInfo[0];      // Best Bid position
             long At = BookInfo[1];      // Best Ask position
             long lBt = BookInfo[2] / 2;     // depth at best Bid
