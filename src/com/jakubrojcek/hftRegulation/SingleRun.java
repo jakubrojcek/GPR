@@ -647,9 +647,7 @@ public class SingleRun {
                     lastUpdateTime = ((int) (EventTime / transparencyPeriod)) * transparencyPeriod;
                     FvLag = FV; // TODO: change the first FvLag to FV after tested for all trader events, make slow uninformed again
                 }
-                if (FvLag != FV){
-                    System.out.println("not equal");
-                }
+
                 // number of all agents to trade
                 prob1 = (double) (nHFT) * lambdaArrival / Lambda;
                 prob2 = (double) (NewNonHFT) * lambdaArrival / Lambda;
