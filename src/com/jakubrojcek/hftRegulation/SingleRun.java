@@ -671,10 +671,10 @@ public class SingleRun {
                 Integer ID;
                 double FVrealization;
                 if (rn < x1){ // New arrival HFT
-                    tr = new Trader(true, true, 0.0f);
+                    tr = new Trader(true, false, 0.0f);
                     ID = tr.getTraderID();
                     traders.put(ID, tr);
-                    ArrayList<Order> orders = tr.decision(BookSizes, BookInfo, EventTime, FvLag, FvLag, lastUpdateTime);
+                    ArrayList<Order> orders = tr.decision(BookSizes, BookInfo, EventTime, FV, FvLag, lastUpdateTime);
                     if (!orders.isEmpty()){
                         for (Order o : orders) {
                             bi = book.getBookInfo();
@@ -724,10 +724,10 @@ public class SingleRun {
                     else if (rn2 < DistributionPV[3]){FVrealization = FprivateValues[3];}
                     else {FVrealization = FprivateValues[4];}
 
-                    tr = new Trader(false, true, FVrealization);
+                    tr = new Trader(false, false, FVrealization);
                     ID = tr.getTraderID();
                     traders.put(ID, tr);
-                    ArrayList<Order> orders = tr.decision(BookSizes, BookInfo, EventTime, FvLag, FvLag, lastUpdateTime);
+                    ArrayList<Order> orders = tr.decision(BookSizes, BookInfo, EventTime, FV, FvLag, lastUpdateTime);
                     if (!orders.isEmpty()){
                         for (Order o : orders) {
                             bi = book.getBookInfo();
@@ -764,7 +764,7 @@ public class SingleRun {
                     }
                 } else if (rn < x3){ // Returning HFT
                     ID = traderIDsHFT.get((int) (Math.random() * traderIDsHFT.size()));
-                    ArrayList<Order> orders = traders.get(ID).decision(BookSizes, BookInfo, EventTime, FvLag, FvLag, lastUpdateTime);
+                    ArrayList<Order> orders = traders.get(ID).decision(BookSizes, BookInfo, EventTime, FV, FvLag, lastUpdateTime);
                     if (!orders.isEmpty()){
                         for (Order o : orders) {
                             if (!o.isCancelled()){
@@ -801,7 +801,7 @@ public class SingleRun {
                     }
                 } else if (rn < x4){ // Returning nonHFT
                     ID = traderIDsNonHFT.get((int)(Math.random() * traderIDsNonHFT.size()));
-                    ArrayList<Order> orders = traders.get(ID).decision(BookSizes,BookInfo, EventTime, FvLag, FvLag, lastUpdateTime);
+                    ArrayList<Order> orders = traders.get(ID).decision(BookSizes,BookInfo, EventTime, FV, FvLag, lastUpdateTime);
                     if (!orders.isEmpty()){
                         for (Order o : orders) {
                             if (!o.isCancelled()){
