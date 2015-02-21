@@ -1397,7 +1397,7 @@ public class Trader {
         if (isHFT){
             decisionHFT.addDecision(BookInfo, ac, cancelled);
             if (model == 2){
-                int tid = (int) (8.0 * infoDelay / transparencyPeriod);
+                int tid = (int) (2.0 * infoDelay / transparencyPeriod);
                 switch (tid){
                     case 0:  decisionHFT0.addDecision(BookInfo, ac, cancelled);
                         break;
