@@ -489,6 +489,7 @@ public class SingleRun {
                     Trader tr;
                     Integer ID;
                     double FVrealization;
+                    speedBump = 0.5+Math.random();     // TODO: remove afterwards
                     if (rn < x1){ // New arrival HFT
                         tr = new Trader(true, true, 0.0f);
                         ID = tr.getTraderID();
